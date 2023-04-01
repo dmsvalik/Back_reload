@@ -25,11 +25,12 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    'main_page',
     'rest_framework',
     'djoser',
+    'drf_yasg',
     'debug_toolbar',
 
-    'main_page.apps.MainPageConfig',
 ]
 
 MIDDLEWARE = [
