@@ -6,5 +6,5 @@ from .views import PersonalClientAPIView
 from . import views
 
 urlpatterns = [
-    path('api/v1/personal_data/', PersonalClientAPIView.as_view()),
+    path('api/personal_client_data/', PersonalClientAPIView.as_view()),
 ]

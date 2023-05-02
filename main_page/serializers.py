@@ -13,8 +13,6 @@ class UserCreateSerializer(UserCreateSerializer):
         fields = ('id', 'email', 'name', 'password')
 
 class PersonalClientSerializer(serializers.Serializer):
-    user_account_id = serializers.IntegerField()
     person_telephone = serializers.CharField()
     person_name = serializers.CharField()
     person_address = serializers.CharField()
-

@@ -53,15 +53,9 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
 class PersonalClientData(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account_id = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    user_account_id = models.ForeignKey(UserAccount, on_delete=models.CASCADE, unique=True, null=True)
     person_rating = models.IntegerField('Рейтинг клиента', null=True)
     person_created = models.DateTimeField('Дата создания аккаунта', auto_now=True)
     person_telephone = models.CharField('Номер телефона', max_length=20, null=True)
     person_name = models.CharField('Имя клиента', max_length=200, null=True)
     person_address = models.CharField('Адрес', max_length=200, null=True)
-
-
-
-
-
-
