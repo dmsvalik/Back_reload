@@ -8,33 +8,28 @@ from .serializers import PersonalClientSerializer
 
 class PersonalClientAPIView(APIView):
 
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         """
-        Запрос на получение данных (телефон, имя, адрес...)
+        Получить персональные данные пользователя (телефон, имя, адрес...)
 
         ---
-        :parameter
-        - вернуться данные конкретно на пользователя токена JWT
         """
-        p = PersonalClientData.objects.all()
-        return Response({'personal_data': PersonalClientSerializer(p, many=True).data})
+        pk = kwargs.get('pk', None)
+        if not pk:
+            p = PersonalClientData.objects.all()
+            return Response({'personal_data': PersonalClientSerializer(p, many=True).data})
+        else:
+            p = PersonalClientData.objects.filter(pk=pk)
+            return Response({'personal_data': PersonalClientSerializer(p, many=True).data})
 
     def post(self, request):
         """
-        Сохранение новых данных (телефон, имя, адрес...)
+        Сохранение персональных данных пользователя (телефон, имя, адрес...)
 
         ---
         - 'person_telephone': 89117861593
-          required: true
-          type: string
-
         - 'person_name': Sam
-          required: true
-          type: string
-
         - 'person_address': Rusia
-          required: true
-          type: string
 
         """
 
@@ -48,3 +43,23 @@ class PersonalClientAPIView(APIView):
         )
 
         return Response({'personal_data': PersonalClientSerializer(post_new).data})
+
+    def put(self, request, *args, **kwargs):
+        """
+        Изменение персональных данных пользователя (телефон, имя, адрес...)
+
+        ---
+        """
+        pk = kwargs.get('pk', None)
+        if not pk:
+            return Response({"error": "Method PUT not allowed"})
+
+        try:
+            instance = PersonalClientData.objects.get(pk=pk)
+        except:
+            return Response({"error": "Object does not exists"})
+
+        serializer = PersonalClientSerializer(data=request.data, instance=instance)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response({"post": serializer.data})

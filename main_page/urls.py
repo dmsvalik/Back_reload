@@ -7,4 +7,5 @@ from . import views
 
 urlpatterns = [
     path('api/personal_client_data/', PersonalClientAPIView.as_view()),
+    path('api/personal_client_data/<int:pk>', PersonalClientAPIView.as_view()),
 ]
