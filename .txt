@@ -1,0 +1,16 @@
+
+
+нюансы
+
+1) POSTMAN
+запрос на получить данные по пользователю:
+http://localhost:8000/auth/users/me/
+
+нельзя в header
+Authorization: Token eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0...
+тк у нас не Token, а JWT
+
+надо в headers так:
+Authorization: JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0...
+тогда запрос пройдет
+
