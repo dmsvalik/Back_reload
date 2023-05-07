@@ -27,6 +27,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'main_page',
+    'products',
     'rest_framework',
     'djoser',
     'drf_yasg',
