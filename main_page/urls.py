@@ -8,5 +8,5 @@ router = routers.SimpleRouter()
 router.register(r'feedback', FeedbackViewSet)
 
 urlpatterns = [
-    path('api/users/', include(router.urls)),
+    path('users/', include(router.urls)),
 ]
