@@ -19,10 +19,10 @@ class UserAccountManager(BaseUserManager):
         return user
 
 
-    def create_superuser(self, email, name, password):
+    def create_superuser(self, email, name, person_telephone, surname, password=None):
 
         email = self.normalize_email(email)
-        user = self.model(email=email, name=name)
+        user = self.model(email=email, name=name, person_telephone=person_telephone, surname=surname)
         user.set_password(password)
         user.save()
 
