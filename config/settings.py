@@ -71,12 +71,12 @@ INTERNAL_IPS = [
 
 DATABASES = {
     'default': {
-        'ENGINE': env('DB_ENGINE'),
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASS'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': env('DB_NAME', default='db_name'),
+        'USER': env('DB_USER', default='db_user'),
+        'PASSWORD': env('DB_PASS', default='dp_pass'),
+        'HOST': env('DB_HOST', default='db_host'),
+        'PORT': env('DB_PORT', default=5432),
     }
 }
 
