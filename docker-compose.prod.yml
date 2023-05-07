@@ -20,7 +20,6 @@ services:
     depends_on:
       - db
     environment:
-      DEBUG_STATUS: False
       DB_ENGINE: django.db.backends.postgresql
       DB_HOST: db
       DB_NAME: whywe
