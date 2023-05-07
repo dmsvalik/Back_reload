@@ -20,6 +20,12 @@ services:
     depends_on:
       - db
     environment:
+      SECRET_KEY: ${SECRET_KEY}
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
+      EMAIL_PORT: ${EMAIL_PORT}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS}
       DB_ENGINE: django.db.backends.postgresql
       DB_HOST: db
       DB_NAME: whywe

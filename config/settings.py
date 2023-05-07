@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('SECRET_KEY', default='SOME_SECRET_KEY')
 
 
 DEBUG = env('DEBUG_STATUS', default=False)
@@ -72,21 +72,21 @@ INTERNAL_IPS = [
 
 DATABASES = {
     'default': {
-        'ENGINE': env('DB_ENGINE'),
-        'NAME': env('DB_NAME'),
-        'USER': env('DB_USER'),
-        'PASSWORD': env('DB_PASS'),
-        'HOST': env('DB_HOST'),
-        'PORT': env('DB_PORT'),
+        'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
+        'NAME': env('DB_NAME', default='db_name'),
+        'USER': env('DB_USER', default='db_user'),
+        'PASSWORD': env('DB_PASS', default='dp_pass'),
+        'HOST': env('DB_HOST', default='db_host'),
+        'PORT': env('DB_PORT', default=5432),
     }
 }
 
 
-EMAIL_HOST = env('EMAIL_HOST')
-EMAIL_HOST_USER = env('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
-EMAIL_PORT = env('EMAIL_PORT')
-EMAIL_USE_TLS = env('EMAIL_USE_TLS')
+EMAIL_HOST = env('EMAIL_HOST', default='email_host')
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='email_host_user')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='email_pass')
+EMAIL_PORT = env('EMAIL_PORT', default=587)
+EMAIL_USE_TLS = env('EMAIL_USE_TLS', default=True)
 
 
 # Password validation
