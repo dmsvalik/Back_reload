@@ -1,0 +1,43 @@
+version: '3'
+
+services:
+  nginx:
+    image: whywe-nginx:latest
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      - app
+    restart: always
+
+  app:
+    image: whywe:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - db
+    environment:
+      DB_ENGINE: django.db.backends.postgresql
+      DB_HOST: db
+      DB_NAME: whywe
+      DB_USER: whywe
+      DB_PASS: whywe
+
+    restart: always
+
+  db:
+    image: postgres:11.1-alpine
+    environment:
+      POSTGRES_DB: whywe
+      POSTGRES_USER: whywe
+      POSTGRES_PASSWORD: whywe
+    volumes:
+      - db:/var/lib/postgresql/data
+    restart: always
+
+
+volumes:
+  db:
