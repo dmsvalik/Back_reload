@@ -13,7 +13,7 @@ SECRET_KEY = env('SECRET_KEY', default='SOME_SECRET_KEY')
 
 DEBUG = env('DEBUG_STATUS', default=False)
 
-ALLOWED_HOSTS = ['app']
+ALLOWED_HOSTS = ['app', '185.244.173.82']
 CSRF_TRUSTED_ORIGINS = ['http://*', 'https://*']
 
 
