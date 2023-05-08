@@ -5,17 +5,17 @@ from .models import CardModel, CategoryModel, ProductModel, KitModel
 
 @admin.register(CardModel)
 class CardModelAdmin(admin.ModelAdmin):
-    list_display = ['card_name']
+    list_display = ['name']
 
 
 @admin.register(CategoryModel)
 class CategoryModelAdmin(admin.ModelAdmin):
-    list_display = ['category_name']
+    list_display = ['name']
 
 @admin.register(ProductModel)
 class ProductModelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user_account_id', 'product_description', 'product_price']
+    list_display = ['id', 'user_account', 'product_description', 'product_price']
 
 @admin.register(KitModel)
 class KitModelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user_account_id', 'kit_name']
+    list_display = ['id', 'user_account', 'kit_name']
