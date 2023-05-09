@@ -6,8 +6,8 @@ import environ
 env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# environ.Env.read_env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env()
+# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 
@@ -129,7 +129,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, '/static')
+    os.path.join(BASE_DIR, 'main_page/static')
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
