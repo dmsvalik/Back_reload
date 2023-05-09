@@ -17,8 +17,6 @@ class CardModelAPIView(APIView):
     permission_classes = [AllowAny]
     def get(self, request):
         p = CardModel.objects.all()
-        print('1')
-        print('---------------')
         return Response({'personal_data': CardModelSerializer(p, many=True).data})
 
 
