@@ -1,11 +1,15 @@
 import os
+from datetime import timedelta
 from pathlib import Path
 
 import environ
 
 env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
+environ.Env.read_env()
+# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+
 
 
 SECRET_KEY = env('SECRET_KEY', default='SOME_SECRET_KEY')
@@ -13,7 +17,7 @@ SECRET_KEY = env('SECRET_KEY', default='SOME_SECRET_KEY')
 
 DEBUG = env('DEBUG_STATUS', default=False)
 
-ALLOWED_HOSTS = ['app', '185.244.173.82']
+ALLOWED_HOSTS = ['app', '185.244.173.82', 'localhost', '127.0.0.1']
 CSRF_TRUSTED_ORIGINS = ['http://app', 'http://185.244.173.82']
 
 
@@ -126,7 +130,7 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, '/static')
+    os.path.join(BASE_DIR, 'main_page/static')
 ]
 
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
@@ -149,6 +153,8 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
    'AUTH_HEADER_TYPES': ('JWT',),
+   'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+   'REFRESH_TOKEN_LIFETIME': timedelta(minutes=720),
 }
 
 DJOSER = {

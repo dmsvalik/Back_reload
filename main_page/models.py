@@ -37,14 +37,14 @@ class UserAccountManager(BaseUserManager):
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
-    surname = models.CharField(max_length=255, null=True)
+    surname = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_partner = models.BooleanField(default=False)
-    person_rating = models.IntegerField('Рейтинг клиента', null=True)
+    person_rating = models.IntegerField('Рейтинг клиента', blank=True, null=True)
     person_created = models.DateTimeField('Дата создания аккаунта', auto_now=True)
-    person_telephone = models.CharField('Номер телефона', max_length=20, null=True)
-    person_address = models.CharField('Адрес', max_length=200, null=True)
+    person_telephone = models.CharField('Номер телефона', max_length=20, blank=True, null=True)
+    person_address = models.CharField('Адрес', max_length=200, blank=True, null=True)
 
     objects = UserAccountManager()
 
@@ -64,6 +64,6 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 class UserFeedback(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     user_account_id = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
-    feedback_text = models.CharField('Запрос от пользователя', max_length=20, null=True)
+    feedback_text = models.CharField('Запрос от пользователя', max_length=20, blank=True, null=True)
     feedback_created = models.DateTimeField('Дата создания обращения', auto_now=True)
 
