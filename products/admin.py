@@ -10,7 +10,7 @@ class CardModelAdmin(admin.ModelAdmin):
 
 @admin.register(CategoryModel)
 class CategoryModelAdmin(admin.ModelAdmin):
-    list_display = ['name']
+    list_display = ['id', 'name']
 
 @admin.register(ProductModel)
 class ProductModelAdmin(admin.ModelAdmin):
