@@ -29,13 +29,13 @@ class CategoryModel(models.Model):
 
 class ProductModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
-    category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=True)
-    product_price = models.IntegerField('цена предмета', null=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
+    category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=False)
+    product_price = models.IntegerField('цена предмета', blank=True)
     product_size = models.CharField('размеры высота x ширина x длина', max_length=20, blank=True)
     product_description = models.CharField('описание', max_length=350, blank=True)
-    product_units = models.IntegerField('количество предметов в шт.', null=True)
-    is_ended = models.BooleanField('завершено ли создание предмета заказа?')
+    product_units = models.IntegerField('количество предметов в шт.', blank=True)
+    is_ended = models.BooleanField('завершено ли создание предмета заказа?', default=False)
 
     class Meta:
         verbose_name = 'Предмет для заказа'
@@ -53,6 +53,3 @@ class KitModel(models.Model):
     class Meta:
         verbose_name = 'Заказ состоящий из продуктов'
         verbose_name_plural = 'Заказ состоящий из продуктов'
-
-
-

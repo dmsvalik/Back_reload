@@ -1,11 +1,13 @@
 from django.shortcuts import render
+from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, CreateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
+from rest_framework import viewsets
 
-from .models import CardModel, CategoryModel
-from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelCreateSerializer
+from .models import CardModel, CategoryModel, ProductModel
+from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer
 
 
 class CardModelAPIView(APIView):
@@ -40,4 +42,19 @@ class ProductModelCreateAPIView(CreateAPIView):
 
     '''
     permission_classes = [IsAuthenticated]
-    serializer_class = ProductModelCreateSerializer
+    serializer_class = ProductModelSerializer
+
+
+class ProductModelAPIView(viewsets.ModelViewSet):
+    '''
+    GET - конкретный продукт по ID  или все продукты сразу у пользователя
+    UPDATE + DELETE - конкретный продукт
+
+    '''
+    permission_classes = [IsAuthenticated]
+    queryset = ProductModel.objects.all()
+    serializer_class = ProductModelSerializer
+
+    def get_queryset(self):
+        return ProductModel.objects.filter(user_account=self.request.user)
+
