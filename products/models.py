@@ -7,11 +7,11 @@ class CardModel(models.Model):
     name = models.CharField('тип - кухня, гостиная', max_length=20, null=True)
 
     class Meta:
-        verbose_name = 'Тип комнаты'
-        verbose_name_plural = 'Тип комнаты'
+        verbose_name = 'Тип комнаты - CardModel'
+        verbose_name_plural = 'Тип комнаты - CardModel'
 
     def __str__(self):
-        return self.card_name
+        return self.name
 
 
 class CategoryModel(models.Model):
@@ -20,11 +20,11 @@ class CategoryModel(models.Model):
     name = models.CharField('тип мебели - кровать, ящик... ', max_length=20, null=True)
 
     class Meta:
-        verbose_name = 'Тип мебели'
-        verbose_name_plural = 'Тип мебели'
+        verbose_name = 'Тип мебели - Category'
+        verbose_name_plural = 'Тип мебели - Category'
 
     def __str__(self):
-        return self.category_name
+        return self.name
 
 
 class ProductModel(models.Model):
