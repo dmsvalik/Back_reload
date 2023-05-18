@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from products.models import CategoryModel
+from products.models import CategoryModel, ProductModel
 
 
 class CardModelSerializer(serializers.Serializer):
@@ -10,4 +10,16 @@ class CardModelSerializer(serializers.Serializer):
 class CategoryModelSeializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryModel
-        fields = ['name']
+        fields = ['id', 'name']
+
+
+class ProductModelCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductModel
+        fields = ['category', 'product_size']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        obj = ProductModel.objects.create(**validated_data, user_account=user, is_ended=False)
+        return obj
