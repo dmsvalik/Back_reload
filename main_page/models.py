@@ -60,6 +60,26 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.email
 
+    class Meta:
+        verbose_name = 'Пользователи'
+        verbose_name_plural = 'Пользователи'
+
+class SellerData(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    user_account_id = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    seller_activity = models.BooleanField('Активен / Не активен', default=False)
+    seller_name_company = models.CharField('Имя компании', max_length=100, blank=True)
+    seller_date = models.DateTimeField('Дата создания аккаунта продавца', auto_now=True)
+    seller_telephone = models.CharField('Телефон компании', max_length=20, blank=True)
+    seller_requisites = models.CharField('Реквизиты компании', max_length=100, blank=True)
+    seller_type_activity = models.CharField('Болванка тут должна быть связь с видом деятельности',
+                                            max_length=100, blank=True)
+
+    class Meta:
+        verbose_name = 'Продавцы'
+        verbose_name_plural = 'Продавцы'
+
+
 
 class UserFeedback(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
