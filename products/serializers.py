@@ -17,7 +17,8 @@ class ProductModelCreateSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductModel
-        fields = ['category', 'product_size']
+        fields = ['id', 'category', 'product_size']
+        read_only_fields = ['id', ]
 
     def create(self, validated_data):
         user = self.context['request'].user
