@@ -24,3 +24,4 @@ class ProductModelSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         obj = ProductModel.objects.create(**validated_data, user_account=user)
         return obj
+
