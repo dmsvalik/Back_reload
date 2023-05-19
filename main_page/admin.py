@@ -5,7 +5,7 @@ from .models import UserAccount, SellerData
 
 @admin.register(UserAccount)
 class UserAccountAdmin(admin.ModelAdmin):
-    list_display = ['email', 'name', 'is_active', 'is_staff']
+    list_display = ['email', 'id', 'name', 'is_active', 'is_staff']
 
 @admin.register(SellerData)
 class SellerDataAdmin(admin.ModelAdmin):

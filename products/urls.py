@@ -1,6 +1,6 @@
 from django.urls import include, path
 from .views import CardModelAPIView, CategoryModelListAPIView, CategoryModelListAPIView, ProductModelCreateAPIView, \
-    ProductModelAPIView
+    ProductModelAPIView, ProductImageViewSet
 
 
 urlpatterns = [
@@ -16,4 +16,5 @@ urlpatterns = [
         'get': 'list',
         'post': 'create'})),
 
+    path('products/image', ProductImageViewSet.as_view()),
 ]
