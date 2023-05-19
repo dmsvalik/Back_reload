@@ -7,11 +7,11 @@ class CardModel(models.Model):
     name = models.CharField('тип - кухня, гостиная', max_length=20, null=True)
 
     class Meta:
-        verbose_name = 'Тип комнаты'
-        verbose_name_plural = 'Тип комнаты'
+        verbose_name = 'Тип комнаты - CardModel'
+        verbose_name_plural = 'Тип комнаты - CardModel'
 
     def __str__(self):
-        return self.card_name
+        return self.name
 
 
 class CategoryModel(models.Model):
@@ -20,28 +20,29 @@ class CategoryModel(models.Model):
     name = models.CharField('тип мебели - кровать, ящик... ', max_length=20, null=True)
 
     class Meta:
-        verbose_name = 'Тип мебели'
-        verbose_name_plural = 'Тип мебели'
+        verbose_name = 'Тип мебели - Category'
+        verbose_name_plural = 'Тип мебели - Category'
 
     def __str__(self):
-        return self.category_name
+        return self.name
 
 
 class ProductModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
-    category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=True)
-    product_price = models.IntegerField('цена предмета', null=True)
-    product_size = models.CharField('размеры высота x ширина x длина', max_length=20, null=True)
-    product_description = models.CharField('описание', max_length=350, null=True)
-    product_units = models.IntegerField('количество предметов в шт.', null=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
+    category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=False,  blank=True)
+    product_price = models.IntegerField('цена предмета', null=True, blank=True)
+    product_size = models.CharField('размеры высота x ширина x длина', max_length=20, null=True, blank=True)
+    product_description = models.CharField('описание', max_length=350, null=True, blank=True)
+    product_units = models.IntegerField('количество предметов в шт.', null=True, blank=True)
+    is_ended = models.BooleanField('завершено ли создание предмета заказа?', default=False)
 
     class Meta:
         verbose_name = 'Предмет для заказа'
         verbose_name_plural = 'Предмет для заказа'
 
     def __str__(self):
-        return self.product_description
+        return str(self.id)
 
 class KitModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
@@ -52,6 +53,3 @@ class KitModel(models.Model):
     class Meta:
         verbose_name = 'Заказ состоящий из продуктов'
         verbose_name_plural = 'Заказ состоящий из продуктов'
-
-
-
