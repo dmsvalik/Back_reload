@@ -48,16 +48,3 @@ class ProductModel(models.Model):
 # создаем путь - папка image далее папка(id пользователя), далее папка(id продукта)
 def nameFile(instance, filename):
     return '/'.join(['images', str(instance.product_id.user_account.id), str(instance.product_id.id), filename])
-
-class ProductImageModel(models.Model):
-    id = models.AutoField(primary_key=True, unique=True)
-    product_id = models.ForeignKey(ProductModel, related_name='product_id', on_delete=models.CASCADE, null=False)
-    image = models.ImageField(upload_to=nameFile, blank=True, null=True)
-
-    class Meta:
-        verbose_name = 'Изображения - продукты пользователя'
-        verbose_name_plural = 'Изображения - продукты пользователя'
-
-    def __str__(self):
-        return str(self.id)
-

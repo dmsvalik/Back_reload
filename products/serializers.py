@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from products.models import CategoryModel, ProductModel, ProductImageModel
+from products.models import CategoryModel, ProductModel
 from rest_framework.response import Response
 
 
@@ -26,11 +26,5 @@ class ProductModelSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         obj = ProductModel.objects.create(**validated_data, user_account=user)
         return obj
-
-class ProductImageSerializer(serializers.ModelSerializer):
-    product_id = ProductModelSerializer(many=True)
-    class Meta:
-        model = ProductImageModel
-        fields = ('id', 'product_id', 'image')
 
 
