@@ -61,13 +61,3 @@ class ProductImageModel(models.Model):
     def __str__(self):
         return str(self.id)
 
-
-class KitModel(models.Model):
-    id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
-    product = models.ManyToManyField(ProductModel)
-    kit_name = models.CharField('название заказа', max_length=20, null=True)
-
-    class Meta:
-        verbose_name = 'Заказ состоящий из продуктов'
-        verbose_name_plural = 'Заказ состоящий из продуктов'
