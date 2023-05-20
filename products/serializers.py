@@ -2,9 +2,11 @@ from rest_framework import serializers
 from products.models import CategoryModel, ProductModel, ProductImageModel
 from rest_framework.response import Response
 
-class CardModelSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    card_name = serializers.CharField()
+
+class CardModelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CategoryModel
+        fields = ['id', 'name']
 
 
 class CategoryModelSeializer(serializers.ModelSerializer):

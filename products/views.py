@@ -17,9 +17,12 @@ class CardModelAPIView(APIView):
     '''
 
     permission_classes = [AllowAny]
+    model = CardModel
+    serializer_class = CardModelSerializer
+
     def get(self, request):
-        p = CardModel.objects.all()
-        return Response({'personal_data': CardModelSerializer(p, many=True).data})
+        result = CardModel.objects.all()
+        return Response({'card rooms': CardModelSerializer(result, many=True).data})
 
 
 class CategoryModelListAPIView(ListAPIView):
