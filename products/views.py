@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
 from rest_framework import viewsets
 
-from .models import CardModel, CategoryModel, ProductModel, ProductImageModel
-from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer, ProductImageSerializer
+from .models import CardModel, CategoryModel, ProductModel
+from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer
 
 
 class CardModelAPIView(APIView):
@@ -61,21 +61,3 @@ class ProductModelAPIView(viewsets.ModelViewSet):
     def get_queryset(self):
         return ProductModel.objects.filter(user_account=self.request.user)
 
-
-class ProductImageViewSet(ListAPIView):
-    '''Проверка картинок по продукту + создание картинок с привязкой к продукту'''
-
-    queryset = ProductImageModel.objects.all()
-    serializer_class = ProductImageSerializer
-
-    #достаем все объекты пользователя
-    def get_queryset(self):
-        user = self.request.user
-        return ProductImageModel.objects.filter(product_id__user_account=user)
-
-    def post(self, request, *args, **kwargs):
-        file = request.FILES['file']
-        product_id = request.data['product_id']
-        get_instance = ProductModel.objects.get(id=product_id)
-        image = ProductImageModel.objects.create(image=file, product_id=get_instance)
-        return Response({'Загрузка фото': 'Успешно прошла'})
