@@ -33,6 +33,7 @@ INSTALLED_APPS = [
 
     'main_page',
     'products',
+    'orders',
     'rest_framework',
     'djoser',
     'drf_yasg',
