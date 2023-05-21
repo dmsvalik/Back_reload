@@ -5,6 +5,7 @@ from orders.models import OrderModel
 
 
 class CardModelSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = CardModel
         fields = ['id', 'name']
