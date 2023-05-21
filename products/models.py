@@ -1,5 +1,6 @@
 from django.db import models
 from main_page.models import UserAccount
+from orders.models import OrderModel
 
 
 class CardModel(models.Model):
@@ -31,6 +32,7 @@ class ProductModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
     category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=False,  blank=True)
+    order = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True,  blank=True)
     product_price = models.IntegerField('цена предмета', null=True, blank=True)
     product_size = models.CharField('размеры высота x ширина x длина', max_length=20, null=True, blank=True)
     product_description = models.CharField('описание', max_length=350, null=True, blank=True)
