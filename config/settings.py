@@ -78,10 +78,10 @@ INTERNAL_IPS = [
 DATABASES = {
     'default': {
         'ENGINE': env('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': env('DB_NAME', default='db_name'),
-        'USER': env('DB_USER', default='db_user'),
-        'PASSWORD': env('DB_PASS', default='dp_pass'),
-        'HOST': env('DB_HOST', default='db_host'),
+        'NAME': env('DB_NAME', default='whywe'),
+        'USER': env('DB_USER', default='whywe'),
+        'PASSWORD': env('DB_PASS', default='whywe'),
+        'HOST': env('DB_HOST', default='localhost'),
         'PORT': env('DB_PORT', default=5432),
     }
 }
@@ -159,16 +159,25 @@ SIMPLE_JWT = {
 
 DJOSER = {
     'LOGIN_FIELD': 'email',
-    'USER_CREATE_PASSWORD_RETYPE': True,
     'USERNAME_CHANGED_EMAIL_CONFIRMATION': True,
     'PASSWORD_CHANGED_EMAIL_CONFIRMATION': True,
     'SEND_CONFIRMATION_EMAIL': True,
     'SET_USERNAME_RETYPE': True,
     'SET_PASSWORD_RETYPE': True,
     'PASSWORD_RESET_CONFIRM_URL': 'password/reset/confirm/{uid}/{token}',
+    'PASSWORD_RESET_SHOW_EMAIL_NOT_FOUND': True,
     'USERNAME_RESET_CONFIRM_URL': 'email/reset/confirm/{uid}/{token}',
+    'USERNAME_RESET_SHOW_EMAIL_NOT_FOUND': True,
     'ACTIVATION_URL': 'activate/{uid}/{token}',
     'SEND_ACTIVATION_EMAIL': True,
+    'EMAIL': {
+        'activation': 'main_page.email.Activation',
+        'confirmation': 'main_page.email.Confirmation',
+        # 'password_reset': 'main_page.email.PasswordReset',
+        # 'password_changed_confirmation': 'main_page.email.PasswordChangedConfirmation',
+        # 'username_reset': 'main_page.email.UsernameReset',
+        # 'username_reset_confirmation': 'main_page.email.UsernameResetConfirmation',
+    },
     'SERIALIZERS': {
         'user_create': 'main_page.serializers.UserCreateSerializer',
         'user': 'main_page.serializers.UserCreateSerializer',
@@ -182,3 +191,13 @@ DJOSER = {
 AUTH_USER_MODEL = 'main_page.UserAccount'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+            }
+        }
+    }
