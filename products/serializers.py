@@ -1,19 +1,20 @@
 from rest_framework import serializers
-from products.models import CategoryModel, ProductModel
+from products.models import CategoryModel, ProductModel, CardModel
 from rest_framework.response import Response
 from orders.models import OrderModel
 
 
 class CardModelSerializer(serializers.ModelSerializer):
+
     class Meta:
-        model = CategoryModel
+        model = CardModel
         fields = ['id', 'name']
 
 
 class CategoryModelSeializer(serializers.ModelSerializer):
     class Meta:
         model = CategoryModel
-        fields = ['id', 'name']
+        fields = ['id', 'card', 'name']
 
 
 class ProductModelSerializer(serializers.ModelSerializer):
