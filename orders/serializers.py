@@ -15,11 +15,13 @@ class OrderModelSerializer(serializers.ModelSerializer):
         return obj
 
 
-
 class OrderImageSerializer(serializers.ModelSerializer):
-    product_id = OrderModelSerializer(many=True)
 
     class Meta:
         model = OrderImageModel
-        fields = ('id', 'order_id', 'image')
+        fields = ('id', 'order_id', 'image_1', 'image_2', 'image_3', 'image_4', 'image_5', 'image_6')
+
+    def create(self, validated_data):
+        obj = OrderImageModel.objects.create(**validated_data)
+        return obj
 

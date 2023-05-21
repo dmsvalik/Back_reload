@@ -10,9 +10,10 @@ from .serializers import *
 
 
 
-class OrderImageViewSet(ListAPIView):
+class OrderImageViewSet(viewsets.ModelViewSet):
     '''Проверка картинок по продукту + создание картинок с привязкой к продукту'''
 
+    permission_classes = [IsAuthenticated]
     queryset = OrderImageModel.objects.all()
     serializer_class = OrderImageSerializer
 
@@ -20,11 +21,4 @@ class OrderImageViewSet(ListAPIView):
     def get_queryset(self):
         user = self.request.user
         return OrderImageModel.objects.filter(order_id__user_account=user)
-
-    def post(self, request, *args, **kwargs):
-        file = request.FILES['file']
-        order_id = request.data['order_id']
-        get_instance = OrderModel.objects.get(id=order_id)
-        image = OrderImageModel.objects.create(image=file, order_id=get_instance)
-        return Response({'Загрузка фото': 'Успешно прошла'})
 
