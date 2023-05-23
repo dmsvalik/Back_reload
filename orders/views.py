@@ -22,3 +22,16 @@ class OrderImageViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return OrderImageModel.objects.filter(order_id__user_account=user)
 
+
+class OrderOfferViewSet(viewsets.ModelViewSet):
+    '''Создание Оффера'''
+
+    permission_classes = [IsAuthenticated]
+    queryset = OrderOffer.objects.all()
+    serializer_class = OrderOfferSerializer
+
+    # достаем все объекты пользователя
+    def get_queryset(self):
+        user = self.request.user
+        return OrderOffer.objects.filter(user_account=user)
+

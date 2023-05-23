@@ -1,5 +1,5 @@
 from django.db import models
-from main_page.models import UserAccount
+from main_page.models import UserAccount, SellerData
 
 
 STATE_CHOICES = (
@@ -51,4 +51,23 @@ class OrderImageModel(models.Model):
     def __str__(self):
         return str(self.id)
 
+
+
+
+class OrderOffer(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True)
+    offer_create_at = models.DateTimeField('Дата создания офера', auto_now=True)
+    offer_price = models.CharField('Цена офера', max_length=300, blank=True)
+    offer_execution_time = models.CharField('Время выполнения офера', max_length=300, blank=True)
+    offer_description = models.CharField('Описание офера', max_length=300, blank=True)
+    offer_status = models.BooleanField('Принят офер или нет', default=False)
+
+    class Meta:
+        verbose_name = 'Офер'
+        verbose_name_plural = 'Офер'
+
+    def __str__(self):
+        return 'офер на заказ №' + ' ' + str(self.order_id)
 
