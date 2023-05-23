@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CardModel, CategoryModel, ProductModel, KitModel, ProductImageModel
+from .models import CardModel, CategoryModel, ProductModel
 
 
 @admin.register(CardModel)
@@ -16,10 +16,5 @@ class CategoryModelAdmin(admin.ModelAdmin):
 class ProductModelAdmin(admin.ModelAdmin):
     list_display = ['id', 'user_account', 'product_description', 'product_price']
 
-@admin.register(KitModel)
-class KitModelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'user_account', 'kit_name']
 
-@admin.register(ProductImageModel)
-class ProductImageModelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'product_id']
+

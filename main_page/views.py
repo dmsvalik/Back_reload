@@ -1,15 +1,16 @@
-from django.forms import model_to_dict
+import requests
+
 from django.shortcuts import render
+from django.http.response import JsonResponse
 from djoser.views import UserViewSet
 from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import viewsets, status
+
 from .serializers import UserFedbackSerializer
 from .models import UserFeedback
-import requests
-from django.http.response import JsonResponse
 
 
 class FeedbackViewSet(viewsets.ModelViewSet):
@@ -36,8 +37,6 @@ class ActivateUser(UserViewSet):
 
 
 def reset_password(request, uid, token):
-    uid = uid
-    token_uid = token
 
     if request.method == 'POST':
         # проверки на стороне фронта на корректность пароля - не пустое поле и тд
@@ -55,4 +54,4 @@ def reset_password(request, uid, token):
 
         return JsonResponse({'обновление пароля': '22 прошло успешно'})
 
-    return render(request, 'main_page/reset_password.html', {'uid': uid, 'token_uid': token_uid})
+    return render(request, 'main_page/reset_password.html', {'uid': uid, 'token_uid': token})
