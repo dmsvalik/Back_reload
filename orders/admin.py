@@ -1,11 +1,15 @@
 from django.contrib import admin
 from .models import OrderModel, OrderImageModel, OrderOffer
+from products.models import ProductModel
 
+class ProductModelInline(admin.TabularInline):
+    model = ProductModel
+    extra = 3
 
 @admin.register(OrderModel)
 class OrderModelAdmin(admin.ModelAdmin):
     list_display = ['order_time', 'id', 'state', 'user_account']
-
+    inlines = [ProductModelInline, ]
 
 @admin.register(OrderImageModel)
 class OrderImageModelAdmin(admin.ModelAdmin):
