@@ -66,10 +66,13 @@ class QuestionsProductsModel(models.Model):
         return 'id - ' + str(self.id) + ' ' + self.question
 
 
+'''нам нужно достать объект кухня для модели ниже. ВНИМАНИЕ если поменяют название, тут тоже надо будет поменять'''
+get_kitchen = CategoryModel.objects.get(name='Кухня')
+
 class QuestionOptionsKitchenModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     question_id = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE,
-                                    limit_choices_to={"category_id": 4}, null=False)
+                                    limit_choices_to={"category_id": get_kitchen.id}, null=False, blank=True)
     option = models.CharField('вариант ответа', max_length=120, null=True, blank=True)
 
     class Meta:
