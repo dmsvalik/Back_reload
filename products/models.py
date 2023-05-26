@@ -49,4 +49,48 @@ class ProductModel(models.Model):
 
 # создаем путь - папка image далее папка(id пользователя), далее папка(id продукта)
 def nameFile(instance, filename):
-    return '/'.join(['images', str(instance.product_id.user_account.id), str(instance.product_id.id), filename])
+    return '/'.join(['images', str(instance.order_id.user_account.id), str(instance.order_id.id), filename])
+
+
+class QuestionsProductsModel(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    category_id = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=False)
+    question = models.CharField('вопрос по заказу', max_length=120, null=True, blank=True)
+    position = models.IntegerField('номер вопроса по порядку', null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Бланк вопросов'
+        verbose_name_plural = 'Бланк вопросов'
+
+    def __str__(self):
+        return 'id - ' + str(self.id) + ' ' + self.question
+
+
+class QuestionOptionsKitchenModel(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    question_id = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE,
+                                    limit_choices_to={"category_id": 4}, null=False)
+    option = models.CharField('вариант ответа', max_length=120, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Опции - кухня'
+        verbose_name_plural = 'Опции - кухня'
+
+    def __str__(self):
+        return 'id - ' + str(self.id) + ' ' + self.option
+
+
+class ResponseModel(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    id_question = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE, null=False)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
+    response = models.CharField('ответ по заказу', max_length=120, null=True, blank=True)
+    position = models.CharField('номер ответа по порядку', max_length=10, null=True, blank=True)
+
+    class Meta:
+        verbose_name = 'Бланк ответов клиента'
+        verbose_name_plural = 'Бланк ответов клиента'
+
+    def __str__(self):
+        return str(self.id)
+
