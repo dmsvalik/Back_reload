@@ -54,7 +54,7 @@ def nameFile(instance, filename):
 
 class QuestionsProductsModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    category_id = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=False)
+    category = models.ForeignKey(CategoryModel, on_delete=models.CASCADE, null=False)
     question = models.CharField('вопрос по заказу', max_length=120, null=True, blank=True)
     position = models.IntegerField('номер вопроса по порядку', null=True, blank=True)
 
@@ -66,18 +66,14 @@ class QuestionsProductsModel(models.Model):
         return 'id - ' + str(self.id) + ' ' + self.question
 
 
-'''нам нужно достать объект кухня для модели ниже. ВНИМАНИЕ если поменяют название, тут тоже надо будет поменять'''
-get_kitchen = CategoryModel.objects.get(name='Кухня')
-
-class QuestionOptionsKitchenModel(models.Model):
+class QuestionOptionsModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    question_id = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE,
-                                    limit_choices_to={"category_id": get_kitchen.id}, null=False, blank=True)
+    question = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE, null=False, blank=True)
     option = models.CharField('вариант ответа', max_length=120, null=True, blank=True)
 
     class Meta:
-        verbose_name = 'Опции - кухня'
-        verbose_name_plural = 'Опции - кухня'
+        verbose_name = 'Опции'
+        verbose_name_plural = 'Опции'
 
     def __str__(self):
         return 'id - ' + str(self.id) + ' ' + self.option
@@ -85,7 +81,7 @@ class QuestionOptionsKitchenModel(models.Model):
 
 class ResponseModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    id_question = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE, null=False)
+    question = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE, null=False)
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
     response = models.CharField('ответ по заказу', max_length=120, null=True, blank=True)
     position = models.CharField('номер ответа по порядку', max_length=10, null=True, blank=True)
