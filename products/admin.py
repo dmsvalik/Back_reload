@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import CardModel, CategoryModel, ProductModel, QuestionsProductsModel, ResponseModel, \
-    QuestionOptionsKitchenModel
+    QuestionOptionsModel
 from django.contrib.admin import RelatedFieldListFilter
 
 
@@ -23,22 +23,22 @@ class ProductModelAdmin(admin.ModelAdmin):
 class QuestionsProductsModelAdmin(admin.ModelAdmin):
     list_display = ['id', 'question', 'position', 'category_id']
     search_fields = (
-        'position',
+        'id', 'question',
     )
     list_filter = (
         ('category_id'),
     )
 
 
-@admin.register(QuestionOptionsKitchenModel)
-class QuestionOptionsKitchenModelAdmin(admin.ModelAdmin):
+@admin.register(QuestionOptionsModel)
+class QuestionOptionsModelAdmin(admin.ModelAdmin):
 
-    list_display = ['question_id', 'option']
-
+    list_display = ['question', 'option']
+    autocomplete_fields = ["question"]
 
 @admin.register(ResponseModel)
 class ResponseModelAdmin(admin.ModelAdmin):
-    list_display = ['id', 'id_question', 'user_account', 'response']
+    list_display = ['id', 'question', 'user_account', 'response']
     search_fields = (
         'user_account',
         'id_question',

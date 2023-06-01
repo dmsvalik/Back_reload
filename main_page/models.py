@@ -5,7 +5,7 @@ from django.db import models
 
 class UserAccountManager(BaseUserManager):
 
-    def create_user(self, email, name, person_telephone, surname, password=None):
+    def create(self, email, name, person_telephone, surname, password=None):
 
         if not email:
             raise ValueError("Почта должна быть указана")
@@ -38,7 +38,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(max_length=255, unique=True)
     name = models.CharField(max_length=255)
     surname = models.CharField(max_length=255, blank=True, null=True)
-    is_active = models.BooleanField(default=True)
+    is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     is_partner = models.BooleanField(default=False)
     person_rating = models.IntegerField('Рейтинг клиента', blank=True, null=True)
