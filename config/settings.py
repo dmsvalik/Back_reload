@@ -1,4 +1,5 @@
 import os
+from os.path import join
 from datetime import timedelta
 from pathlib import Path
 
@@ -6,9 +7,10 @@ import environ
 
 env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = BASE_DIR
 
-# environ.Env.read_env()
-environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
+environ.Env.read_env()
+# environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
 
 
@@ -32,12 +34,14 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'main_page',
+    'chat',
     'products',
     'orders',
     'rest_framework',
     'djoser',
     'drf_yasg',
     'debug_toolbar',
+    'channels',
 
 ]
 
@@ -57,7 +61,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,13 +132,15 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
+# Collect static files here
+STATIC_ROOT = join(PROJECT_ROOT, 'run', 'static_root')
 
-STATIC_URL = 'static/'
+# look for static assets here
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'main_page/static')
+    join(PROJECT_ROOT, 'static'),
 ]
 
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_URL = '/static/'
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -202,3 +208,33 @@ SWAGGER_SETTINGS = {
             }
         }
     }
+
+
+
+MESSAGES_TO_LOAD = 15
+
+# Could be changed to the config below to scale:
+# "BACKEND": "asgi_redis.RedisChannelLayer",
+# "CONFIG": {
+#     "hosts": [("localhost", 6379)],
+# },
+
+
+ASGI_APPLICATION = 'config.routing.application'
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', 6379)],
+        },
+    },
+}
+
+
+
+# channels
+# install pip channels-redis
+# install redis
+# install daphne
+# daphne -p 8001 config.routing:application
