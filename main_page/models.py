@@ -80,7 +80,6 @@ class SellerData(models.Model):
         verbose_name_plural = 'Продавцы'
 
 
-
 class UserFeedback(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     user_account_id = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
