@@ -9,16 +9,16 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import viewsets, status
 
-from .serializers import UserFedbackSerializer
-from .models import UserFeedback
+from .serializers import CooperationOfferSerializer
+from .models import CooperationOffer
 
 
-class FeedbackViewSet(viewsets.ModelViewSet):
+class CooperationViewSet(viewsets.ModelViewSet):
     '''
-    Сохранение обращения клиента на главной странице
+    Сохранение обращения клиента на сотрудничество
     '''
-    queryset = UserFeedback.objects.all()
-    serializer_class = UserFedbackSerializer
+    queryset = CooperationOffer.objects.all()
+    serializer_class = CooperationOfferSerializer
     http_method_names = ['get', 'post', 'delete']
 
 

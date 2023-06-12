@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-from .models import UserFeedback, UserAccount
+from .models import CooperationOffer, UserAccount
 from rest_framework.response import Response
 
 User = get_user_model()
@@ -17,10 +17,10 @@ class UserAccountSerializer(serializers.ModelSerializer):
         fields = ('id', 'email', 'name', 'person_telephone', 'surname')
 
 
-class UserFedbackSerializer(serializers.ModelSerializer):
+class CooperationOfferSerializer(serializers.ModelSerializer):
     user_account_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
-        model = UserFeedback
+        model = CooperationOffer
         fields = '__all__'
 
