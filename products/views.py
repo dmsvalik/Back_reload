@@ -68,7 +68,7 @@ class QuestionsModelListAPIView(ListAPIView):
 
     '''
     model = QuestionsProductsModel
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     serializer_class = QuestionModelSerializer
 
     def get_queryset(self):
