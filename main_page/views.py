@@ -3,20 +3,17 @@ import requests
 from django.shortcuts import render
 from django.http.response import JsonResponse
 from djoser.views import UserViewSet
-from rest_framework.decorators import api_view
-from rest_framework.generics import GenericAPIView
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import viewsets, status
+from rest_framework import viewsets
 
 from .serializers import CooperationOfferSerializer
 from .models import CooperationOffer
 
 
 class CooperationViewSet(viewsets.ModelViewSet):
-    '''
+    """
     Сохранение обращения клиента на сотрудничество
-    '''
+    """
     queryset = CooperationOffer.objects.all()
     serializer_class = CooperationOfferSerializer
     http_method_names = ['get', 'post', 'delete']
