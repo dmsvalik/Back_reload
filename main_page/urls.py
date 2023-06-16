@@ -1,6 +1,4 @@
-from django.conf import settings
 from django.urls import include, path
-from .views import ActivateUser, reset_password
 from .views import CooperationViewSet, ActivateUser, reset_password
 
 from rest_framework import routers
