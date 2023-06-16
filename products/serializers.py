@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from products.models import CategoryModel, ProductModel, CardModel
+from products.models import CategoryModel, ProductModel, CardModel, QuestionsProductsModel, QuestionOptionsModel
 from rest_framework.response import Response
 from orders.models import OrderModel
 
@@ -31,3 +31,13 @@ class ProductModelSerializer(serializers.ModelSerializer):
         return obj
 
 
+class QuestionModelSerializer(serializers.ModelSerializer):
+    options = serializers.SerializerMethodField()
+
+    class Meta:
+        model = QuestionsProductsModel
+        exclude = ['category']
+
+    def get_options(self, obj):
+        result = QuestionOptionsModel.objects.filter(question=obj).values_list('option', flat=True)
+        return result

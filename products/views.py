@@ -6,8 +6,8 @@ from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
 from rest_framework import viewsets
 
-from .models import CardModel, CategoryModel, ProductModel
-from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer
+from .models import CardModel, CategoryModel, ProductModel, QuestionsProductsModel
+from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer, QuestionModelSerializer
 
 
 class CardModelAPIView(APIView):
@@ -61,3 +61,16 @@ class ProductModelAPIView(viewsets.ModelViewSet):
     def get_queryset(self):
         return ProductModel.objects.filter(user_account=self.request.user)
 
+
+class QuestionsModelListAPIView(ListAPIView):
+    '''
+        Получить список вопросов по id категории
+
+    '''
+    model = QuestionsProductsModel
+    permission_classes = [IsAuthenticated]
+    serializer_class = QuestionModelSerializer
+
+    def get_queryset(self):
+        category_id = self.kwargs['category_id']
+        return QuestionsProductsModel.objects.filter(category__id=category_id).all()
