@@ -1,13 +1,14 @@
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, ListCreateAPIView
 from rest_framework.response import Response
 from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
 from rest_framework import viewsets
 
 from .models import CardModel, CategoryModel, ProductModel, QuestionsProductsModel
-from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer, QuestionModelSerializer
+from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer, QuestionModelSerializer, \
+    AnswerCreateSerializer
 
 
 class CardModelAPIView(APIView):
@@ -74,3 +75,18 @@ class QuestionsModelListAPIView(ListAPIView):
     def get_queryset(self):
         category_id = self.kwargs['category_id']
         return QuestionsProductsModel.objects.filter(category__id=category_id).all()
+
+
+class AnswerListAPIView(CreateAPIView):
+    '''
+        Создать ответы на вопросы
+
+    '''
+    permission_classes = [IsAuthenticated]
+    serializer_class = AnswerCreateSerializer
+
+    def get_serializer(self, *args, **kwargs):
+        """ if an array is passed, set serializer to many """
+        if isinstance(kwargs.get('data', {}), list):
+            kwargs['many'] = True
+        return super(AnswerListAPIView, self).get_serializer(*args, **kwargs)
