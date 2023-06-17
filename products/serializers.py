@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from products.models import CategoryModel, ProductModel, CardModel, QuestionsProductsModel, QuestionOptionsModel
+from products.models import CategoryModel, ProductModel, CardModel, QuestionsProductsModel, QuestionOptionsModel, \
+    ResponseModel
 from rest_framework.response import Response
 from orders.models import OrderModel
 
@@ -41,3 +42,15 @@ class QuestionModelSerializer(serializers.ModelSerializer):
     def get_options(self, obj):
         result = QuestionOptionsModel.objects.filter(question=obj).values_list('option', flat=True)
         return result
+
+
+class AnswerCreateSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ResponseModel
+        exclude = ['id', 'user_account']
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        obj = ResponseModel.objects.create(**validated_data, user_account=user)
+        return obj
