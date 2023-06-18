@@ -1,21 +1,21 @@
-from django.shortcuts import render
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView, ListCreateAPIView
-from rest_framework.response import Response
-from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
 from rest_framework import viewsets
+from rest_framework.generics import CreateAPIView, ListAPIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from .models import CardModel, CategoryModel, ProductModel, QuestionsProductsModel
-from .serializers import CardModelSerializer, CategoryModelSeializer, ProductModelSerializer, QuestionModelSerializer, \
-    AnswerCreateSerializer
+from .models import (CardModel, CategoryModel, ProductModel,
+                     QuestionsProductsModel)
+from .serializers import (AnswerCreateSerializer, CardModelSerializer,
+                          CategoryModelSeializer, ProductModelSerializer,
+                          QuestionModelSerializer)
 
 
 class CardModelAPIView(APIView):
-    '''
+    """
     Получить список комнат - кухня, спалья и т.д.
 
-    '''
+    """
 
     permission_classes = [AllowAny]
     model = CardModel
@@ -23,38 +23,41 @@ class CardModelAPIView(APIView):
 
     def get(self, request):
         result = CardModel.objects.all()
-        return Response({'card rooms': CardModelSerializer(result, many=True).data})
+        return Response({"card rooms": CardModelSerializer(result, many=True).data})
 
 
 class CategoryModelListAPIView(ListAPIView):
-    '''
+    """
     Получить список категорий по id карточки
 
-    '''
+    """
+
     model = CategoryModel
     permission_classes = [IsAuthenticated]
     serializer_class = CategoryModelSeializer
 
     def get_queryset(self):
-        card_id = self.kwargs['card_id']
+        card_id = self.kwargs["card_id"]
         return CategoryModel.objects.filter(card__id=card_id).all()
 
 
 class ProductModelCreateAPIView(CreateAPIView):
-    '''
+    """
     Создать продукт заказа
 
-    '''
+    """
+
     permission_classes = [IsAuthenticated]
     serializer_class = ProductModelSerializer
 
 
 class ProductModelAPIView(viewsets.ModelViewSet):
-    '''
+    """
     GET - конкретный продукт по ID  или все продукты сразу у пользователя
     UPDATE + DELETE - конкретный продукт
 
-    '''
+    """
+
     permission_classes = [IsAuthenticated]
     queryset = ProductModel.objects.all()
     serializer_class = ProductModelSerializer
@@ -64,29 +67,31 @@ class ProductModelAPIView(viewsets.ModelViewSet):
 
 
 class QuestionsModelListAPIView(ListAPIView):
-    '''
-        Получить список вопросов по id категории
+    """
+    Получить список вопросов по id категории
 
-    '''
+    """
+
     model = QuestionsProductsModel
     permission_classes = [IsAuthenticated]
     serializer_class = QuestionModelSerializer
 
     def get_queryset(self):
-        category_id = self.kwargs['category_id']
+        category_id = self.kwargs["category_id"]
         return QuestionsProductsModel.objects.filter(category__id=category_id).all()
 
 
 class AnswerListAPIView(CreateAPIView):
-    '''
-        Создать ответы на вопросы
+    """
+    Создать ответы на вопросы
 
-    '''
+    """
+
     permission_classes = [IsAuthenticated]
     serializer_class = AnswerCreateSerializer
 
     def get_serializer(self, *args, **kwargs):
-        """ if an array is passed, set serializer to many """
-        if isinstance(kwargs.get('data', {}), list):
-            kwargs['many'] = True
+        """if an array is passed, set serializer to many"""
+        if isinstance(kwargs.get("data", {}), list):
+            kwargs["many"] = True
         return super(AnswerListAPIView, self).get_serializer(*args, **kwargs)
