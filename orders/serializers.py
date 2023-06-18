@@ -23,8 +23,7 @@ class OrderModelSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-        obj = OrderModel.objects.create(**validated_data, user_account=user)
-        return obj
+        return OrderModel.objects.create(**validated_data, user_account=user)
 
 
 class OrderImageSerializer(serializers.ModelSerializer):
@@ -42,8 +41,7 @@ class OrderImageSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        obj = OrderImageModel.objects.create(**validated_data)
-        return obj
+        return OrderImageModel.objects.create(**validated_data)
 
 
 class OrderOfferSerializer(serializers.ModelSerializer):
@@ -69,8 +67,7 @@ class OrderOfferSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Вы не можете сделать оффер")
         """ставим заглушку на цену, тк ее можно указать только через 24 часа после офера"""
         validated_data["offer_price"] = " "
-        obj = OrderOffer.objects.create(**validated_data, user_account=user)
-        return obj
+        return OrderOffer.objects.create(**validated_data, user_account=user)
 
     def update(self, instance, validated_data):
         check_time = datetime.datetime.now()

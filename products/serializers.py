@@ -1,9 +1,14 @@
 from rest_framework import serializers
 
 from orders.models import OrderModel
-from products.models import (CardModel, CategoryModel, ProductModel,
-                             QuestionOptionsModel, QuestionsProductsModel,
-                             ResponseModel)
+from products.models import (
+    CardModel,
+    CategoryModel,
+    ProductModel,
+    QuestionOptionsModel,
+    QuestionsProductsModel,
+    ResponseModel,
+)
 
 
 class CardModelSerializer(serializers.ModelSerializer):
@@ -38,10 +43,7 @@ class ProductModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context["request"].user
         new_order = OrderModel.objects.create(user_account=user, state="creating")
-        obj = ProductModel.objects.create(
-            **validated_data, user_account=user, order=new_order
-        )
-        return obj
+        return ProductModel.objects.create(**validated_data, user_account=user, order=new_order)
 
 
 class QuestionModelSerializer(serializers.ModelSerializer):
@@ -51,11 +53,9 @@ class QuestionModelSerializer(serializers.ModelSerializer):
         model = QuestionsProductsModel
         exclude = ["category"]
 
-    def get_options(self, obj):
-        result = QuestionOptionsModel.objects.filter(question=obj).values_list(
-            "option", flat=True
-        )
-        return result
+    @staticmethod
+    def get_options(obj):
+        return QuestionOptionsModel.objects.filter(question=obj).values_list("option", flat=True)
 
 
 class AnswerCreateSerializer(serializers.ModelSerializer):
@@ -65,5 +65,4 @@ class AnswerCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-        obj = ResponseModel.objects.create(**validated_data, user_account=user)
-        return obj
+        return ResponseModel.objects.create(**validated_data, user_account=user)
