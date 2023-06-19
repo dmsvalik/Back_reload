@@ -6,19 +6,41 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main_page', '0019_delete_userfeedback'),
+        ("main_page", "0019_delete_userfeedback"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CooperationOffer',
+            name="CooperationOffer",
             fields=[
-                ('id', models.AutoField(primary_key=True, serialize=False, unique=True)),
-                ('text', models.CharField(blank=True, max_length=20, null=True, verbose_name='Запрос от пользователя')),
-                ('created', models.DateTimeField(auto_now=True, verbose_name='Дата создания обращения')),
-                ('user_account_id', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.AutoField(primary_key=True, serialize=False, unique=True),
+                ),
+                (
+                    "text",
+                    models.CharField(
+                        blank=True,
+                        max_length=20,
+                        null=True,
+                        verbose_name="Запрос от пользователя",
+                    ),
+                ),
+                (
+                    "created",
+                    models.DateTimeField(
+                        auto_now=True, verbose_name="Дата создания обращения"
+                    ),
+                ),
+                (
+                    "user_account_id",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
         ),
     ]

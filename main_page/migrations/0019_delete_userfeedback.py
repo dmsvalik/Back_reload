@@ -4,13 +4,12 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('main_page', '0018_alter_useraccount_is_active'),
+        ("main_page", "0018_alter_useraccount_is_active"),
     ]
 
     operations = [
         migrations.DeleteModel(
-            name='UserFeedback',
+            name="UserFeedback",
         ),
     ]
