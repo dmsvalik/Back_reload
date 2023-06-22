@@ -14,7 +14,7 @@ def user_superuser(django_user_model):
         name='TestSuperuser',
         password='32[fN_r7/z5v`o&N',
         person_telephone='+79000000000',
-        surrname='TestSuperuser',
+        surname='TestSuperuser',
     )
 
 

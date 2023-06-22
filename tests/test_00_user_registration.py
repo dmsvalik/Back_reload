@@ -3,15 +3,15 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 
 from tests.fixtures.fixture_user import (
-    user_full_data_1, user_invalid_data_1, user_invalid_data_2, user_full_data_2, user_full_data_3, url_signup
+    user_full_data_1, user_invalid_data_1, user_invalid_data_2, user_full_data_2, user_full_data_3, url_signup,
 )
 
-User = get_user_model()
 
+User = get_user_model()
 pytestmark = pytest.mark.users
 
 
-class TestUserRegistration:
+class Test00UserRegistration:
     """Тестирование регистрации пользователей."""
 
     @pytest.mark.django_db(transaction=True)
@@ -23,7 +23,7 @@ class TestUserRegistration:
             user_full_data_3,
         ]
     )
-    def test_valid_data_user_signup(self, api_client, valid_data):
+    def test_00_valid_data_user_signup(self, api_client, valid_data):
         """Тест регистрации пользователя с валидными данными."""
         outbox_before_count = len(mail.outbox)
         request_type = 'POST'
@@ -61,7 +61,7 @@ class TestUserRegistration:
         new_user.delete()
 
     @pytest.mark.django_db
-    def test_unauthorized_request(self, api_client):
+    def test_00_unauthorized_request(self, api_client):
         """Тест отсутствия доступа неавторизованным пользователям."""
         response = api_client.get(url_signup)
         response_type = 'GET'
@@ -72,7 +72,7 @@ class TestUserRegistration:
 
     @pytest.mark.skip(reason='Разобраться с сериализаторами регистрации пользователей - обязательные поля!')
     @pytest.mark.django_db(transaction=True)
-    def test_nodata_signup(self, client):
+    def test_00_nodata_signup(self, client):
         """Тест попытки регистрации с пустыми полями."""
         request_type = 'POST'
         response = client.post(url_signup)
@@ -102,7 +102,7 @@ class TestUserRegistration:
             user_invalid_data_2,
         ]
     )
-    def test_invalid_data_signup(self, client, invalid_data):
+    def test_00_invalid_data_signup(self, client, invalid_data):
         """Тест регистрации пользователей с невалидными данными."""
         request_type = 'POST'
         response = client.post(url_signup, data=invalid_data)
@@ -128,7 +128,7 @@ class TestUserRegistration:
             user_full_data_1,
         ]
     )
-    def test_same_email_user_signup(self, client, valid_data):
+    def test_00_same_email_user_signup(self, client, valid_data):
         """Тест повторной регистрации пользователя."""
         request_type = 'POST'
         client.post(url_signup, data=valid_data)
