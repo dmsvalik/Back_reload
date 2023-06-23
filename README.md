@@ -52,25 +52,25 @@ pip install -r requirements.txt
 ```shell
 [settings]
 
-SECRET_KEY = 
-DEBUG_STATUS = 
+SECRET_KEY =
+DEBUG_STATUS =
 
 [database]
 
-DB_ENGINE = 
-DB_NAME = 
-DB_PASS = 
-DB_USER = 
-DB_HOST = 
-DB_PORT = 
+DB_ENGINE =
+DB_NAME =
+DB_PASS =
+DB_USER =
+DB_HOST =
+DB_PORT =
 
 [email_host]
 
-EMAIL_HOST = 
-EMAIL_HOST_USER = 
-EMAIL_HOST_PASSWORD = 
-EMAIL_PORT = 
-EMAIL_USE_TLS =  
+EMAIL_HOST =
+EMAIL_HOST_USER =
+EMAIL_HOST_PASSWORD =
+EMAIL_PORT =
+EMAIL_USE_TLS =
 ```
 БД можно развернуть как в Docker, так и локально. (рекоменудуем создать локально)
 
@@ -85,12 +85,12 @@ python manage.py migrate
 Вся работа проходит с веткой pre-main. Как только набирается критическая масса обновлений DevOps(Ильшат) или Team Lead
 проводят мерж с главной веткой (main), которая связана с CI/CD Jenkins. <br> <br>
 Ваши шаги:
-- Выберите ticket или tasks на Kaiten доске. 
+- Выберите ticket или tasks на Kaiten доске.
 - Отметьте на доске Kaiten, что Вы взяли в работу task (Обязательно поставьте
 ориентировочные сроки выполнения задачи)
 - Создайте ветку с следующим названием: task/описание проблемы
 > **пример**: ```git checkout -b task/fix_model_User_problem```
-старайтесь часто делать commits и указывать в них основную суть проделанной работы (предпочтительно на 
+старайтесь часто делать commits и указывать в них основную суть проделанной работы (предпочтительно на
 > английском)
 - Как только Вы решили проблему и готовы ее отправить на проверку наберите команду
 > **Примечание**: использование Poetry и pre-commit при работе над проектом очень рекомендуется. Спасибо.
@@ -179,4 +179,3 @@ pre-commit install
 ```
 Теперь при каждом коммите у вас будет автоматическая проверка линтером,
 а так же, автоматическое форматирование кода.
-

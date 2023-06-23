@@ -1,7 +1,6 @@
 from django.db import models
 
 from main_page.models import UserAccount
-from orders.models import OrderModel
 
 
 class CardModel(models.Model):

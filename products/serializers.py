@@ -1,6 +1,5 @@
 from rest_framework import serializers
 
-from orders.models import OrderModel
 from products.models import (
     CardModel,
     CategoryModel,

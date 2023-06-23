@@ -37,6 +37,7 @@ class CategoryModelListAPIView(ListAPIView):
         card_id = self.kwargs["card_id"]
         return CategoryModel.objects.filter(card__id=card_id).all()
 
+
 class QuestionsModelListAPIView(ListAPIView):
     """
     Получить список вопросов по id категории
