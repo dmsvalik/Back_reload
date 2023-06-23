@@ -29,38 +29,7 @@ class CategoryModel(models.Model):
         return self.name
 
 
-class ProductModel(models.Model):
-    id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
-    category = models.ForeignKey(
-        CategoryModel, on_delete=models.CASCADE, null=False, blank=True
-    )
-    order = models.ForeignKey(
-        OrderModel, on_delete=models.CASCADE, null=True, blank=True
-    )
-    product_price = models.IntegerField("цена предмета", null=True, blank=True)
-    product_size = models.CharField(
-        "размеры высота x ширина x длина", max_length=20, null=True, blank=True
-    )
-    product_description = models.CharField(
-        "описание", max_length=350, null=True, blank=True
-    )
-    product_units = models.IntegerField(
-        "количество предметов в шт.", null=True, blank=True
-    )
-    is_ended = models.BooleanField(
-        "завершено ли создание предмета заказа?", default=False
-    )
-
-    class Meta:
-        verbose_name = "Предмет для заказа"
-        verbose_name_plural = "Предмет для заказа"
-
-    def __str__(self):
-        return str(self.id)
-
-
-# создаем путь - папка image далее папка(id пользователя), далее папка(id продукта)
+# не трогать, возможно пригодится
 def nameFile(instance, filename):
     return "/".join(
         [

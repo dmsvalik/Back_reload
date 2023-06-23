@@ -1,8 +1,7 @@
 from django.urls import path
 
 from .views import (AnswerListAPIView, CardModelAPIView,
-                    CategoryModelListAPIView, ProductModelAPIView,
-                    ProductModelCreateAPIView, QuestionsModelListAPIView)
+                    CategoryModelListAPIView, QuestionsModelListAPIView)
 
 
 urlpatterns = [
@@ -12,14 +11,7 @@ urlpatterns = [
         "products/category/<int:category_id>/questions",
         QuestionsModelListAPIView.as_view(),
     ),
-    path("products/product", ProductModelCreateAPIView.as_view()),
-    path("products/questions", AnswerListAPIView.as_view()),
-    path(
-        "products/<int:pk>",
-        ProductModelAPIView.as_view(
-            {"get": "retrieve", "delete": "destroy", "put": "update"}
-        ),
-    ),
-    path("products/", ProductModelAPIView.as_view({"get": "list", "post": "create"})),
+    path("products/questions_response", AnswerListAPIView.as_view()),
+
     # path('products/image', ProductImageViewSet.as_view()),
 ]

@@ -1,14 +1,11 @@
-from rest_framework import viewsets
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from .models import (CardModel, CategoryModel, ProductModel,
-                     QuestionsProductsModel)
+from .models import (CardModel, CategoryModel, QuestionsProductsModel)
 from .serializers import (AnswerCreateSerializer, CardModelSerializer,
-                          CategoryModelSeializer, ProductModelSerializer,
-                          QuestionModelSerializer)
+                          CategoryModelSeializer, QuestionModelSerializer)
 
 
 class CardModelAPIView(APIView):
@@ -39,32 +36,6 @@ class CategoryModelListAPIView(ListAPIView):
     def get_queryset(self):
         card_id = self.kwargs["card_id"]
         return CategoryModel.objects.filter(card__id=card_id).all()
-
-
-class ProductModelCreateAPIView(CreateAPIView):
-    """
-    Создать продукт заказа
-
-    """
-
-    permission_classes = [IsAuthenticated]
-    serializer_class = ProductModelSerializer
-
-
-class ProductModelAPIView(viewsets.ModelViewSet):
-    """
-    GET - конкретный продукт по ID  или все продукты сразу у пользователя
-    UPDATE + DELETE - конкретный продукт
-
-    """
-
-    permission_classes = [IsAuthenticated]
-    queryset = ProductModel.objects.all()
-    serializer_class = ProductModelSerializer
-
-    def get_queryset(self):
-        return ProductModel.objects.filter(user_account=self.request.user)
-
 
 class QuestionsModelListAPIView(ListAPIView):
     """
