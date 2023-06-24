@@ -90,7 +90,7 @@ def CreateOrderAnswers(request):
     if serializer.is_valid():
         order_create = serializer.save()
 
-        # если заказ создан, ищем созданные ответы на вопросы и записываем их к этому заказу
+        # если заказ создан, ищем ответы на вопросы (которые без привязки order_id) и записываем их к этому заказу
         ResponseModel.objects.filter(user_account=request.user.id, order_id=None).update(order_id=order_create.id)
 
         return Response(serializer.data, status=status.HTTP_200_OK)
