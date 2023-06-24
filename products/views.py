@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import ResponseModel
 from .models import (CardModel, CategoryModel, QuestionsProductsModel)
 from .serializers import (AnswerCreateSerializer, CardModelSerializer,
                           CategoryModelSeializer, QuestionModelSerializer)
@@ -14,13 +15,17 @@ class CardModelAPIView(APIView):
 
     """
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     model = CardModel
     serializer_class = CardModelSerializer
 
     def get(self, request):
+
+        """перед началом шагов по созданию заказа надо удалить старые ответы (без связки с заказом) """
+        ResponseModel.objects.filter(user_account=request.user.id, order_id=None).delete()
+
         result = CardModel.objects.all()
-        return Response({"card rooms": CardModelSerializer(result, many=True).data})
+        return Response({"card_rooms": CardModelSerializer(result, many=True).data})
 
 
 class CategoryModelListAPIView(ListAPIView):
