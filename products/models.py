@@ -3,6 +3,7 @@ from django.db import models
 from main_page.models import UserAccount
 from orders.models import OrderModel
 
+
 class CardModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     name = models.CharField("тип - кухня, гостиная", max_length=20, null=True)
@@ -73,7 +74,7 @@ class QuestionOptionsModel(models.Model):
 
 class ResponseModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True)
+    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True, blank=True)
     question = models.ForeignKey(
         QuestionsProductsModel, on_delete=models.CASCADE, null=False
     )
