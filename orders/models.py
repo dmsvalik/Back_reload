@@ -20,16 +20,18 @@ class OrderModel(models.Model):
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
     order_time = models.DateTimeField("Дата создания заказа", auto_now=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
+    order_deliver_price = models.CharField("Цена доставки", max_length=300, blank=True)
+    order_courier_service = models.CharField("Цена доставки", max_length=300, blank=True)
     state = models.CharField(
         verbose_name="Статус", choices=STATE_CHOICES, max_length=15
     )
 
     class Meta:
-        verbose_name = "Заказ состоящий из продуктов"
-        verbose_name_plural = "Заказ состоящий из продуктов"
+        verbose_name = "Заказ клиента"
+        verbose_name_plural = "Заказ клиента"
 
     def __str__(self):
-        return "id:" + " " + str(self.id) + " - " + str(self.order_time)
+        return str(self.id)
 
 
 # создаем путь - папка image далее папка(id пользователя), далее папка(id продукта)

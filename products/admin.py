@@ -30,7 +30,7 @@ class QuestionOptionsModelAdmin(admin.ModelAdmin):
 
 @admin.register(ResponseModel)
 class ResponseModelAdmin(admin.ModelAdmin):
-    list_display = ["id", "question", "user_account", "response"]
+    list_display = ["id", "order_id", "question", "user_account", "response"]
     search_fields = (
         "user_account",
         "id_question",

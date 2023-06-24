@@ -3,6 +3,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from .models import ResponseModel
 from .models import (CardModel, CategoryModel, QuestionsProductsModel)
 from .serializers import (AnswerCreateSerializer, CardModelSerializer,
                           CategoryModelSeializer, QuestionModelSerializer)
@@ -10,22 +11,26 @@ from .serializers import (AnswerCreateSerializer, CardModelSerializer,
 
 class CardModelAPIView(APIView):
     """
-    Получить список комнат - кухня, спалья и т.д.
+    ORDER. STEP 1. Получить список комнат - кухня, спалья и т.д.
 
     """
 
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     model = CardModel
     serializer_class = CardModelSerializer
 
     def get(self, request):
+
+        """перед началом шагов по созданию заказа надо удалить старые ответы (без связки с заказом) """
+        ResponseModel.objects.filter(user_account=request.user.id, order_id=None).delete()
+
         result = CardModel.objects.all()
-        return Response({"card rooms": CardModelSerializer(result, many=True).data})
+        return Response({"card_rooms": CardModelSerializer(result, many=True).data})
 
 
 class CategoryModelListAPIView(ListAPIView):
     """
-    Получить список категорий по id карточки
+    ORDER. STEP 2. Получить список категорий (возможных товаров) по id карточки (раздела)
 
     """
 
@@ -40,7 +45,7 @@ class CategoryModelListAPIView(ListAPIView):
 
 class QuestionsModelListAPIView(ListAPIView):
     """
-    Получить список вопросов по id категории
+    ORDER. STEP 3.1. Получить список вопросов по id категории (товара)
 
     """
 
@@ -55,7 +60,7 @@ class QuestionsModelListAPIView(ListAPIView):
 
 class AnswerListAPIView(CreateAPIView):
     """
-    Создать ответы на вопросы
+    ORDER. STEP 3.2. Создать ответы на вопросы
 
     """
 

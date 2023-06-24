@@ -1,7 +1,7 @@
 from django.db import models
 
 from main_page.models import UserAccount
-
+from orders.models import OrderModel
 
 class CardModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
@@ -73,6 +73,7 @@ class QuestionOptionsModel(models.Model):
 
 class ResponseModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
+    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True)
     question = models.ForeignKey(
         QuestionsProductsModel, on_delete=models.CASCADE, null=False
     )
