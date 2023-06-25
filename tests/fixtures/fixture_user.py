@@ -1,4 +1,5 @@
 import pytest
+from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.test import APIClient
 
 
@@ -18,8 +19,36 @@ def user_superuser(django_user_model):
     )
 
 
+@pytest.fixture
+def user(django_user_model):
+    return django_user_model.objects.create(
+        email='testuser@project.fake',
+        name='TestUser',
+        password='L1Z,D2xo=x]!XbqQ',
+        person_telephone='+79000000000',
+        surname='TestUseroff',
+    )
+
+
+# @pytest.fixture
+# def token_user(user):
+#     token = AccessToken.for_user(user)
+#     return {
+#         'access': str(token),
+#     }
+#
+#
+# @pytest.fixture
+# def user_client(token_user):
+#     client = APIClient()
+#     client.credentials(HTTP_AUTHORIZATION=f'JWT {token_user["access"]}')
+#     return client
+
+
 url_signup = '/auth/users/'
 url_token = '/auth/jwt/create/'
+url_profile = '/auth/users/me/'
+# url_user = '/auth/users/{}'
 user_full_data_1 = {
     'email': 'fulluser@mail.fake',
     'name': 'TestUser',
