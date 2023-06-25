@@ -68,22 +68,23 @@ class OrderOfferSerializer(serializers.ModelSerializer):
         validated_data["offer_price"] = " "
         return OrderOffer.objects.create(**validated_data, user_account=user)
 
-    def update(self, instance, validated_data):
-        check_time = datetime.datetime.now()
-        time_offer = instance.offer_create_at
-        """проверяем прошло ли больше 24 часов с момента оффера для обновления цены"""
-        check_total = (
-            check_time.day * 24 * 60 + check_time.hour * 60 + check_time.minute
-        )
-        time_offer_total = (
-            time_offer.day * 24 * 60 + time_offer.hour * 60 + time_offer.minute
-        )
-
-        result = check_total - time_offer_total
-        print(result)
-
-        """ временно проверяем если прошло 5 минут"""
-        if result < 5:
-            raise serializers.ValidationError("Вы не можете установить цену, должно пройти 24 часа")
-
-        return super().update(instance, validated_data)
+    # def update(self, instance, validated_data):
+    #     check_time = datetime.datetime.now()
+    #     time_offer = instance.offer_create_at
+    #     """проверяем прошло ли больше 24 часов с момента оффера для обновления цены"""
+    #     check_total = (
+    #         check_time.day * 24 * 60 + check_time.hour * 60 + check_time.minute
+    #     )
+    #     time_offer_total = (
+    #         time_offer.day * 24 * 60 + time_offer.hour * 60 + time_offer.minute
+    #     )
+    #
+    #     result = check_total - time_offer_total
+    #     print(result)
+    #
+    #     """ временно проверяем если прошло 5 минут"""
+    #     if result < 5:
+    #         raise serializers.ValidationError("Вы не можете установить цену, должно пройти 24 часа")
+    #
+    #     return super().update(instance, validated_data)
+#

@@ -20,7 +20,7 @@ class UserAccountSerializer(serializers.ModelSerializer):
 
 
 class CooperationOfferSerializer(serializers.ModelSerializer):
-    user_account_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    user_account = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = CooperationOffer
