@@ -12,7 +12,6 @@ class OrderModelSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "user_account",
-            "card_id",
             "order_description",
             "order_time",
             "state",
