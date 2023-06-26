@@ -21,7 +21,7 @@ class OrderImageViewSet(viewsets.ModelViewSet):
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
-    """Создание Оффера"""
+    """Поведение Оффера"""
 
     permission_classes = [IsAuthenticated, IsSeller, ChangePriceInOrder]
     queryset = OrderOffer.objects.all()

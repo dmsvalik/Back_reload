@@ -57,15 +57,16 @@ class OrderOfferSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-        try:
-            seller_data = SellerData.objects.get(user_account_id=user)
-        except TypeError:
-            raise serializers.ValidationError("Вы не являетесь продавцом")
+        seller_data = SellerData.objects.get(user_account=user)
+        # try:
+        #     seller_data = SellerData.objects.get(user_account_id=user)
+        # except TypeError:
+        #     raise serializers.ValidationError("Вы не являетесь продавцом")
         """проверяем если продавец активен, не заблокирован"""
         if not seller_data.seller_activity:
             raise serializers.ValidationError("Вы не можете сделать оффер")
-        """ставим заглушку на цену, тк ее можно указать только через 24 часа после офера"""
-        validated_data["offer_price"] = " "
+        # """ставим заглушку на цену, тк ее можно указать только через 24 часа после офера"""
+        # validated_data["offer_price"] = " "
         return OrderOffer.objects.create(**validated_data, user_account=user)
 
     # def update(self, instance, validated_data):
