@@ -1,12 +1,19 @@
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
                                         PermissionsMixin)
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
 
 class UserAccountManager(BaseUserManager):
-    def create(self, email, name, person_telephone, surname, password=None):
+    def create(self, email, name, person_telephone, surname=None, password=None):
         if not email:
-            raise ValueError("Почта должна быть указана")
+            raise ValidationError({"error": "Не указана почта"})
+
+        if not name or len(name) <= 2 or len(name) >= 50:
+            raise ValidationError({"error": "Укажите корректное имя"})
+
+        if person_telephone[0:2] != '+7' or len(person_telephone) != 12 or person_telephone[1:].isdigit() is False:
+            raise ValidationError({"error": "Телефон должен начинаться с +7 и иметь 12 символов(цифры)."})
 
         email = self.normalize_email(email)
         user = self.model(
@@ -51,7 +58,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     objects = UserAccountManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name", "person_telephone", "surname"]
+    REQUIRED_FIELDS = ["name", "person_telephone"]
 
     def get_full_name(self):
         return self.name
