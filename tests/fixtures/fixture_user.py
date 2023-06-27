@@ -1,11 +1,22 @@
 import pytest
-from rest_framework_simplejwt.tokens import AccessToken
 from rest_framework.test import APIClient
+
+from tests.common import auth_client
 
 
 @pytest.fixture
 def api_client():
     return APIClient()
+
+
+@pytest.fixture
+def user_client(user):
+    return auth_client(user)
+
+
+@pytest.fixture
+def admin_client(user_admin):
+    return auth_client(user_admin)
 
 
 @pytest.fixture
@@ -20,55 +31,76 @@ def user_superuser(django_user_model):
 
 
 @pytest.fixture
+def user_admin(django_user_model):
+    user = django_user_model.objects.create(**test_admin)
+    user.is_active = True
+    user.is_admin = True
+    user.is_staff = True
+    user.save()
+    return user
+
+
+@pytest.fixture
 def user(django_user_model):
-    return django_user_model.objects.create(
-        email='testuser@project.fake',
-        name='TestUser',
-        password='L1Z,D2xo=x]!XbqQ',
-        person_telephone='+79000000000',
-        surname='TestUseroff',
-    )
+    user = django_user_model.objects.create(**test_user_data)
+    user.is_active = True
+    user.save()
+    return user
 
 
-# @pytest.fixture
-# def token_user(user):
-#     token = AccessToken.for_user(user)
-#     return {
-#         'access': str(token),
-#     }
-#
-#
-# @pytest.fixture
-# def user_client(token_user):
-#     client = APIClient()
-#     client.credentials(HTTP_AUTHORIZATION=f'JWT {token_user["access"]}')
-#     return client
+@pytest.fixture
+def user_1(django_user_model):
+    user = django_user_model.objects.create(**test_user_data_1)
+    user.is_active = True
+    user.save()
+    return user
 
 
-url_signup = '/auth/users/'
+url_users = '/auth/users/'
+url_activation = '/auth/users/activation/'
 url_token = '/auth/jwt/create/'
 url_profile = '/auth/users/me/'
-# url_user = '/auth/users/{}'
-user_full_data_1 = {
-    'email': 'fulluser@mail.fake',
+test_admin = {
+    'email': 'testadmin@project.fake',
+    'name': 'TestAdmin',
+    'password': 'L1Z,D2xo=x]!XbqQ',
+    'person_telephone': '+79000000000',
+    'surname': 'TestAdminoff',
+}
+test_user_data = {
+    'email': 'testuser@project.fake',
     'name': 'TestUser',
-    'password': '_>Ke:[Bs<kSo[H9T',
+    'password': 'L1Z,D2xo=x]!XbqQ',
     'person_telephone': '+79000000000',
     'surname': 'TestUseroff',
 }
-user_full_data_2 = {
+test_user_data_1 = {
+    'email': 'test_user_1@project.fake',
+    'name': 'Первый',
+    'password': '_>Ke:[Bs<kSo[H9T',
+    'person_telephone': '+79000000000',
+    'surname': 'Пользователь',
+}
+test_user_data_2 = {
     'email': 'fulluser2@mail.fake',
-    'name': 'TestUser',
+    'name': 'Второй',
     'password': 'C1Pt}&Rq*4^!A*)A',
     'person_telephone': '89000000000',
-    'surname': 'TestUseroff',
+    'surname': 'Пользователь',
 }
-user_full_data_3 = {
+test_user_data_3 = {
     'email': 'fulluser3@mail.fake',
     'name': 'TestUser',
     'password': '>-Kc-k]_1UwVy1>^',
     'person_telephone': '9000000000',
     'surname': 'TestUseroff',
+}
+test_user_new_data = {
+    'email': 'new_test_user@project.fake',
+    'name': 'UpdatedName',
+    'password': 'K)x2MkG{z>fn.QEC',
+    'person_telephone': '+79000000001',
+    'surname': 'UpdatedSurname',
 }
 user_minimum_data = {
     'email': 'minuser@mail.fake',
