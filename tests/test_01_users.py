@@ -11,7 +11,6 @@ pytestmark = pytest.mark.users
 
 class Test01UserAPI:
 
-    @pytest.mark.now
     @pytest.mark.django_db(transaction=True)
     def test_01_profile_get(self, user_client):
         """Тест получения данных из профиля пользователя."""

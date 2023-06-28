@@ -85,14 +85,14 @@ test_user_data_2 = {
     'email': 'fulluser2@mail.fake',
     'name': 'Второй',
     'password': 'C1Pt}&Rq*4^!A*)A',
-    'person_telephone': '89000000000',
+    'person_telephone': '+79000000000',
     'surname': 'Пользователь',
 }
 test_user_data_3 = {
     'email': 'fulluser3@mail.fake',
     'name': 'TestUser',
     'password': '>-Kc-k]_1UwVy1>^',
-    'person_telephone': '9000000000',
+    'person_telephone': '+79000000000',
     'surname': 'TestUseroff',
 }
 test_user_new_data = {

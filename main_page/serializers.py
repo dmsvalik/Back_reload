@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .models import CooperationOffer, UserAccount
 from .validators import UserValidationFields
 
+
 User = get_user_model()
 
 
@@ -11,6 +12,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "email", "name", "password", "person_telephone", "surname")
+        validators = [UserValidationFields()]
 
 
 class UserAccountSerializer(serializers.ModelSerializer):

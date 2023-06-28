@@ -7,7 +7,7 @@ from rest_framework import status as st
 
 from tests.fixtures.fixture_user import (
     url_users, test_user_data_1, user_invalid_data_1, user_invalid_data_2, test_user_data_2, test_user_data_3,
-    url_activation
+    url_activation, user_minimum_data
 )
 
 
@@ -21,7 +21,7 @@ class Test00UserRegistration:
     @pytest.mark.django_db(transaction=True)
     @pytest.mark.parametrize(
         "valid_data", [
-            # user_minimum_data,
+            user_minimum_data,
             test_user_data_1,
             test_user_data_2,
             test_user_data_3,
@@ -74,7 +74,7 @@ class Test00UserRegistration:
             f'доступ запрещён'
         )
 
-    @pytest.mark.skip(reason='Разобраться с сериализаторами регистрации пользователей - обязательные поля!')
+    # @pytest.mark.skip(reason='Разобраться с сериализаторами регистрации пользователей - обязательные поля!')
     @pytest.mark.django_db(transaction=True)
     def test_00_nodata_signup(self, api_client):
         """Тест попытки регистрации с пустыми полями."""
@@ -90,7 +90,7 @@ class Test00UserRegistration:
             f'не создается пользователь и возвращается статус {code}'
         )
         response_json = response.json()
-        empty_fields = ['email', 'name', 'password', 'person_telephone', 'surname']
+        empty_fields = ['email', 'name', 'password']
         for field in empty_fields:
             assert (field in response_json.keys()
                     and isinstance(response_json[field], list)), (
@@ -98,7 +98,8 @@ class Test00UserRegistration:
                 f'в ответе есть сообщение о том, какие поля не заполнены'
             )
 
-    @pytest.mark.skip(reason='Добавить валидацию всех полей')
+    @pytest.mark.now
+    # @pytest.mark.skip(reason='Добавить валидацию всех полей')
     @pytest.mark.django_db(transaction=True)
     @pytest.mark.parametrize(
         "invalid_data", [
@@ -120,9 +121,11 @@ class Test00UserRegistration:
         invalid_fields = ['email', 'name', 'password', 'person_telephone', 'surname']
         for field in invalid_fields:
             assert (field in response_json.keys()
-                    and isinstance(response_json[field], list)), (
-                f'Проверьте, что при {request_type} запросе `{url_users}` с невалидными данными - '
-                f'в ответе есть сообщение о том, какие поля заполнены неправильно'
+                    and isinstance(response_json[field], list)
+                    ), (
+                # f'Проверьте, что при {request_type} запросе `{url_users}` с невалидными данными - '
+                # f'в ответе есть сообщение о том, какие поля заполнены неправильно'
+                f'{response_json.keys()}'
             )
 
     @pytest.mark.django_db(transaction=True)
