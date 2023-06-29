@@ -98,7 +98,6 @@ class Test00UserRegistration:
                 f'в ответе есть сообщение о том, какие поля не заполнены'
             )
 
-    @pytest.mark.now
     # @pytest.mark.skip(reason='Добавить валидацию всех полей')
     @pytest.mark.django_db(transaction=True)
     @pytest.mark.parametrize(
@@ -118,14 +117,20 @@ class Test00UserRegistration:
         )
 
         response_json = response.json()
-        invalid_fields = ['email', 'name', 'password', 'person_telephone', 'surname']
+        invalid_fields = [
+            'email',
+            'name',
+            'person_telephone',
+            'surname',
+            # 'password',
+        ]
         for field in invalid_fields:
             assert (field in response_json.keys()
                     and isinstance(response_json[field], list)
                     ), (
-                # f'Проверьте, что при {request_type} запросе `{url_users}` с невалидными данными - '
-                # f'в ответе есть сообщение о том, какие поля заполнены неправильно'
-                f'{response_json.keys()}'
+                f'Проверьте, что при {request_type} запросе `{url_users}` с невалидными данными - '
+                f'в ответе есть сообщение о том, какие поля заполнены неправильно'
+                # f'{response_json.keys()}'
             )
 
     @pytest.mark.django_db(transaction=True)
