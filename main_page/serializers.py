@@ -3,7 +3,7 @@ from rest_framework.fields import CharField, CurrentUserDefault, HiddenField
 from rest_framework.serializers import ModelSerializer
 
 from .models import CooperationOffer, UserAccount
-from .validators import validate_name, validate_phone
+from .validators import field_name_validator, field_phone_validator
 
 
 User = get_user_model()
@@ -22,17 +22,17 @@ class UserCreateSerializer(ModelSerializer):
 
     @staticmethod
     def validate_name(value):
-        validate_name(value)
+        field_name_validator(value)
         return value
 
     @staticmethod
     def validate_surname(value):
-        validate_name(value)
+        field_name_validator(value)
         return value
 
     @staticmethod
     def validate_person_telephone(value):
-        validate_phone(value)
+        field_phone_validator(value)
         return value
 
     class Meta:
