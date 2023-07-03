@@ -67,15 +67,15 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
 
 class SellerData(models.Model):
-    id = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
-    seller_activity = models.BooleanField("Активен / Не активен", default=False)
-    seller_name_company = models.CharField("Имя компании", max_length=100, blank=True)
-    seller_date = models.DateTimeField("Дата создания аккаунта продавца", auto_now=True)
-    seller_telephone = models.CharField("Телефон компании", max_length=20, blank=True)
-    seller_requisites = models.CharField(
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
+    is_activ = models.BooleanField("Активен / Не активен", default=False)
+    company_name = models.CharField("Имя компании", max_length=100, blank=True)
+    created_date = models.DateTimeField("Дата создания аккаунта продавца", auto_now=True)
+    phone_number = models.CharField("Телефон компании", max_length=20, blank=True)
+    requisites = models.CharField(
         "Реквизиты компании", max_length=100, blank=True
     )
-    seller_type_activity = models.CharField(
+    activity_type = models.CharField(
         "Болванка тут должна быть связь с видом деятельности",
         max_length=100,
         blank=True,

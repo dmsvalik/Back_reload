@@ -11,13 +11,15 @@ class UserAccountAdmin(admin.ModelAdmin):
 @admin.register(SellerData)
 class SellerDataAdmin(admin.ModelAdmin):
     list_display = [
-        "user_account_id",
-        "seller_name_company",
-        "seller_activity",
-        "seller_telephone",
+        "user",
+        "is_activ",
+        "company_name",
+        "phone_number",
+        "requisites",
+        "activity_type",
     ]
 
 
 @admin.register(CooperationOffer)
 class CooperationOfferAdmin(admin.ModelAdmin):
-    list_display = ["user_account_id", "text", "created"]
+    list_display = ["user_account", "text", "created"]
