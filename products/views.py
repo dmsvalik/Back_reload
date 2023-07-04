@@ -1,7 +1,7 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import CreateAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -20,15 +20,11 @@ class CardModelAPIView(APIView):
 
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     model = CardModel
     serializer_class = CardModelSerializer
 
     def get(self, request):
-
-        """перед началом шагов по созданию заказа надо удалить старые ответы (без связки с заказом) """
-        ResponseModel.objects.filter(user_account=request.user.id, order_id=None).delete()
-
         result = CardModel.objects.all()
         return Response({"card_rooms": CardModelSerializer(result, many=True).data})
 
@@ -40,7 +36,7 @@ class CategoryModelListAPIView(ListAPIView):
     """
 
     model = CategoryModel
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = CategoryModelSeializer
 
     def get_queryset(self):
@@ -55,7 +51,7 @@ class QuestionsModelListAPIView(ListAPIView):
     """
 
     model = QuestionsProductsModel
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = QuestionModelSerializer
 
     def get_queryset(self):
