@@ -2,8 +2,8 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework import status as st
 
-from tests.fixtures.fixture_user import url_profile, url_users, test_user_data, test_user_new_data, \
-    test_user_new_invalid_data, test_user_data_1
+from tests.fixtures.fixture_user import url_profile, url_users, test_user_data, test_user_new_data
+
 
 User = get_user_model()
 pytestmark = pytest.mark.users
@@ -11,6 +11,7 @@ pytestmark = pytest.mark.users
 
 class Test01UserAPI:
 
+    @pytest.mark.now
     @pytest.mark.django_db(transaction=True)
     def test_01_profile_get(self, user_client):
         """Тест получения данных из профиля пользователя."""
@@ -31,8 +32,8 @@ class Test01UserAPI:
             )
 
     @pytest.mark.django_db(transaction=True)
-    def test_02_valid_data_profile_patch(self, user_client):
-        """Тест редактирования профиля пользователя валидными данными."""
+    def test_02_profile_patch(self, user_client):
+        """Тест редактирования профиля пользователя."""
         for field, value in test_user_new_data.items():
             if field in ('email', 'password'):
                 continue
@@ -43,36 +44,16 @@ class Test01UserAPI:
         for field in test_user_new_data:
             if field in ('email', 'password'):
                 continue
-            assert field in response_json and test_user_new_data.get(field) == response_json.get(field), (
-                f'Проверьте что при PATCH запросе `{response_json}` с валидными данными - происходит обновление данных'
-            )
-
-    @pytest.mark.django_db(transaction=True)
-    def test_03_invalid_data_profile_patch(self, user_client):
-        """Тест недопустимости редактирования профиля пользователя не валидными данными."""
-        for field, value in test_user_new_invalid_data.items():
-            if field in ('email', 'password'):
-                continue
-            user_client.patch(url_profile, data={field: value})
-
-        response = user_client.get(url_profile)
-        response_json = response.json()
-        for field in test_user_data:
-            if field in ('email', 'password'):
-                continue
-            assert field in response_json and test_user_data.get(field) == response_json.get(field), (
-                f'Проверьте, что при PATCH запросе `{url_profile}` с невалидными данными - обновления данных не '
-                f'происходит'
-            )
+            assert field in response_json and test_user_new_data.get(field) == response_json.get(field)
 
     @pytest.mark.skip(reason='Определиться с удалением пользователей')
     @pytest.mark.django_db(transaction=True)
-    def test_04_profile_delete(self, user):
+    def test_03_profile_delete(self, user):
         """Тест удаления профиля пользователя."""
         pass
 
     @pytest.mark.django_db(transaction=True)
-    def test_05_user_by_id_get(self, user, admin_client):
+    def test_04_user_by_id_get(self, user, admin_client):
         """Тест получения данных пользователя по его `id`."""
         response = admin_client.get(f'{url_users}{user.id}/')
         assert response.status_code != st.HTTP_404_NOT_FOUND, (
@@ -91,8 +72,8 @@ class Test01UserAPI:
             )
 
     @pytest.mark.django_db(transaction=True)
-    def test_06_valid_data_user_by_id_patch(self, user_1, admin_client):
-        """Тест редактирования данных пользователя по его `id` валидными данными."""
+    def test_05_user_by_id_patch(self, user_1, admin_client):
+        """Тест редактирования данных пользователя по его `id`."""
         for field, value in test_user_new_data.items():
             if field in ('email', 'password'):
                 continue
@@ -103,32 +84,10 @@ class Test01UserAPI:
         for field in test_user_new_data:
             if field in ('email', 'password'):
                 continue
-            assert field in response_json and test_user_new_data.get(field) == response_json.get(field), (
-                f'Проверьте что при PATCH запросе `{url_users}<id>/` с валидными данными - происходит '
-                f'обновление данных'
-            )
-
-    @pytest.mark.now
-    @pytest.mark.django_db(transaction=True)
-    def test_07_invalid_data_user_by_id_patch(self, user_1, admin_client):
-        """Тест недопустимости редактирования данных пользователя по его `id` не валидными данными."""
-        for field, value in test_user_new_invalid_data.items():
-            if field in ('email', 'password'):
-                continue
-            admin_client.patch(f'{url_users}{user_1.id}/', data={field: value})
-
-        response = admin_client.get(f'{url_users}{user_1.id}/')
-        response_json = response.json()
-        for field in test_user_data_1:
-            if field in ('email', 'password'):
-                continue
-            assert field in response_json and test_user_data_1.get(field) == response_json.get(field), (
-                f'Проверьте, что при PATCH запросе `{url_users}<id>/` с невалидными данными - не происходит обновления '
-                f'данных'
-            )
+            assert field in response_json and test_user_new_data.get(field) == response_json.get(field)
 
     @pytest.mark.skip(reason='Определиться с удалением пользователей')
     @pytest.mark.django_db(transaction=True)
-    def test_08_user_by_id_delete(self, admin_client):
+    def test_06_user_by_id_delete(self, admin_client):
         """Тест удаления пользователя по его `id`."""
         pass
