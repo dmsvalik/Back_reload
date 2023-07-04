@@ -30,6 +30,8 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework.authtoken",
+
     "main_page",
     "products",
     "orders",
@@ -178,6 +180,7 @@ DJOSER = {
     "SERIALIZERS": {
         "user_create": "main_page.serializers.UserCreateSerializer",
         "user": "main_page.serializers.UserCreateSerializer",
+        "current_user": "main_page.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
 }
