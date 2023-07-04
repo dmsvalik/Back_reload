@@ -70,7 +70,6 @@ class AnswerListAPIView(CreateAPIView):
     """
 
     permission_classes = [IsAuthenticated]
-    # это оставим для сваггера
     serializer_class = AnswerCreateSerializer
 
     def get_serializer(self, *args, **kwargs):
