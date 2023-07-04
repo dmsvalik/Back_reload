@@ -40,4 +40,6 @@ class AnswerCreateSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-        return ResponseModel.objects.create(**validated_data, user_account=user)
+        order_id = self.context["request"].order
+        return ResponseModel.objects.create(**validated_data, user_account=user, order_id_id=order_id)
+

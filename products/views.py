@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 
 from .models import ResponseModel
 from .models import (CardModel, CategoryModel, QuestionsProductsModel)
+from orders.models import OrderModel
 from orders.serializers import OrderModelSerializer
 
 from .serializers import (AnswerCreateSerializer, CardModelSerializer,
@@ -69,6 +70,7 @@ class AnswerListAPIView(CreateAPIView):
     """
 
     permission_classes = [IsAuthenticated]
+    # это оставим для сваггера
     serializer_class = AnswerCreateSerializer
 
     def get_serializer(self, *args, **kwargs):
@@ -76,6 +78,12 @@ class AnswerListAPIView(CreateAPIView):
         if isinstance(kwargs.get("data", {}), list):
             kwargs["many"] = True
         return super(AnswerListAPIView, self).get_serializer(*args, **kwargs)
+
+    def create(self, request, *args, **kwargs):
+        user = request.user
+        order = OrderModel.objects.create(user_account=user, state='creating')
+        request.order = order.id
+        return super(AnswerListAPIView, self).create(request, *args, **kwargs)
 
 
 @api_view(['POST'])
