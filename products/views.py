@@ -3,6 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from rest_framework.views import APIView
 
 from .models import ResponseModel
@@ -23,6 +24,7 @@ class CardModelAPIView(APIView):
     permission_classes = [AllowAny]
     model = CardModel
     serializer_class = CardModelSerializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get(self, request):
         result = CardModel.objects.all()
@@ -38,6 +40,7 @@ class CategoryModelListAPIView(ListAPIView):
     model = CategoryModel
     permission_classes = [AllowAny]
     serializer_class = CategoryModelSeializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
         card_id = self.kwargs["card_id"]
@@ -53,6 +56,7 @@ class QuestionsModelListAPIView(ListAPIView):
     model = QuestionsProductsModel
     permission_classes = [AllowAny]
     serializer_class = QuestionModelSerializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
         category_id = self.kwargs["category_id"]
