@@ -1,8 +1,9 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.generics import CreateAPIView, ListAPIView
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from rest_framework.views import APIView
 
 from .models import ResponseModel
@@ -20,15 +21,12 @@ class CardModelAPIView(APIView):
 
     """
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     model = CardModel
     serializer_class = CardModelSerializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get(self, request):
-
-        """перед началом шагов по созданию заказа надо удалить старые ответы (без связки с заказом) """
-        ResponseModel.objects.filter(user_account=request.user.id, order_id=None).delete()
-
         result = CardModel.objects.all()
         return Response({"card_rooms": CardModelSerializer(result, many=True).data})
 
@@ -40,8 +38,9 @@ class CategoryModelListAPIView(ListAPIView):
     """
 
     model = CategoryModel
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = CategoryModelSeializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
         card_id = self.kwargs["card_id"]
@@ -55,8 +54,9 @@ class QuestionsModelListAPIView(ListAPIView):
     """
 
     model = QuestionsProductsModel
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AllowAny]
     serializer_class = QuestionModelSerializer
+    throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get_queryset(self):
         category_id = self.kwargs["category_id"]
