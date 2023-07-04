@@ -85,14 +85,14 @@ test_user_data_2 = {
     'email': 'fulluser2@mail.fake',
     'name': 'Второй',
     'password': 'C1Pt}&Rq*4^!A*)A',
-    'person_telephone': '89000000000',
+    'person_telephone': '+79000000000',
     'surname': 'Пользователь',
 }
 test_user_data_3 = {
     'email': 'fulluser3@mail.fake',
     'name': 'TestUser',
     'password': '>-Kc-k]_1UwVy1>^',
-    'person_telephone': '9000000000',
+    'person_telephone': '+79000000000',
     'surname': 'TestUseroff',
 }
 test_user_new_data = {
@@ -102,6 +102,13 @@ test_user_new_data = {
     'person_telephone': '+79000000001',
     'surname': 'UpdatedSurname',
 }
+test_user_new_invalid_data = {
+    'email': 'new_test_user_project.fake',
+    'name': '#.+-=',
+    'password': '111',
+    'person_telephone': '+7900',
+    'surname': '#==-/',
+}
 user_minimum_data = {
     'email': 'minuser@mail.fake',
     'name': 'MinUserName',
@@ -109,13 +116,15 @@ user_minimum_data = {
 }
 user_invalid_data_1 = {
     'email': 'invalid_email',
-    'name': '123',
+    # 'email': 'valid@email.ru',
+    'name': '12',
     'password': '1234578',
     'person_telephone': '8900',
     'surname': '321',
 }
 user_invalid_data_2 = {
     'email': 'invalid@email',
+    # 'email': 'valid@email.ru',
     'name': '@!=+-',
     'password': '!@#',
     'person_telephone': '0000000000',
