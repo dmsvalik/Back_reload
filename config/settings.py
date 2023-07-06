@@ -30,10 +30,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+
     "main_page",
     "products",
     "orders",
     "rest_framework",
+    "rest_framework.authtoken",
     "djoser",
     "drf_yasg",
     "debug_toolbar",
@@ -143,8 +145,16 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-}
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/day',
+        'user': '1000/day'
+    },
 
+}
 
 # Documentation https://djoser.readthedocs.io/en/latest/settings.html
 
@@ -178,6 +188,7 @@ DJOSER = {
     "SERIALIZERS": {
         "user_create": "main_page.serializers.UserCreateSerializer",
         "user": "main_page.serializers.UserCreateSerializer",
+        "current_user": "main_page.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
 }

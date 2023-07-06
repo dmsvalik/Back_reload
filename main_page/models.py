@@ -1,24 +1,18 @@
-from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
-                                        PermissionsMixin)
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 
 
 class UserAccountManager(BaseUserManager):
-    def create(self, email, name, person_telephone, surname, password=None):
-        if not email:
-            raise ValueError("Почта должна быть указана")
-
+    def create(self, email, name, person_telephone=None, surname=None, password=None):
         email = self.normalize_email(email)
         user = self.model(
             email=email, name=name, person_telephone=person_telephone, surname=surname
         )
-
         user.set_password(password)
         user.save()
-
         return user
 
-    def create_superuser(self, email, name, person_telephone, surname, password=None):
+    def create_superuser(self, email, name, person_telephone=None, surname=None, password=None):
         email = self.normalize_email(email)
         user = self.model(
             email=email, name=name, person_telephone=person_telephone, surname=surname
@@ -50,7 +44,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     objects = UserAccountManager()
 
     USERNAME_FIELD = "email"
-    REQUIRED_FIELDS = ["name", "person_telephone", "surname"]
+    REQUIRED_FIELDS = ["name", ]
 
     def get_full_name(self):
         return self.name
