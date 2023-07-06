@@ -34,7 +34,6 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     surname = models.CharField(max_length=255, blank=True, null=True)
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    is_partner = models.BooleanField(default=False)
     person_rating = models.IntegerField("Рейтинг клиента", blank=True, null=True)
     person_created = models.DateTimeField("Дата создания аккаунта", auto_now=True)
     person_telephone = models.CharField(
@@ -62,18 +61,15 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
 
 class SellerData(models.Model):
-    id = models.AutoField(primary_key=True, unique=True)
-    user_account_id = models.ForeignKey(
-        UserAccount, on_delete=models.CASCADE, null=True
-    )
-    seller_activity = models.BooleanField("Активен / Не активен", default=False)
-    seller_name_company = models.CharField("Имя компании", max_length=100, blank=True)
-    seller_date = models.DateTimeField("Дата создания аккаунта продавца", auto_now=True)
-    seller_telephone = models.CharField("Телефон компании", max_length=20, blank=True)
-    seller_requisites = models.CharField(
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
+    is_activ = models.BooleanField("Активен / Не активен", default=False)
+    company_name = models.CharField("Имя компании", max_length=100, blank=True)
+    created_date = models.DateTimeField("Дата создания аккаунта продавца", auto_now=True)
+    phone_number = models.CharField("Телефон компании", max_length=20, blank=True)
+    requisites = models.CharField(
         "Реквизиты компании", max_length=100, blank=True
     )
-    seller_type_activity = models.CharField(
+    activity_type = models.CharField(
         "Болванка тут должна быть связь с видом деятельности",
         max_length=100,
         blank=True,
@@ -86,7 +82,7 @@ class SellerData(models.Model):
 
 class CooperationOffer(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account_id = models.ForeignKey(
+    user_account = models.ForeignKey(
         UserAccount, on_delete=models.CASCADE, null=True
     )
     text = models.CharField(

@@ -1,7 +1,9 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 
+from main_page.permissions import IsSeller
 from .models import OrderImageModel, OrderOffer
+from .permissions import ChangePriceInOrder
 from .serializers import OrderImageSerializer, OrderOfferSerializer
 
 
@@ -19,9 +21,9 @@ class OrderImageViewSet(viewsets.ModelViewSet):
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
-    """Создание Оффера"""
+    """Поведение Оффера"""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSeller, ChangePriceInOrder]
     queryset = OrderOffer.objects.all()
     serializer_class = OrderOfferSerializer
 

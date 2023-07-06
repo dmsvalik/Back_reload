@@ -46,8 +46,9 @@ class UserAccountSerializer(UserCreateSerializer):
         fields = ("id", "email", "name", "person_telephone", "surname")
 
 
-class CooperationOfferSerializer(ModelSerializer):
-    user_account_id = HiddenField(default=CurrentUserDefault())
+
+class CooperationOfferSerializer(serializers.ModelSerializer):
+    user_account = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
     class Meta:
         model = CooperationOffer

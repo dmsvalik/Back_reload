@@ -71,7 +71,7 @@ class OrderOffer(models.Model):
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True)
     offer_create_at = models.DateTimeField("Дата создания офера", auto_now=True)
-    offer_price = models.CharField("Цена офера", max_length=300, blank=True)
+    offer_price = models.CharField("Цена офера", max_length=300, blank=True, default="")
     offer_execution_time = models.CharField(
         "Время выполнения офера", max_length=300, blank=True
     )
