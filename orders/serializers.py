@@ -57,33 +57,14 @@ class OrderOfferSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context["request"].user
-        try:
-            seller_data = SellerData.objects.get(user_account_id=user)
-        except TypeError:
-            raise serializers.ValidationError("Вы не являетесь продавцом")
+        seller_data = SellerData.objects.get(user=user)
+        # try:
+        #     seller_data = SellerData.objects.get(user_account_id=user)
+        # except TypeError:
+        #     raise serializers.ValidationError("Вы не являетесь продавцом")
         """проверяем если продавец активен, не заблокирован"""
-        if not seller_data.seller_activity:
+        if not seller_data.is_activ:
             raise serializers.ValidationError("Вы не можете сделать оффер")
-        """ставим заглушку на цену, тк ее можно указать только через 24 часа после офера"""
-        validated_data["offer_price"] = " "
+        # """ставим заглушку на цену, тк ее можно указать только через 24 часа после офера"""
+        # validated_data["offer_price"] = " "
         return OrderOffer.objects.create(**validated_data, user_account=user)
-
-    def update(self, instance, validated_data):
-        check_time = datetime.datetime.now()
-        time_offer = instance.offer_create_at
-        """проверяем прошло ли больше 24 часов с момента оффера для обновления цены"""
-        check_total = (
-            check_time.day * 24 * 60 + check_time.hour * 60 + check_time.minute
-        )
-        time_offer_total = (
-            time_offer.day * 24 * 60 + time_offer.hour * 60 + time_offer.minute
-        )
-
-        result = check_total - time_offer_total
-        print(result)
-
-        """ временно проверяем если прошло 5 минут"""
-        if result < 5:
-            raise serializers.ValidationError("Вы не можете установить цену, должно пройти 24 часа")
-
-        return super().update(instance, validated_data)

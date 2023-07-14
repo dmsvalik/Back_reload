@@ -20,8 +20,9 @@ class UserAccountSerializer(serializers.ModelSerializer):
         validators = [UserValidationFields()]
 
 
-class CooperationOfferSerializer(serializers.ModelSerializer):
-    user_account_id = serializers.HiddenField(default=serializers.CurrentUserDefault())
+
+class CooperationOfferSerializer(ModelSerializer):
+    user_account_id = HiddenField(default=CurrentUserDefault())
 
     class Meta:
         model = CooperationOffer
