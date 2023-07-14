@@ -30,12 +30,12 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "rest_framework.authtoken",
 
     "main_page",
     "products",
     "orders",
     "rest_framework",
-    "rest_framework.authtoken",
     "djoser",
     "drf_yasg",
     "debug_toolbar",

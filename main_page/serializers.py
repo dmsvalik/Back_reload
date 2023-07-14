@@ -1,49 +1,23 @@
 from django.contrib.auth import get_user_model
-from rest_framework.fields import CharField, CurrentUserDefault, HiddenField
-from rest_framework.serializers import ModelSerializer
+from rest_framework import serializers
 
 from .models import CooperationOffer, UserAccount
-from .validators import field_name_validator, field_phone_validator
-
+from .validators import UserValidationFields
 
 User = get_user_model()
 
 
-class UserCreateSerializer(ModelSerializer):
-    name = CharField(
-        min_length=3,
-        max_length=120,
-    )
-    surname = CharField(
-        min_length=3,
-        max_length=120,
-        required=False,
-    )
-
-    @staticmethod
-    def validate_name(value):
-        field_name_validator(value)
-        return value
-
-    @staticmethod
-    def validate_surname(value):
-        field_name_validator(value)
-        return value
-
-    @staticmethod
-    def validate_person_telephone(value):
-        field_phone_validator(value)
-        return value
-
+class UserCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ("id", "email", "name", "password", "person_telephone", "surname")
 
 
-class UserAccountSerializer(UserCreateSerializer):
+class UserAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAccount
         fields = ("id", "email", "name", "person_telephone", "surname")
+        validators = [UserValidationFields()]
 
 
 
