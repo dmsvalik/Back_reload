@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework.fields import CharField, CurrentUserDefault, HiddenField
+
 from rest_framework.serializers import ModelSerializer
 
 from .models import CooperationOffer, UserAccount
@@ -44,7 +45,6 @@ class UserAccountSerializer(UserCreateSerializer):
     class Meta:
         model = UserAccount
         fields = ("id", "email", "name", "person_telephone", "surname")
-
 
 
 class CooperationOfferSerializer(ModelSerializer):
