@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.fields import CurrentUserDefault, HiddenField
+from rest_framework.serializers import ModelSerializer
 
 from .models import CooperationOffer, UserAccount
 from .validators import UserValidationFields
