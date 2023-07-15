@@ -55,7 +55,6 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
@@ -89,12 +88,12 @@ CORS_ALLOW_HEADERS = [
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
-    "http://127.0.0.1",
-    "http://127.0.0.1:3000",
-    "http://localhost",
-    "http://localhost:3000",
-    "http://app",
-    "http://185.244.173.82",
+    "http://127.0.0.1/",
+    "http://127.0.0.1:3000/",
+    "http://localhost/",
+    "http://localhost:3000/",
+    "http://app/",
+    "http://185.244.173.82/",
 ]
 
 CORS_ORIGIN_WHITELIST = [
