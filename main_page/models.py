@@ -69,8 +69,8 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         return self.email
 
     class Meta:
-        verbose_name = "Пользователи"
-        verbose_name_plural = "Пользователи"
+        verbose_name = "UserAccount"
+        verbose_name_plural = "UserAccount"
 
 
 class SellerData(models.Model):
