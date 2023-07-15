@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault, HiddenField
 from rest_framework.serializers import ModelSerializer
 
-from .models import CooperationOffer, UserAccount
+from .models import UserAccount, CooperationOffer
 from .validators import UserValidationFields
 
 User = get_user_model()
