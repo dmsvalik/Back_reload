@@ -63,6 +63,8 @@ MIDDLEWARE = [
     "debug_toolbar.middleware.DebugToolbarMiddleware",
 ]
 
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
