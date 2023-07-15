@@ -100,8 +100,8 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://localhost:8000',
-    "http://app",
-    "http://185.244.173.82",
+    "http://app:8000",
+    "http://185.244.173.82:8000",
 ]
 
 
