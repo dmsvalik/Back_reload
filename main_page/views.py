@@ -8,7 +8,20 @@ from rest_framework.response import Response
 from .models import CooperationOffer
 from .serializers import CooperationOfferSerializer
 
+from django.utils.decorators import method_decorator
+from drf_yasg.utils import swagger_auto_schema
 
+
+@method_decorator(name='create', decorator=swagger_auto_schema(
+    operation_description="Создание запроса на сотрудничество", responses={500: 'Server error'}
+))
+@method_decorator(name='list', decorator=swagger_auto_schema(
+    operation_description="Получить список запросов на сотрудничество",
+    responses={
+        500: 'Server error',
+        401: 'Unauthorized',
+    }
+))
 class CooperationViewSet(viewsets.ModelViewSet):
     """
     Сохранение обращения клиента на сотрудничество
