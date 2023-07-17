@@ -12,7 +12,8 @@ from orders.models import OrderModel
 from orders.serializers import OrderModelSerializer
 
 from .serializers import (AnswerCreateSerializer, CardModelSerializer,
-                          CategoryModelSeializer, QuestionModelSerializer)
+                          CategoryModelSeializer, QuestionModelSerializer,
+                          AnswerImageSerializer)
 
 
 class CardModelAPIView(APIView):
@@ -104,3 +105,13 @@ def CreateOrderAnswers(request):
 
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class ImageResponseAPIView(CreateAPIView):
+    """
+    Загрузить изображение к ответу
+
+    """
+
+    permission_classes = [IsAuthenticated]
+    serializer_class = AnswerImageSerializer

@@ -48,6 +48,7 @@ class QuestionsProductsModel(models.Model):
         "вопрос по заказу", max_length=120, null=True, blank=True
     )
     position = models.IntegerField("номер вопроса по порядку", null=True, blank=True)
+    is_image = models.BooleanField('Изображение?', default=False)
 
     class Meta:
         verbose_name = "Бланк вопросов"
@@ -85,6 +86,7 @@ class ResponseModel(models.Model):
     position = models.CharField(
         "номер ответа по порядку", max_length=10, null=True, blank=True
     )
+    # image = models.ImageField('Изображение', upload_to= , blank=True, null=True)
 
     class Meta:
         verbose_name = "Бланк ответов клиента"
@@ -92,3 +94,18 @@ class ResponseModel(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+def iamgeFile(instance, filename):
+    return "/".join(
+        [
+            "images",
+            str(instance.response.user_account.id),
+            filename,
+        ]
+    )
+
+
+class ResponsesImage(models.Model):
+    response = models.ForeignKey(ResponseModel, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField('Изображение', upload_to=iamgeFile)
