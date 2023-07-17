@@ -18,6 +18,8 @@ DEBUG = env("DEBUG_STATUS", default=False)
 ALLOWED_HOSTS = [
     "app",
     "185.244.173.82",
+    "http://185.244.173.82",
+    "http://app",
     "localhost",
     "127.0.0.1",
     "http://127.0.0.1:3000",
