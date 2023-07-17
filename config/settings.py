@@ -103,6 +103,7 @@ CORS_ORIGIN_WHITELIST = [
     'http://localhost:3000',
     'http://localhost:8000',
     "http://app:8000",
+    "http://app",
     "http://185.244.173.82:8000",
 ]
 
