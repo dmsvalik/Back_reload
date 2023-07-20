@@ -6,6 +6,7 @@ from products.models import (
     QuestionOptionsModel,
     QuestionsProductsModel,
     ResponseModel,
+    ResponsesImage
 )
 
 
@@ -43,3 +44,8 @@ class AnswerCreateSerializer(serializers.ModelSerializer):
         order_id = self.context["request"].order
         return ResponseModel.objects.create(**validated_data, user_account=user, order_id_id=order_id)
 
+
+class AnswerImageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ResponsesImage
+        fields = ['response', 'image']
