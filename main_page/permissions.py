@@ -1,5 +1,4 @@
 from rest_framework import permissions, serializers
-
 from main_page.models import SellerData
 
 

@@ -218,6 +218,8 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(minutes=720),
+
+    "TOKEN_OBTAIN_SERIALIZER": "main_page.serializers.CustomTokenObtainPairSerializer",
 }
 
 DJOSER = {
