@@ -7,6 +7,7 @@ from .models import UserAccount, CooperationOffer
 from .validators import UserValidationFields
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 User = get_user_model()
 
@@ -32,12 +33,19 @@ class CooperationOfferSerializer(ModelSerializer):
         fields = "__all__"
 
 
-class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user: User):
-        token = super().get_token(user)
+class TokenObtainSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        refresh = self.get_token(self.user)
 
-        token['name'] = user.name
-        token['email'] = user.email
-        token['surname'] = user.surname
-        return token
+        print(self.user.email)
+        data["refresh"] = str(refresh)
+        data["access"] = str(refresh.access_token)
+        data["test"] = "value"
+        data["email"] = self.user.email
+
+
+        return data
+
+class CutomObtainPairView(TokenObtainPairView):
+    serializer_class = TokenObtainSerializer
