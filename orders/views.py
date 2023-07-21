@@ -8,7 +8,7 @@ from .serializers import OrderImageSerializer, OrderOfferSerializer
 
 
 class OrderImageViewSet(viewsets.ModelViewSet):
-    """Проверка картинок по продукту + создание картинок с привязкой к продукту"""
+    """Проверка картинок по продукту + создание картинок с привязкой к продукту - test """
 
     permission_classes = [IsAuthenticated]
     queryset = OrderImageModel.objects.all()
