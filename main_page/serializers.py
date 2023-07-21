@@ -6,6 +6,8 @@ from rest_framework.serializers import ModelSerializer
 from .models import UserAccount, CooperationOffer
 from .validators import UserValidationFields
 
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 User = get_user_model()
 
 
@@ -22,10 +24,20 @@ class UserAccountSerializer(serializers.ModelSerializer):
         validators = [UserValidationFields()]
 
 
-
 class CooperationOfferSerializer(ModelSerializer):
     user_account_id = HiddenField(default=CurrentUserDefault())
 
     class Meta:
         model = CooperationOffer
         fields = "__all__"
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user: User):
+        token = super().get_token(user)
+
+        token['name'] = user.name
+        token['email'] = user.email
+        token['surname'] = user.surname
+        return token

@@ -1,5 +1,4 @@
 
-
 docs = {'main_page.views.CooperationViewSet': {
     'create': '....description',
     'list': '....description'},
@@ -7,4 +6,3 @@ docs = {'main_page.views.CooperationViewSet': {
             'create': '....description',
         }
 }
-

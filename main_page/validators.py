@@ -14,7 +14,7 @@ class UserValidationFields:
 
         if self.person_telephone in value:
             if value[self.person_telephone][0:2] != '+7' or len(value[self.person_telephone]) != 12 or \
-                        value[self.person_telephone][1:].isdigit() is False:
+                    value[self.person_telephone][1:].isdigit() is False:
                 raise serializers.ValidationError({"error": "Телефон должен начинаться с +7, иметь 12 знаков(цифры)."})
 
         if self.name in value:
