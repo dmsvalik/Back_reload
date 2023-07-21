@@ -38,12 +38,11 @@ class TokenObtainSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         refresh = self.get_token(self.user)
 
-        print(self.user.email)
         data["refresh"] = str(refresh)
         data["access"] = str(refresh.access_token)
-        data["test"] = "value"
+        data["name"] = self.user.name
         data["email"] = self.user.email
-
+        data["surname"] = self.user.surname
 
         return data
 
