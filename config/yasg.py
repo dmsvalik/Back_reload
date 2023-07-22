@@ -2,7 +2,12 @@ from django.urls import path, re_path
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions
+from config.settings import DEBUG
 
+
+settings_swagger = {}
+if not DEBUG:
+    settings_swagger = {"url": 'http://185.244.173.82/'}
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -13,6 +18,7 @@ schema_view = get_schema_view(
     ),
     public=True,
     permission_classes=[permissions.AllowAny],
+    **settings_swagger,
 )
 
 
