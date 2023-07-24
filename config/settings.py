@@ -213,11 +213,21 @@ REST_FRAMEWORK = {
 }
 
 # Documentation https://djoser.readthedocs.io/en/latest/settings.html
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#jwk-url
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(minutes=720),
+
+    "ALGORITHM": "HS256",
+    "SIGNING_KEY": SECRET_KEY,
+    "VERIFYING_KEY": "",
+    "AUDIENCE": None,
+    "ISSUER": None,
+    "JSON_ENCODER": None,
+    "JWK_URL": None,
+    "LEEWAY": 0,
 
 }
 
