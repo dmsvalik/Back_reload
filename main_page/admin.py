@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CooperationOffer, SellerData, UserAccount
+from .models import CooperationOffer, SellerData, UserAccount, EmailSendTime
 
 
 @admin.register(UserAccount)
@@ -23,3 +23,8 @@ class SellerDataAdmin(admin.ModelAdmin):
 @admin.register(CooperationOffer)
 class CooperationOfferAdmin(admin.ModelAdmin):
     list_display = ["user_account", "text", "created"]
+
+
+@admin.register(EmailSendTime)
+class EmailSendTimeAdmin(admin.ModelAdmin):
+    list_display = ["id", "email", "timestamp"]

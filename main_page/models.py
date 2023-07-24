@@ -73,6 +73,16 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "UserAccount"
 
 
+class EmailSendTime(models.Model):
+    email = models.CharField("Почта на которую было отправлено письмо", max_length=100, blank=True)
+    api_call = models.CharField("Api запрос", max_length=100, blank=True)
+    timestamp = models.DateTimeField("Время отправки запроса на сброс почты", auto_now=True)
+
+    class Meta:
+        verbose_name = "Email - Send Control"
+        verbose_name_plural = "Email - Send Control"
+
+
 class SellerData(models.Model):
     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
     is_activ = models.BooleanField("Активен / Не активен", default=False)
