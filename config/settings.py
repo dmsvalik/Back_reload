@@ -213,6 +213,7 @@ REST_FRAMEWORK = {
 }
 
 # Documentation https://djoser.readthedocs.io/en/latest/settings.html
+# https://django-rest-framework-simplejwt.readthedocs.io/en/latest/settings.html#jwk-url
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
