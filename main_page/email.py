@@ -26,12 +26,19 @@ class UsernameReset(email.UsernameResetEmail):
         context = super().get_context_data()
         user = context.get("user")
 
-        # ищем по почте последний запрос и высчитываем в секундах с текущем временем
-        check_user = EmailSendTime.objects.filter(email=user).latest('timestamp')
-        check_time = datetime.now().replace(tzinfo=None) - check_user.timestamp.replace(tzinfo=None)
-        check_seconds = check_time.total_seconds()
-        if check_seconds < 20:
-            raise EmailTimestampError('We have already sent message to this email. Try letter')
+        # проверяем наличие писем на сброс от пользователя
+        check_user = EmailSendTime.objects.filter(email=user).order_by('id')
+        time_now = datetime.now().hour*60 + datetime.now().minute
+        score = list()
+
+        # собираем последние 3 записи (так как можно отправлять 3 записи в час)
+        if len(check_user) >= 3:
+            for item in check_user[len(check_user) - 3:]:
+                score.append(item.timestamp.hour*60 + item.timestamp.minute)
+
+            result = time_now - score[0]
+            if result <= 60:
+                raise EmailTimestampError('We have already sent message to this email. Try 1 hour latter')
 
         context["uid"] = utils.encode_uid(user.pk)
         context["token"] = default_token_generator.make_token(user)

@@ -1,6 +1,8 @@
 import requests
+
 from django.http.response import JsonResponse
 from django.shortcuts import render
+
 from djoser.views import UserViewSet
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -47,6 +49,8 @@ class ActivateUser(UserViewSet):
 
 
 def reset_password(request, uid, token):
+    """ Тестовый сброс пароля - заменить на сторону фронта """
+
     if request.method == "POST":
         # проверки на стороне фронта на корректность пароля - не пустое поле и тд
         new_pass = request.POST["new_pass"]

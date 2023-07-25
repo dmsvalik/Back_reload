@@ -207,7 +207,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
-        'user': '1000/day'
+        'user': '2000/day',
     },
 
 }
@@ -258,7 +258,6 @@ DJOSER = {
         "user": "main_page.serializers.UserCreateSerializer",
         "current_user": "main_page.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
-
     },
 }
 
