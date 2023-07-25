@@ -207,7 +207,7 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_THROTTLE_RATES': {
         'anon': '100/day',
-        'user': '2000/day'
+        'user': '2000/day',
     },
 
 }
@@ -250,7 +250,7 @@ DJOSER = {
         "confirmation": "main_page.email.Confirmation",
         # 'password_reset': 'main_page.email.PasswordReset',
         # 'password_changed_confirmation': 'main_page.email.PasswordChangedConfirmation',
-        # 'username_reset': 'main_page.email.UsernameReset',
+        'username_reset': 'main_page.email.UsernameReset',
         # 'username_reset_confirmation': 'main_page.email.UsernameResetConfirmation',
     },
     "SERIALIZERS": {
@@ -258,7 +258,6 @@ DJOSER = {
         "user": "main_page.serializers.UserCreateSerializer",
         "current_user": "main_page.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
-
     },
 }
 

@@ -4,6 +4,7 @@ from django.urls import include, path
 from .yasg import urlpatterns as doc_urls
 from main_page.serializers import CutomObtainPairView
 
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("", include("main_page.urls")),
