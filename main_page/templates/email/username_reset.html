@@ -1,11 +1,11 @@
 {% load i18n %}
 
 {% block subject %}
-{% blocktrans %}Username reset on {{ site_name }}{% endblocktrans %}
+{% blocktrans %}Сброс почты для сайта whywee {{ site_name }}{% endblocktrans %}
 {% endblock subject %}
 
 {% block text_body %}
-{% blocktrans %}You're receiving this email because you requested a username reset for your user account at {{ site_name }}.{% endblocktrans %}
+{% blocktrans %}Вы получили это письмо, потому, что был осуществлен запрос на сброс почты аккаунта на почте  receiving this email because you requested a username reset for your user account at {{ site_name }}.{% endblocktrans %}
 
 {% trans "Please go to the following page and choose a new username:" %}
 {{ protocol }}://{{ domain }}/{{ url }}

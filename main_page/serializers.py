@@ -46,5 +46,6 @@ class TokenObtainSerializer(TokenObtainPairSerializer):
 
         return data
 
+
 class CutomObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainSerializer
