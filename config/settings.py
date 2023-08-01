@@ -132,18 +132,23 @@ INTERNAL_IPS = [
 ]
 
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
+#         "NAME": env("DB_NAME", default="whywe"),
+#         "USER": env("DB_USER", default="whywe"),
+#         "PASSWORD": env("DB_PASS", default="whywe"),
+#         "HOST": env("DB_HOST", default="localhost"),
+#         "PORT": env("DB_PORT", default=5432),
+#     }
+# }
+
 DATABASES = {
-    "default": {
-        "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
-        "NAME": env("DB_NAME", default="whywe"),
-        "USER": env("DB_USER", default="whywe"),
-        "PASSWORD": env("DB_PASS", default="whywe"),
-        "HOST": env("DB_HOST", default="localhost"),
-        "PORT": env("DB_PORT", default=5432),
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
-
-
 EMAIL_HOST = env("EMAIL_HOST", default="email_host")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="email_host_user")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="email_pass")
