@@ -2,6 +2,23 @@ from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
                                         PermissionsMixin)
 from django.db import models
 from rest_framework.exceptions import ValidationError
+import re
+
+
+def validate_password(password):
+    if len(password) < 8 or len(password) > 20:
+        return False
+
+    if not re.search(r"\d", password):
+        return False
+
+    if not re.search(r"[a-zA-Z]", password):
+        return False
+
+    if not re.search(r"\W", password):
+        return False
+
+    return True
 
 
 class UserAccountManager(BaseUserManager):
@@ -9,18 +26,29 @@ class UserAccountManager(BaseUserManager):
         if not email:
             raise ValidationError({"error": "Не указана почта"})
 
-        if not name or len(name) <= 2 or len(name) >= 50:
+        if not re.match(
+                r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name
+        ) or not re.match(
+            r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname
+        ):
             raise ValidationError({"error": "Укажите корректное имя"})
 
-        if person_telephone[0:2] != '+7' or len(person_telephone) != 12 or person_telephone[1:].isdigit() is False:
-            raise ValidationError({"error": "Телефон должен начинаться с +7 и иметь 12 символов(цифры)."})
+        if person_telephone[0:2] != '+7' or len(
+                person_telephone) != 12 or person_telephone[1:].isdigit(
+
+        ) is False:
+            raise ValidationError(
+                {"error": "Телефон должен начинаться с +7 и иметь 12 символов(цифры)."}
+            )
 
         email = self.normalize_email(email)
         user = self.model(
             email=email, name=name, person_telephone=person_telephone, surname=surname
         )
-
-        user.set_password(password)
+        if validate_password(password):
+            user.set_password(password)
+        else:
+            raise ValidationError({"error": "Укажите корректный пароль"})
         user.save()
 
         return user
@@ -30,7 +58,10 @@ class UserAccountManager(BaseUserManager):
         user = self.model(
             email=email, name=name, person_telephone=person_telephone, surname=surname
         )
-        user.set_password(password)
+        if validate_password(password):
+            user.set_password(password)
+        else:
+            raise ValidationError({"error": "Укажите корректный пароль"})
         user.save()
 
         user.is_admin = True

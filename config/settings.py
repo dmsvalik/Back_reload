@@ -131,7 +131,6 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
-
 DATABASES = {
     "default": {
         "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
