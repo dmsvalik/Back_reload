@@ -28,13 +28,13 @@ class UsernameReset(email.UsernameResetEmail):
 
         # проверяем наличие писем на сброс от пользователя
         check_user = EmailSendTime.objects.filter(email=user).order_by('id')
-        time_now = datetime.now().hour*60 + datetime.now().minute
+        time_now = datetime.now().hour * 60 + datetime.now().minute
         score = list()
 
         # собираем последние 3 записи (так как можно отправлять 3 записи в час)
         if len(check_user) >= 3:
             for item in check_user[len(check_user) - 3:]:
-                score.append(item.timestamp.hour*60 + item.timestamp.minute)
+                score.append(item.timestamp.hour * 60 + item.timestamp.minute)
 
             result = time_now - score[0]
             if result <= 60:

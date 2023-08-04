@@ -4,7 +4,7 @@ from django.http.response import JsonResponse
 from django.shortcuts import render
 
 from djoser.views import UserViewSet
-from rest_framework import viewsets
+from rest_framework import viewsets, status
 from rest_framework.response import Response
 
 from .models import CooperationOffer
@@ -13,25 +13,47 @@ from .serializers import CooperationOfferSerializer
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 
+from .error_message import error_responses
+
 
 @method_decorator(name='create', decorator=swagger_auto_schema(
-    operation_description="Создание запроса на сотрудничество", responses={500: 'Server error'}
-))
+    operation_description="Создание запроса на сотрудничество",
+    responses={
+        status.HTTP_400_BAD_REQUEST: error_responses[status.HTTP_400_BAD_REQUEST],
+        status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
+        status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+    }))
 @method_decorator(name='list', decorator=swagger_auto_schema(
     operation_description="Получить список запросов на сотрудничество",
     responses={
-        500: 'Server error',
-        401: 'Unauthorized',
-    }
-))
+        status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
+        status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+    }))
+@method_decorator(name='destroy', decorator=swagger_auto_schema(
+    operation_description="Удаление запроса на сотрудничество",
+    responses={
+        status.HTTP_204_NO_CONTENT: error_responses[status.HTTP_204_NO_CONTENT],
+        status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
+        status.HTTP_404_NOT_FOUND: error_responses[status.HTTP_404_NOT_FOUND],
+        status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+    }))
 class CooperationViewSet(viewsets.ModelViewSet):
     """
     Сохранение обращения клиента на сотрудничество
     """
-
     queryset = CooperationOffer.objects.all()
     serializer_class = CooperationOfferSerializer
     http_method_names = ["get", "post", "delete"]
+
+    @swagger_auto_schema(
+        operation_description="Получить запрос на сотрудничество",
+        responses={
+            status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
+            status.HTTP_404_NOT_FOUND: error_responses[status.HTTP_404_NOT_FOUND],
+            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+        })
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
 
 class ActivateUser(UserViewSet):
@@ -43,6 +65,13 @@ class ActivateUser(UserViewSet):
         kwargs["data"] = {"uid": self.kwargs["uid"], "token": self.kwargs["token"]}
         return serializer_class(*args, **kwargs)
 
+    @method_decorator(name='list', decorator=swagger_auto_schema(
+        operation_description="Получить список запросов на сотрудничество",
+        responses={
+            status.HTTP_400_BAD_REQUEST: error_responses[status.HTTP_400_BAD_REQUEST],
+            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+        }
+    ))
     def activation(self, request, uid, token, *args, **kwargs):
         super().activation(request, *args, **kwargs)
         return Response({"активация": "активация аккаунта прошла успешно"})
