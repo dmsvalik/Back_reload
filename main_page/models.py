@@ -25,13 +25,14 @@ class UserAccountManager(BaseUserManager):
     def create(self, email, name, person_telephone, surname=None, password=None):
         if not email:
             raise ValidationError({"error": "Не указана почта"})
-
+        if surname is None:
+            raise ValidationError({"surname": "Это поле необходимо заполнить"})
         if not re.match(
                 r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name
         ) or not re.match(
             r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname
         ):
-            raise ValidationError({"error": "Укажите корректное имя"})
+            raise ValidationError({"error": "Укажите корректное имя, фамилию"})
 
         if person_telephone[0:2] != '+7' or len(
                 person_telephone) != 12 or person_telephone[1:].isdigit(
@@ -58,10 +59,8 @@ class UserAccountManager(BaseUserManager):
         user = self.model(
             email=email, name=name, person_telephone=person_telephone, surname=surname
         )
-        if validate_password(password):
-            user.set_password(password)
-        else:
-            raise ValidationError({"error": "Укажите корректный пароль"})
+
+        user.set_password(password)
         user.save()
 
         user.is_admin = True
