@@ -1,15 +1,16 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import ActivateUser, CooperationViewSet, reset_password
+from .views import ActivateUser, CooperationViewSet, SupportViewSet, reset_password
 
 
 router = routers.SimpleRouter()
 
 router.register(r"cooperation", CooperationViewSet)
+router.register(r"support", SupportViewSet)
 
 urlpatterns = [
-    path("users/", include(router.urls)),
+    path("contact/", include(router.urls)),
     path(
         "activate/<uid>/<token>",
         ActivateUser.as_view({"get": "activation"}),

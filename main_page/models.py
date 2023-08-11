@@ -130,9 +130,7 @@ class SellerData(models.Model):
     company_name = models.CharField("Имя компании", max_length=100, blank=True)
     created_date = models.DateTimeField("Дата создания аккаунта продавца", auto_now=True)
     phone_number = models.CharField("Телефон компании", max_length=12, blank=True)
-    requisites = models.CharField(
-        "Реквизиты компании", max_length=100, blank=True
-    )
+    requisites = models.CharField("Реквизиты компании", max_length=100, blank=True)
     activity_type = models.CharField(
         "Болванка тут должна быть связь с видом деятельности",
         max_length=100,
@@ -146,10 +144,14 @@ class SellerData(models.Model):
 
 class CooperationOffer(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(
-        UserAccount, on_delete=models.CASCADE, null=True
-    )
-    text = models.CharField(
-        "Запрос от пользователя", max_length=20, blank=True, null=True
-    )
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    text = models.CharField("Запрос от пользователя", max_length=250, blank=True, null=True)
     created = models.DateTimeField("Дата создания обращения", auto_now=True)
+
+
+class ContactSupport(models.Model):
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    user_question = models.CharField("Вопрос от пользователя", max_length=250, blank=True, null=True)
+    admin_response = models.CharField("Ответ пользователю", max_length=250, blank=True, null=True)
+    created = models.DateTimeField("Дата создания обращения", auto_now=True)
+    resolved = models.BooleanField("Проблема решена?", default=False)

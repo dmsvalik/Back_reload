@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import CooperationOffer, SellerData, UserAccount, EmailSendTime
+from .models import CooperationOffer, SellerData, UserAccount, EmailSendTime, ContactSupport
 
 
 @admin.register(UserAccount)
@@ -18,6 +18,11 @@ class SellerDataAdmin(admin.ModelAdmin):
         "requisites",
         "activity_type",
     ]
+
+
+@admin.register(ContactSupport)
+class ContactSupportAdmin(admin.ModelAdmin):
+    list_display = ["user_account", "user_question", "created"]
 
 
 @admin.register(CooperationOffer)
