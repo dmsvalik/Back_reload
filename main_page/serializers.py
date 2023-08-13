@@ -3,7 +3,7 @@ from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault, HiddenField
 from rest_framework.serializers import ModelSerializer
 
-from .models import UserAccount, CooperationOffer
+from .models import UserAccount, CooperationOffer, ContactSupport
 from .validators import UserValidationFields
 
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
@@ -32,6 +32,19 @@ class CooperationOfferSerializer(ModelSerializer):
         model = CooperationOffer
         fields = "__all__"
 
+
+class ContactSupportSerializer(ModelSerializer):
+    user_account = HiddenField(default=CurrentUserDefault())
+
+    class Meta:
+        model = ContactSupport
+        fields = [
+            "id",
+            "user_account",
+            "user_question",
+            "admin_response",
+            "resolved"
+        ]
 
 class TokenObtainSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
