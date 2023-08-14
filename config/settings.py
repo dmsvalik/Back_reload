@@ -52,9 +52,6 @@ INSTALLED_APPS = [
     "corsheaders",
 ]
 
-DOMAIN = 'whywe.ru'
-
-SITE_NAME = 'Frontend'
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
