@@ -26,6 +26,8 @@ ALLOWED_HOSTS = [
     "http://127.0.0.1",
     "http://localhost:3000",
     "http://localhost",
+    "https://www.whywe.ru/",
+    "www.whywe.ru"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -52,6 +54,9 @@ INSTALLED_APPS = [
     "corsheaders",
 ]
 
+DOMAIN = ('185.244.173.82')
+
+SITE_NAME = ('whywe.ru')
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
