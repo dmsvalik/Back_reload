@@ -54,9 +54,9 @@ INSTALLED_APPS = [
     "corsheaders",
 ]
 
-DOMAIN = ('185.244.173.82')
+DOMAIN = ("185.244.173.82")
 
-SITE_NAME = ('whywe.ru')
+SITE_NAME = ("whywe.ru")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -74,12 +74,12 @@ SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 CORS_ORIGIN_ALLOW_ALL = True
 
 CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
 ]
 
 CORS_ALLOW_HEADERS = [
@@ -106,8 +106,8 @@ CORS_ALLOWED_ORIGINS = [
 ]
 
 CORS_ORIGIN_WHITELIST = [
-    'http://localhost:3000',
-    'http://localhost:8000',
+    "http://localhost:3000",
+    "http://localhost:8000",
     "http://app:8000",
     "http://app",
     "http://185.244.173.82:8000",
@@ -257,12 +257,12 @@ DJOSER = {
         "confirmation": "main_page.email.Confirmation",
         # 'password_reset': 'main_page.email.PasswordReset',
         # 'password_changed_confirmation': 'main_page.email.PasswordChangedConfirmation',
-        'username_reset': 'main_page.email.UsernameReset',
+        "username_reset": "main_page.email.UsernameReset",
         # 'username_reset_confirmation': 'main_page.email.UsernameResetConfirmation',
     },
     "SERIALIZERS": {
         "user_create": "main_page.serializers.UserCreateSerializer",
-        "user": "main_page.serializers.UserCreateSerializer",
+        "user": "main_page.serializers.UserAccountSerializer",
         "current_user": "main_page.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
