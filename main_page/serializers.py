@@ -2,12 +2,12 @@ from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.fields import CurrentUserDefault, HiddenField
 from rest_framework.serializers import ModelSerializer
-
-from .models import UserAccount, CooperationOffer, ContactSupport
-from .validators import UserValidationFields
-
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
+
+from .models import ContactSupport, CooperationOffer, UserAccount
+from .validators import UserValidationFields
+
 
 User = get_user_model()
 
@@ -45,6 +45,7 @@ class ContactSupportSerializer(ModelSerializer):
             "admin_response",
             "resolved"
         ]
+
 
 class TokenObtainSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
