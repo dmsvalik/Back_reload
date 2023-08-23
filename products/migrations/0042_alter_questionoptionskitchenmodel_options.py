@@ -4,14 +4,16 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('products', '0041_rename_questionoptionsmodel_questionoptionskitchenmodel'),
+        ("products", "0041_rename_questionoptionsmodel_questionoptionskitchenmodel"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='questionoptionskitchenmodel',
-            options={'verbose_name': 'Опции - кухня', 'verbose_name_plural': 'Опции - кухня'},
+            name="questionoptionskitchenmodel",
+            options={
+                "verbose_name": "Опции - кухня",
+                "verbose_name_plural": "Опции - кухня",
+            },
         ),
     ]

@@ -142,6 +142,7 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+.vscode/
 
 # Spyder project settings
 .spyderproject
@@ -313,3 +314,4 @@ sketch
 [Ss]cripts
 pyvenv.cfg
 pip-selfcheck.json
+.env

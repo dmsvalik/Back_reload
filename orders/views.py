@@ -1,17 +1,14 @@
-from django.shortcuts import render
-from rest_framework import status
-from rest_framework.views import APIView
-from rest_framework.generics import ListAPIView, CreateAPIView, UpdateAPIView
-from rest_framework.response import Response
-from rest_framework.permissions import BasePermission, IsAuthenticated, AllowAny
 from rest_framework import viewsets
-from .models import *
-from .serializers import *
+from rest_framework.permissions import IsAuthenticated
 
+from main_page.permissions import IsSeller
+from .models import OrderImageModel, OrderOffer
+from .permissions import ChangePriceInOrder
+from .serializers import OrderImageSerializer, OrderOfferSerializer
 
 
 class OrderImageViewSet(viewsets.ModelViewSet):
-    '''Проверка картинок по продукту + создание картинок с привязкой к продукту'''
+    """Проверка картинок по продукту + создание картинок с привязкой к продукту - test """
 
     permission_classes = [IsAuthenticated]
     queryset = OrderImageModel.objects.all()
@@ -24,9 +21,9 @@ class OrderImageViewSet(viewsets.ModelViewSet):
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
-    '''Создание Оффера'''
+    """Поведение Оффера"""
 
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsAuthenticated, IsSeller, ChangePriceInOrder]
     queryset = OrderOffer.objects.all()
     serializer_class = OrderOfferSerializer
 
@@ -34,4 +31,3 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return OrderOffer.objects.filter(user_account=user)
-
