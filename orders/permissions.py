@@ -15,9 +15,9 @@ class ChangePriceInOrder(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.data.get("offer_price"):
             if request.method in ("PATH", "PUT"):
-                if datetime.now().replace(
+                if datetime.now().replace(tzinfo=None) < obj.offer_create_at.replace(
                     tzinfo=None
-                ) < obj.order_id.order_time.replace(tzinfo=None) + timedelta(days=1):
+                ) + timedelta(days=1):
                     raise ValidationError(
                         "Цену можно указать только через день после размещения заказа"
                     )
