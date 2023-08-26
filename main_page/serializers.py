@@ -21,7 +21,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
 class UserAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserAccount
-        fields = ("id", "email", "name", "person_telephone", "surname")
+        fields = ("id", "email", "name", "person_telephone", "surname", "role")
         validators = [UserValidationFields()]
 
 
