@@ -71,6 +71,10 @@ class UserAccountManager(BaseUserManager):
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
+    ROLES_CHOICES = [
+        ("contractor", 'Исполнитель'),
+        ('client', 'Заказчик')
+    ]
     email = models.EmailField(max_length=50, unique=True,
                               validators=[
                                   MinLengthValidator(5, 'the field must contain at least 5 characters')
@@ -94,6 +98,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         ]
     )
     person_address = models.CharField("Адрес", max_length=200, blank=True, null=True)
+    role = models.CharField('Роль', max_length=11, choices=ROLES_CHOICES, default='client')
 
     objects = UserAccountManager()
 

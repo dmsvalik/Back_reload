@@ -63,6 +63,9 @@ class OrderOfferSerializer(serializers.ModelSerializer):
         """проверяем если продавец активен, не заблокирован"""
         if not seller_data.is_activ:
             raise serializers.ValidationError("Вы не можете сделать оффер")
-        # """ставим заглушку на цену, тк ее можно указать только через 24 часа после офера"""
+        # """ставим заглушку на цену, тк ее можно указать только через 24 часа после оффера"""
         # validated_data["offer_price"] = " "
+        validated_data.pop(
+            "user_account", None
+        )  # Ensure 'user_account' is not in validated_data
         return OrderOffer.objects.create(**validated_data, user_account=user)
