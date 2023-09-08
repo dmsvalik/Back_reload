@@ -2,6 +2,7 @@ from django.urls import path
 
 from .views import (AnswerListAPIView, CardModelAPIView, ImageResponseAPIView,
                     CategoryModelListAPIView, QuestionsModelListAPIView, CreateOrderAnswers)
+from . import views
 
 
 urlpatterns = [
@@ -13,5 +14,7 @@ urlpatterns = [
     ),
     path("products/step_3_2/questions_response", AnswerListAPIView.as_view()),
     path("products/step_4/create_order", CreateOrderAnswers),
-    path("products/responses/image", ImageResponseAPIView.as_view())
+    path("products/responses/image", ImageResponseAPIView.as_view()),
+
+    path("products/image_upload_order/", views.upload_image_order, name='upload-image-order'),
 ]
