@@ -5,7 +5,6 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from rest_framework.views import APIView
-from utils import errorcode
 
 from .models import ResponseModel
 from .models import (CardModel, CategoryModel, QuestionsProductsModel)
@@ -116,19 +115,3 @@ class ImageResponseAPIView(CreateAPIView):
 
     permission_classes = [IsAuthenticated]
     serializer_class = AnswerImageSerializer
-
-
-@api_view(['POST'])
-def upload_image_order(request):
-    """
-    Процесс приема изображения и последующего сохранения
-
-    """
-
-    order_id = request.POST.get('order_id')
-    image = request.FILES["image"]
-
-    if order_id == '' or not order_id.isdigit():
-        raise errorcode.IncorrectImageOrderUpload()
-
-    return Response({'status': 'success'})
