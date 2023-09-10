@@ -1,8 +1,8 @@
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import APIException
 from rest_framework import status
 
 
-class HttpValidationException(ValidationError):
+class HttpValidationException(APIException):
     """
         Шаблон для создания ошибок на базе ValidationError
 

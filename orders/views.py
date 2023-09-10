@@ -1,10 +1,14 @@
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
+from utils import errorcode
 from main_page.permissions import IsSeller
 from .models import OrderImageModel, OrderOffer
 from .permissions import ChangePriceInOrder
 from .serializers import OrderImageSerializer, OrderOfferSerializer
+
 
 
 class OrderImageViewSet(viewsets.ModelViewSet):
@@ -31,3 +35,18 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return OrderOffer.objects.filter(user_account=user)
+
+@api_view(['POST'])
+def upload_image_order(request):
+    """
+    Процесс приема изображения и последующего сохранения
+
+    """
+
+    order_id = request.POST.get('order_id')
+    image = request.FILES["image"]
+
+    if order_id == '' or not order_id.isdigit():
+        raise errorcode.IncorrectImageOrderUpload()
+
+    return Response({'status': 'success'})

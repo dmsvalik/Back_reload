@@ -34,11 +34,10 @@ class OrderModel(models.Model):
         return str(self.id)
 
 
-# создаем путь - папка image далее папка(id пользователя), далее папка(id продукта)
 def nameFile(instance, filename):
     return "/".join(
         [
-            "images",
+            "data",
             str(instance.order_id.user_account.id),
             str(instance.order_id.id),
             filename,
@@ -64,6 +63,16 @@ class OrderImageModel(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+
+class ImageData(models.Model):
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=False)
+    image_preview = models.ImageField(upload_to=nameFile, blank=True, null=True)
+    image_name = models.CharField("Название файла в системе и облаке", max_length=40, blank=True, default="")
+    date_upload = models.DateTimeField("Дата создания изображения", auto_now=True)
+    cloud_image_size = models.DateTimeField("Облако - размер изображения", auto_now=True)
+    preview_image_size = models.DateTimeField("Сервер - размер изображения", auto_now=True)
 
 
 class OrderOffer(models.Model):
