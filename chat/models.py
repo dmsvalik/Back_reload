@@ -7,23 +7,25 @@ from channels.layers import get_channel_layer
 from django.db import models
 from main_page.models import UserAccount
 
-class MessageModel(models.Model):
-    """
-    This class represents a chat message. It has a owner (user), timestamp and
-    the message body.
 
-    """
-    user = ForeignKey(UserAccount, on_delete=CASCADE, verbose_name='user',
-                      related_name='from_user', db_index=True)
-    recipient = ForeignKey(UserAccount, on_delete=CASCADE, verbose_name='recipient',
-                           related_name='to_user', db_index=True)
+class ChatRoom(models.Model):
+    name = models.CharField(max_length=100)
+    participants = models.ManyToManyField(UserAccount, related_name='chat_rooms')
+    
+    def __str__(self):
+        return self.name
+
+
+class Message(models.Model):
+    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE)
+    sender = models.ForeignKey(UserAccount, on_delete=models.CASCADE)
+    body = models.TextField()
     timestamp = DateTimeField('timestamp', auto_now_add=True, editable=False,
                               db_index=True)
-    body = TextField('bodys')
-
+    
     def __str__(self):
         return str(self.id)
-
+    
     def characters(self):
         """
         Toy function to count body characters.
@@ -31,37 +33,34 @@ class MessageModel(models.Model):
         """
         return len(self.body)
 
+    def save(self, *args, **kwargs):
+        """Trims white spaces, saves the message and notifies the recipient via WS
+        if the message is new.
+        """
+        new = self.id
+        self.body = self.body.strip()  # Удаление лишних пробелов
+        super().save(*args, **kwargs)
+        # Отправка уведомлений о новом сообщении
+        if new is None:
+            self.notify_ws_clients()
+
     def notify_ws_clients(self):
         """
         Inform client there is a new message.
         """
         notification = {
-            'type': 'recieve_group_message',
-            'message': '{}'.format(self.id)
+            'type': 'receive_group_message',
+            'message': self.id
         }
-
-
         channel_layer = get_channel_layer()
-        print("user.id {}".format(self.user.id))
-        print("user.id {}".format(self.recipient.id))
+        async_to_sync(channel_layer.group_send)(
+            f"chat_{self.chat_room.id}",
+            notification
+        )
 
-        async_to_sync(channel_layer.group_send)("{}".format(self.user.id), notification)
-        async_to_sync(channel_layer.group_send)("{}".format(self.recipient.id), notification)
-
-    def save(self, *args, **kwargs):
-        """
-        Trims white spaces, saves the message and notifies the recipient via WS
-        if the message is new.
-        """
-        new = self.id
-        self.body = self.body.strip()  # Trimming whitespaces from the body
-        super(MessageModel, self).save(*args, **kwargs)
-        if new is None:
-            self.notify_ws_clients()
 
     # Meta
     class Meta:
-        # app_label = 'marketplace'
         verbose_name = 'message'
         verbose_name_plural = 'messages'
         ordering = ('-timestamp',)

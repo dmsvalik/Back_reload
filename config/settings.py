@@ -49,11 +49,13 @@ INSTALLED_APPS = [
     "main_page",
     "products",
     "orders",
+    "chat",
     "rest_framework",
     "djoser",
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
+    "channels",
 ]
 
 DOMAIN = ("185.244.173.82")
@@ -284,4 +286,17 @@ SWAGGER_SETTINGS = {
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     },
     "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
+}
+
+MESSAGES_TO_LOAD = 15
+
+ASGI_APPLICATION = 'config.routing.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
 }
