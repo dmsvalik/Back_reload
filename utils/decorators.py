@@ -1,6 +1,7 @@
 from functools import wraps
 from django.http import HttpResponse
 from .models import UserQuota
+from orders.models import OrderOffer
 
 
 def check_user_quota(func):
@@ -30,6 +31,19 @@ def check_file_type(allowed_types):
                 file_extension = uploaded_file.name.split('.')[-1].lower()
                 if file_extension not in allowed_types:
                     return HttpResponse("Недопустимый тип файла", status=400)
+            return func(request, *args, **kwargs)
+        return wrapped
+    return decorator
+
+
+def check_order_limit(max_orders):
+    def decorator(func):
+        @wraps(func)
+        def wrapped(request, *args, **kwargs):
+            user_id = request.user.id 
+            user_order_count = OrderOffer.objects.filter(user_id=user_id, offer_status=False).count()
+            if user_order_count >= max_orders:
+                return HttpResponse("Превышен лимит заказов. Максимальное количество заказов: {}".format(max_orders), status=400)
             return func(request, *args, **kwargs)
         return wrapped
     return decorator
