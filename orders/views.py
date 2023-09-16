@@ -1,5 +1,5 @@
 from utils import errorcode
-from utils.decorators import check_user_quota
+from utils.decorators import check_user_quota, check_file_type
 from utils.storage import CloudStorage
 
 from django.core.files.temp import NamedTemporaryFile
@@ -40,19 +40,16 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return OrderOffer.objects.filter(user_account=user)
 
 
-@check_user_quota
 @api_view(["POST"])
+@check_file_type(["jpg",])
+@check_user_quota
 def upload_image_order(request):
     """
     Процесс приема изображения и последующего сохранения
 
     """
     order_id = request.POST.get("order_id")
-    if "image" not in request.FILES:
-        return Response(
-            {"error": 'Ключ "image" отсутствует в загруженных файлах'}, status=400
-        )
-    image = request.FILES["image"]
+    image = request.FILES["upload_file"]
     user_id = request.user.id
     name = image.name
 
