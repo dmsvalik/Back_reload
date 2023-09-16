@@ -160,3 +160,14 @@ class ContactSupport(models.Model):
     admin_response = models.CharField("Ответ пользователю", max_length=250, blank=True, null=True)
     created = models.DateTimeField("Дата создания обращения", auto_now=True)
     resolved = models.BooleanField("Проблема решена?", default=False)
+
+
+class UserQuota(models.Model):
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
+    total_cloud_size = models.PositiveIntegerField(default=0)
+    total_server_size = models.PositiveIntegerField(default=0) 
+    total_traffic = models.PositiveIntegerField(default=1000)  
+
+    def reset_traffic(self):
+        self.total_traffic = 0
+        self.save()
