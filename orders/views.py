@@ -1,20 +1,21 @@
+from utils import errorcode
+from utils.decorators import check_user_quota
+from utils.storage import CloudStorage
+
+from django.core.files.temp import NamedTemporaryFile
 from rest_framework import viewsets
+from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 
-from utils import errorcode
-from main_page.permissions import IsSeller
 from .models import OrderImageModel, OrderOffer
 from .permissions import ChangePriceInOrder
 from .serializers import OrderImageSerializer, OrderOfferSerializer
-from utils.decorators import check_file_type, check_user_quota
-
-
+from main_page.permissions import IsSeller
 
 
 class OrderImageViewSet(viewsets.ModelViewSet):
-    """Проверка картинок по продукту + создание картинок с привязкой к продукту - test """
+    """Проверка картинок по продукту + создание картинок с привязкой к продукту - test"""
 
     permission_classes = [IsAuthenticated]
     queryset = OrderImageModel.objects.all()
@@ -38,19 +39,41 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return OrderOffer.objects.filter(user_account=user)
 
+
 @check_user_quota
-@api_view(['POST'])
+@api_view(["POST"])
 def upload_image_order(request):
     """
     Процесс приема изображения и последующего сохранения
 
     """
-    order_id = request.POST.get('order_id')
-    if 'image' not in request.FILES:
-        return Response({'error': 'Ключ "image" отсутствует в загруженных файлах'}, status=400)
+    order_id = request.POST.get("order_id")
+    if "image" not in request.FILES:
+        return Response(
+            {"error": 'Ключ "image" отсутствует в загруженных файлах'}, status=400
+        )
     image = request.FILES["image"]
-    print(image)
-    if order_id == '' or not order_id.isdigit():
+    user_id = request.user.id
+    name = image.name
+
+    if order_id == "" or not order_id.isdigit():
         raise errorcode.IncorrectImageOrderUpload()
 
-    return Response({'status': 'success'})
+    # save temp version of the file in system, for celery task
+    temp_file = NamedTemporaryFile(delete=True)
+    for block in image.chunks():
+        temp_file.write(block)
+    temp_file.flush()
+
+    yandex = CloudStorage()
+    response_code = yandex.cloud_upload_image(temp_file.name, user_id, order_id, name)
+    temp_file.close()
+
+    if response_code == 201:
+        return Response({"status": "success"})
+    return Response(
+        {
+            "status": "failed",
+            "message": f"Unexpected response from Yandex.Disk: {response_code}",
+        },
+    )
