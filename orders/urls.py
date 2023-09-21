@@ -1,7 +1,7 @@
 from django.urls import path
 
 from .views import OrderImageViewSet, OrderOfferViewSet
-
+from . import views
 
 urlpatterns = [
     path(
@@ -15,4 +15,6 @@ urlpatterns = [
             {"get": "retrieve", "delete": "destroy", "put": "update"}
         ),
     ),
+
+    path("order/image_upload_order/", views.upload_image_order, name='upload-image-order'),
 ]

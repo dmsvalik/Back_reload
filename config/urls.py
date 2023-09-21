@@ -10,6 +10,7 @@ urlpatterns = [
     path("", include("main_page.urls")),
     path("", include("products.urls")),
     path("", include("orders.urls")),
+    path("", include("utils.urls")),
     path('auth/jwt/create/', CutomObtainPairView.as_view(), name='customtoken'),
     path("api-auth/", include("rest_framework.urls")),
     path("auth/", include("djoser.urls")),

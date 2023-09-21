@@ -13,5 +13,6 @@ urlpatterns = [
     ),
     path("products/step_3_2/questions_response", AnswerListAPIView.as_view()),
     path("products/step_4/create_order", CreateOrderAnswers),
-    path("products/responses/image", ImageResponseAPIView.as_view())
+    path("products/responses/image", ImageResponseAPIView.as_view()),
+
 ]

@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "main_page",
     "products",
     "orders",
+    "utils",
     "rest_framework",
     "djoser",
     "drf_yasg",
@@ -281,3 +282,8 @@ SWAGGER_SETTINGS = {
     },
     "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
 }
+
+MAX_SERVER_QUOTA = 5* 1024 * 1024
+MAX_STORAGE_QUOTA = 10 * 1024 * 1024
+MAX_ORDERS = 50
+
