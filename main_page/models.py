@@ -24,27 +24,26 @@ def validate_password(password):
 
 class UserAccountManager(BaseUserManager):
     def create(self, email, name, person_telephone, surname=None, password=None):
+
         if not email:
             raise ValidationError({"error": "Не указана почта"})
+        email = email.lower()
+        if not re.match(r'^[a-zA-Z-0-9\-.@]{5,50}$', email):
+            raise ValidationError({"email": "Английские буквы, цифры, тире, точка, @. Длина не менее 5 и не более 50 символов."})
+
         if surname is None:
             raise ValidationError({"surname": "Это поле необходимо заполнить"})
-        if not re.match(
-                r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name
-        ) or not re.match(
-            r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname
-        ):
+
+        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name) or not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname):
             raise ValidationError({"error": "Укажите корректное имя, фамилию"})
 
-        if person_telephone[0:2] != '+7' or len(
-                person_telephone) != 12 or (person_telephone[1:].isdigit() is False):
+        if person_telephone[0:2] != '+7' or len(person_telephone) != 12 or (person_telephone[1:].isdigit() is False):
             raise ValidationError(
-                {"error": "Телефон должен начинаться с +7 и иметь 12 символов(цифры)."}
-            )
+                {"error": "Телефон должен начинаться с +7 и иметь 12 символов(цифры)."})
 
         email = self.normalize_email(email)
-        user = self.model(
-            email=email, name=name, person_telephone=person_telephone, surname=surname
-        )
+        user = self.model(email=email, name=name, person_telephone=person_telephone, surname=surname)
+
         if validate_password(password):
             user.set_password(password)
         else:
