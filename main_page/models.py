@@ -2,23 +2,22 @@ from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
                                         PermissionsMixin)
 from django.db import models
 from rest_framework.exceptions import ValidationError
-import re
+from utils.errorcode import IncorrectEmailCreateUser, IncorrectSurnameCreateUser, IncorrectTelephoneCreateUser, \
+                            IncorrectPasswordCreateUser
+
 from django.core.validators import MinLengthValidator
+import re
 
 
 def validate_password(password):
     if len(password) < 8 or len(password) > 20:
         return False
-
     if not re.search(r"\d", password):
         return False
-
     if not re.search(r"[a-zA-Z]", password):
         return False
-
     if not re.search(r"\W", password):
         return False
-
     return True
 
 
@@ -29,17 +28,13 @@ class UserAccountManager(BaseUserManager):
             raise ValidationError({"error": "Не указана почта"})
         email = email.lower()
         if not re.match(r'^[a-zA-Z-0-9\-.@]{5,50}$', email):
-            raise ValidationError({"email": "Английские буквы, цифры, тире, точка, @. Длина не менее 5 и не более 50 символов."})
-
-        if surname is None:
-            raise ValidationError({"surname": "Это поле необходимо заполнить"})
+            raise IncorrectEmailCreateUser
 
         if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name) or not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname):
-            raise ValidationError({"error": "Укажите корректное имя, фамилию"})
+            raise IncorrectSurnameCreateUser
 
         if person_telephone[0:2] != '+7' or len(person_telephone) != 12 or (person_telephone[1:].isdigit() is False):
-            raise ValidationError(
-                {"error": "Телефон должен начинаться с +7 и иметь 12 символов(цифры)."})
+            raise IncorrectTelephoneCreateUser
 
         email = self.normalize_email(email)
         user = self.model(email=email, name=name, person_telephone=person_telephone, surname=surname)
@@ -47,7 +42,7 @@ class UserAccountManager(BaseUserManager):
         if validate_password(password):
             user.set_password(password)
         else:
-            raise ValidationError({"error": "Укажите корректный пароль"})
+            raise IncorrectPasswordCreateUser
         user.save()
 
         return user
