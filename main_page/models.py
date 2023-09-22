@@ -22,13 +22,17 @@ def validate_password(password):
 
 
 class UserAccountManager(BaseUserManager):
-    def create(self, email, name, person_telephone, surname=None, password=None):
+    def create(self, email, name, person_telephone=None, surname=None, password=None):
 
         if not email:
             raise ValidationError({"error": "Не указана почта"})
         email = email.lower()
         if not re.match(r'^[a-zA-Z-0-9\-.@]{5,50}$', email):
             raise IncorrectEmailCreateUser
+        if not person_telephone:
+            raise ValidationError({"person_telephone": ["This field is required."]})
+        if not surname:
+            raise ValidationError({"surname": ["This field is required."]})
 
         if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name):
             raise IncorrectNameCreateUser
@@ -80,7 +84,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
                             validators=[
                                 MinLengthValidator(2, 'the field must contain at least 2 characters')
                             ])
-    surname = models.CharField(max_length=50, blank=True, null=True,
+    surname = models.CharField(max_length=50, blank=True, unique=True, null=True,
                                validators=[
                                    MinLengthValidator(2, 'the field must contain at least 2 characters')
                                ])
@@ -88,8 +92,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     person_rating = models.IntegerField("Рейтинг клиента", blank=True, null=True)
     person_created = models.DateTimeField("Дата создания аккаунта", auto_now=True)
-    person_telephone = models.CharField(
-        "Номер телефона", max_length=12, blank=True, null=True,
+    person_telephone = models.CharField("Номер телефона", max_length=12, unique=True, blank=True, null=True,
         validators=[
             MinLengthValidator(7, 'the field must contain at least 7 numbers')
         ]
