@@ -34,10 +34,10 @@ class UserAccountManager(BaseUserManager):
         if not surname:
             raise ValidationError({"surname": ["This field is required."]})
 
-        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name):
+        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,20}$', name):
             raise IncorrectNameCreateUser
 
-        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname):
+        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,20}$', surname):
             raise IncorrectSurnameCreateUser
 
         if person_telephone[0:2] != '+7' or len(person_telephone) != 12 or (person_telephone[1:].isdigit() is False):
