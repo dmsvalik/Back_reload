@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
+    "tests",
 ]
 
 DOMAIN = ("185.244.173.82")
