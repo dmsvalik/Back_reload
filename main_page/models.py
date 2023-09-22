@@ -3,7 +3,7 @@ from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
 from django.db import models
 from rest_framework.exceptions import ValidationError
 from utils.errorcode import IncorrectEmailCreateUser, IncorrectSurnameCreateUser, IncorrectTelephoneCreateUser, \
-                            IncorrectPasswordCreateUser
+                            IncorrectPasswordCreateUser, IncorrectNameCreateUser
 
 from django.core.validators import MinLengthValidator
 import re
@@ -30,7 +30,10 @@ class UserAccountManager(BaseUserManager):
         if not re.match(r'^[a-zA-Z-0-9\-.@]{5,50}$', email):
             raise IncorrectEmailCreateUser
 
-        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name) or not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname):
+        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', name):
+            raise IncorrectNameCreateUser
+
+        if not re.match(r'^[a-zA-Zа-яА-Я\s\-]{2,50}$', surname):
             raise IncorrectSurnameCreateUser
 
         if person_telephone[0:2] != '+7' or len(person_telephone) != 12 or (person_telephone[1:].isdigit() is False):
