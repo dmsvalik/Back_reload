@@ -31,13 +31,13 @@ class IncorrectEmailCreateUser(HttpValidationException):
 class IncorrectSurnameCreateUser(HttpValidationException):
     status_code = 400
     detail = {"Field": "surname",
-              "Description": "English or Russian letters. Length is not less than 2 and not more than 50 characters."}
+              "Description": "English or Russian letters. Length is not less than 2 and not more than 20 characters."}
 
 
 class IncorrectNameCreateUser(HttpValidationException):
     status_code = 400
     detail = {"Field": "name",
-              "Description": "English or Russian letters. Length is not less than 2 and not more than 50 characters."}
+              "Description": "English or Russian letters. Length is not less than 2 and not more than 20 characters."}
 
 
 class IncorrectTelephoneCreateUser(HttpValidationException):
