@@ -1,14 +1,19 @@
+import mimetypes
+
 from utils import errorcode
-from utils.decorators import check_user_quota, check_file_type
+from utils.decorators import check_file_type, check_user_quota
 from utils.storage import CloudStorage
 
+from django.core.cache import caches
 from django.core.files.temp import NamedTemporaryFile
+from django.http import FileResponse
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import OrderImageModel, OrderOffer
+from .models import ImageData, OrderImageModel, OrderOffer
 from .permissions import ChangePriceInOrder
 from .serializers import OrderImageSerializer, OrderOfferSerializer
 from main_page.permissions import IsSeller
@@ -41,7 +46,11 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["POST"])
-@check_file_type(["jpg",])
+@check_file_type(
+    [
+        "jpg",
+    ]
+)
 @check_user_quota
 def upload_image_order(request):
     """
@@ -74,3 +83,56 @@ def upload_image_order(request):
             "message": f"Unexpected response from Yandex.Disk: {response_code}",
         },
     )
+
+
+file_cache = caches["file_cache"]
+
+
+@api_view(["GET"])
+def get_image_order(request, id):
+    """
+    Получение изображения и передача его на фронт
+    """
+
+    # Поиск пути изображения в БД по ID
+    image_data = get_object_or_404(
+        ImageData, id=id
+    )  # TODO: Добавить логику ошибки в errorcode.py
+
+    yandex_path = image_data.yandex_path
+
+    # Проверяем, есть ли изображение в кеше
+    cached_image = file_cache.get(yandex_path)
+    # Обработка различных форматов файлов, определяем MIME-тип динамически на основе расширения файла
+    if cached_image:
+        mime_type, encoding = mimetypes.guess_type(yandex_path.split("/")[-1])
+        return FileResponse(
+            cached_image,
+            content_type=mime_type if mime_type else "application/octet-stream",
+        )
+
+    # Иначе получаем изображение из Yandex
+    yandex = CloudStorage()
+    try:
+        image_data = yandex.cloud_get_image(yandex_path)
+    except Exception as e:
+        return Response(
+            {
+                "status": "failed",
+                "message": f"Failed to get image from Yandex.Disk: {str(e)}",
+            },
+        )
+
+    # Сохраняем изображение в кеш
+    file_cache.set(yandex_path, image_data)
+
+    # передача изображения на фронт
+    # Обработка различных форматов файлов, определяем MIME-тип динамически на основе расширения файла
+    mime_type, encoding = mimetypes.guess_type(yandex_path.split("/")[-1])
+    response = FileResponse(
+        image_data, content_type=mime_type if mime_type else "application/octet-stream"
+    )
+    response[
+        "Content-Disposition"
+    ] = f'attachment; filename="{yandex_path.split("/")[-1]}"'
+    return response

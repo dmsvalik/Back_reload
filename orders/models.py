@@ -21,7 +21,9 @@ class OrderModel(models.Model):
     order_time = models.DateTimeField("Дата создания заказа", auto_now=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
     order_deliver_price = models.CharField("Цена доставки", max_length=300, blank=True)
-    order_courier_service = models.CharField("Цена доставки", max_length=300, blank=True)
+    order_courier_service = models.CharField(
+        "Цена доставки", max_length=300, blank=True
+    )
     state = models.CharField(
         verbose_name="Статус", choices=STATE_CHOICES, max_length=15
     )
@@ -69,10 +71,17 @@ class ImageData(models.Model):
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=False)
     image_preview = models.ImageField(upload_to=nameFile, blank=True, null=True)
-    image_name = models.CharField("Название файла в системе и облаке", max_length=40, blank=True, default="")
+    image_name = models.CharField(
+        "Название файла в системе и облаке", max_length=40, blank=True, default=""
+    )
     date_upload = models.DateTimeField("Дата создания изображения", auto_now=True)
-    cloud_image_size = models.DateTimeField("Облако - размер изображения", auto_now=True)
-    preview_image_size = models.DateTimeField("Сервер - размер изображения", auto_now=True)
+    cloud_image_size = models.DateTimeField(
+        "Облако - размер изображения", auto_now=True
+    )
+    preview_image_size = models.DateTimeField(
+        "Сервер - размер изображения", auto_now=True
+    )
+    # TODO: Добавить поле yandex_path
 
 
 class OrderOffer(models.Model):
