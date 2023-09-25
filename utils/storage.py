@@ -77,5 +77,20 @@ class CloudStorage:
             )
         return response.status_code
 
-    def cloud_get_image(self, user_id, order_id, name):
-        pass
+    def cloud_get_image(self, yandex_path):
+        """
+        Метод для получения файла из YandexDisk.
+        """
+
+        params = {"path": yandex_path}
+        res = requests.get(f"{self.URL}/download", headers=self.headers, params=params)
+
+        download_url = res.json().get("href")
+
+        if not download_url:
+            raise Exception("Failed to get download link for the file.")
+
+        res = requests.get(download_url, stream=True)
+        res.raise_for_status()
+
+        return res.content
