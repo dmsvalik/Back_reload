@@ -27,13 +27,10 @@ ALLOWED_HOSTS = [
     "http://localhost:3000",
     "http://localhost",
     "https://www.whywe.ru/",
-    "www.whywe.ru"
+    "www.whywe.ru",
 ]
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://app",
-    "http://185.244.173.82"
-]
+CSRF_TRUSTED_ORIGINS = ["http://app", "http://185.244.173.82"]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -43,7 +40,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework.authtoken",
-
     "main_page",
     "products",
     "orders",
@@ -56,9 +52,9 @@ INSTALLED_APPS = [
     "tests",
 ]
 
-DOMAIN = ("185.244.173.82")
+DOMAIN = "185.244.173.82"
 
-SITE_NAME = ("whywe.ru")
+SITE_NAME = "whywe.ru"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -210,15 +206,14 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
     ],
-    'DEFAULT_THROTTLE_CLASSES': [
-        'rest_framework.throttling.AnonRateThrottle',
-        'rest_framework.throttling.UserRateThrottle'
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
     ],
-    'DEFAULT_THROTTLE_RATES': {
-        'anon': '2000/day',
-        'user': '2000/day',
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "2000/day",
+        "user": "2000/day",
     },
-
 }
 
 # Documentation https://djoser.readthedocs.io/en/latest/settings.html
@@ -229,7 +224,6 @@ SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(minutes=720),
     "BLACKLIST_AFTER_ROTATION": False,
-
     "ALGORITHM": "HS256",
     "SIGNING_KEY": SECRET_KEY,
     "VERIFYING_KEY": "",
@@ -238,7 +232,6 @@ SIMPLE_JWT = {
     "JSON_ENCODER": None,
     "JWK_URL": None,
     "LEEWAY": 0,
-
 }
 
 DJOSER = {
@@ -284,7 +277,22 @@ SWAGGER_SETTINGS = {
     "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
 }
 
-MAX_SERVER_QUOTA = 5* 1024 * 1024
+MAX_SERVER_QUOTA = 5 * 1024 * 1024
 MAX_STORAGE_QUOTA = 10 * 1024 * 1024
 MAX_ORDERS = 50
 
+# Filesystem caching
+# CACHES = {
+#     "file_cache": {
+#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
+#         "LOCATION": "/var/tmp/django_cache",
+#     }
+# }
+
+# Redis
+# CACHES = {
+#     "redis_cache": {
+#         "BACKEND": "django.core.cache.backends.redis.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379",
+#     }
+# }
