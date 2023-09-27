@@ -81,7 +81,7 @@ class ImageData(models.Model):
     preview_image_size = models.DateTimeField(
         "Сервер - размер изображения", auto_now=True
     )
-    # TODO: Добавить поле yandex_path
+    # TODO: Добавить поле yandex_path (yandex_path = models.CharField(max_length=500))
 
 
 class OrderOffer(models.Model):

@@ -72,10 +72,15 @@ def upload_image_order(request):
     temp_file.flush()
 
     yandex = CloudStorage()
-    response_code = yandex.cloud_upload_image(temp_file.name, user_id, order_id, name)
+    response_code, yandex_path = yandex.cloud_upload_image(
+        temp_file.name, user_id, order_id, name
+    )
     temp_file.close()
 
     if response_code == 201:
+        ImageData.objects.create(
+            user_account=request.user, yandex_path=yandex_path, order_id=order_id
+        )  # TODO
         return Response({"status": "success"})
     return Response(
         {
@@ -136,3 +141,29 @@ def get_image_order(request, id):
         "Content-Disposition"
     ] = f'attachment; filename="{yandex_path.split("/")[-1]}"'
     return response
+
+
+# TODO: Для проверки файла при POST и GET запросах...?
+# def check_file_type(allowed_types):
+#     def decorator(func):
+#         @wraps(func)
+#         def wrapped(request, *args, **kwargs):
+#             if request.method == 'POST':
+#                 uploaded_file = request.FILES.get('upload_file')
+#                 if "upload_file" not in request.FILES:
+#                     return HttpResponse(
+#                         {'The "upload_file" key is missing in the uploaded files.'}, status=400
+#                     )
+#                 else:
+#                     file_extension = uploaded_file.name.split('.')[-1].lower()
+#                     if file_extension not in allowed_types:
+#                         return HttpResponse("Invalid file type.", status=400)
+#             elif request.method == 'GET':
+#                 id = kwargs.get('id')
+#                 image_data = get_object_or_404(ImageData, id=id)
+#                 file_extension = image_data.yandex_path.split('.')[-1].lower()
+#                 if file_extension not in allowed_types:
+#                     return HttpResponse("Invalid file type.", status=400)
+#             return func(request, *args, **kwargs)
+#         return wrapped
+#     return decorator

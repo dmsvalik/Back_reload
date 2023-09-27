@@ -70,12 +70,18 @@ class CloudStorage:
             print("Failed to create path")
             return False
 
+        full_path = f"{path}/{order_id}_{name}"
         upload_link = self._get_upload_link(path, order_id, name)
         with open(image, "rb") as f:
             response = requests.put(
                 upload_link, headers=self.headers, files={"file": f}
             )
-        return response.status_code
+        if response.status_code == 201:
+            print("Successful upload")
+            return response.status_code, full_path
+        else:
+            print("Failed to upload")
+            return response.status_code, None
 
     def cloud_get_image(self, yandex_path):
         """
