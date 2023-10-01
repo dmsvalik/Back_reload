@@ -12,7 +12,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import ImageData, OrderImageModel, OrderOffer
+from .models import FileData, OrderImageModel, OrderOffer
 from .permissions import ChangePriceInOrder
 from .serializers import OrderImageSerializer, OrderOfferSerializer
 from main_page.permissions import IsSeller
@@ -77,9 +77,6 @@ def upload_image_order(request):
     temp_file.close()
 
     if response_code == 201:
-        ImageData.objects.create(
-            user_account=request.user, yandex_path=yandex_path, order_id=order_id
-        )  # TODO
         return Response({"status": "success"})
     return Response(
         {
@@ -97,7 +94,7 @@ def get_image_order(request, id):
 
     # Поиск пути изображения в БД по ID
     image_data = get_object_or_404(
-        ImageData, id=id
+        FileData, id=id
     )  # TODO: Добавить логику ошибки в errorcode.py
 
     yandex_path = image_data.yandex_path
