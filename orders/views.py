@@ -4,7 +4,6 @@ from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
 from utils.storage import CloudStorage
 
-# from django.core.cache import caches
 from django.core.files.temp import NamedTemporaryFile
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -90,9 +89,6 @@ def upload_image_order(request):
     )
 
 
-# file_cache = caches["file_cache"]
-
-
 @api_view(["GET"])
 def get_image_order(request, id):
     """
@@ -118,9 +114,6 @@ def get_image_order(request, id):
             },
         )
 
-    # Сохраняем изображение в кеш
-    # file_cache.set(yandex_path, image_data)
-
     # передача изображения на фронт
     # Обработка различных форматов файлов, определяем MIME-тип динамически на основе расширения файла
     mime_type, encoding = mimetypes.guess_type(yandex_path.split("/")[-1])
@@ -131,29 +124,3 @@ def get_image_order(request, id):
         "Content-Disposition"
     ] = f'attachment; filename="{yandex_path.split("/")[-1]}"'
     return response
-
-
-# TODO: Для проверки файла при POST и GET запросах...?
-# def check_file_type(allowed_types):
-#     def decorator(func):
-#         @wraps(func)
-#         def wrapped(request, *args, **kwargs):
-#             if request.method == 'POST':
-#                 uploaded_file = request.FILES.get('upload_file')
-#                 if "upload_file" not in request.FILES:
-#                     return HttpResponse(
-#                         {'The "upload_file" key is missing in the uploaded files.'}, status=400
-#                     )
-#                 else:
-#                     file_extension = uploaded_file.name.split('.')[-1].lower()
-#                     if file_extension not in allowed_types:
-#                         return HttpResponse("Invalid file type.", status=400)
-#             elif request.method == 'GET':
-#                 id = kwargs.get('id')
-#                 image_data = get_object_or_404(ImageData, id=id)
-#                 file_extension = image_data.yandex_path.split('.')[-1].lower()
-#                 if file_extension not in allowed_types:
-#                     return HttpResponse("Invalid file type.", status=400)
-#             return func(request, *args, **kwargs)
-#         return wrapped
-#     return decorator

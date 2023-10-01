@@ -19,5 +19,7 @@ urlpatterns = [
     path(
         "order/image_upload_order/", views.upload_image_order, name="upload-image-order"
     ),
-    path("order/image_get_order/", views.get_image_order, name="get-image-order"),
+    path(
+        "order/image_get_order/<int:id>", views.get_image_order, name="get-image-order"
+    ),
 ]

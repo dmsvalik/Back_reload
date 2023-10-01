@@ -67,21 +67,20 @@ class OrderImageModel(models.Model):
         return str(self.id)
 
 
-class ImageData(models.Model):
+class FileData(models.Model):
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
-    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=False)
-    image_preview = models.ImageField(upload_to=nameFile, blank=True, null=True)
-    image_name = models.CharField(
-        "Название файла в системе и облаке", max_length=40, blank=True, default=""
+    order_id = models.ForeignKey(
+        OrderModel, on_delete=models.SET_NULL, null=True, blank=True
     )
-    date_upload = models.DateTimeField("Дата создания изображения", auto_now=True)
-    cloud_image_size = models.DateTimeField(
-        "Облако - размер изображения", auto_now=True
+    yandex_path = models.CharField("Путь до файла на Яндекс", max_length=500)
+    server_path = models.CharField("Путь до файла на сервере", max_length=500)
+    date_upload = models.DateTimeField("Дата создания файла", auto_now_add=True)
+    yandex_size = models.DecimalField(
+        "Размер файла на Яндекс в Мб", max_digits=10, decimal_places=2
     )
-    preview_image_size = models.DateTimeField(
-        "Сервер - размер изображения", auto_now=True
+    preview_size = models.DecimalField(
+        "Размер файла превью на сервере в Мб", max_digits=10, decimal_places=2
     )
-    # TODO: Добавить поле yandex_path (yandex_path = models.CharField(max_length=500))
 
 
 class OrderOffer(models.Model):
