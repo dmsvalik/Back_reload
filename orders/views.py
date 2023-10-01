@@ -4,7 +4,7 @@ from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
 from utils.storage import CloudStorage
 
-from django.core.cache import caches
+# from django.core.cache import caches
 from django.core.files.temp import NamedTemporaryFile
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
@@ -90,7 +90,7 @@ def upload_image_order(request):
     )
 
 
-file_cache = caches["file_cache"]
+# file_cache = caches["file_cache"]
 
 
 @api_view(["GET"])
@@ -106,16 +106,6 @@ def get_image_order(request, id):
 
     yandex_path = image_data.yandex_path
 
-    # Проверяем, есть ли изображение в кеше
-    cached_image = file_cache.get(yandex_path)
-    # Обработка различных форматов файлов, определяем MIME-тип динамически на основе расширения файла
-    if cached_image:
-        mime_type, encoding = mimetypes.guess_type(yandex_path.split("/")[-1])
-        return FileResponse(
-            cached_image,
-            content_type=mime_type if mime_type else "application/octet-stream",
-        )
-
     # Иначе получаем изображение из Yandex
     yandex = CloudStorage()
     try:
@@ -129,7 +119,7 @@ def get_image_order(request, id):
         )
 
     # Сохраняем изображение в кеш
-    file_cache.set(yandex_path, image_data)
+    # file_cache.set(yandex_path, image_data)
 
     # передача изображения на фронт
     # Обработка различных форматов файлов, определяем MIME-тип динамически на основе расширения файла
