@@ -1,6 +1,7 @@
 """ логика для работы с сохранением на сервер / облако / yandex disk """
 import json
 import os
+from orders.models import FileData
 
 import requests
 
@@ -41,11 +42,11 @@ class CloudStorage:
             print(response.json()["message"])
         return False
 
-    def _ensure_path_exists(self, user_id):
+    def _ensure_path_exists(self, user_id, order_id):
         """
         Метод для создания пути для файла, если он еще не существует.
         """
-        path = f"{user_id}"
+        path = f"{user_id}/{order_id}"
         if not self._check_path(path):
             if not self._create_path(path):
                 return False
@@ -55,7 +56,7 @@ class CloudStorage:
         """
         Метод для создания ссылки для загрузки.
         """
-        full_path = f"{path}/{order_id}_{name}"
+        full_path = f"{path}/{name}"
         params = {"path": full_path, "overwrite": self.overwrite}
         res = requests.get(f"{self.URL}/upload", headers=self.headers, params=params)
         result = json.loads(res.content)
@@ -65,17 +66,36 @@ class CloudStorage:
             return result["message"]
 
     def cloud_upload_image(self, image, user_id, order_id, name):
-        path = self._ensure_path_exists(user_id)
+        path = self._ensure_path_exists(user_id, order_id)
         if not path:
             print("Failed to create path")
             return False
 
         upload_link = self._get_upload_link(path, order_id, name)
-        with open(image, "rb") as f:
-            response = requests.put(
-                upload_link, headers=self.headers, files={"file": f}
-            )
-        return response.status_code
 
-    def cloud_get_image(self, user_id, order_id, name):
-        pass
+        with open(image, "rb") as f:
+            response = requests.put(upload_link, headers=self.headers, files={"file": f})
+
+        result = dict()
+        result['status_code'] = response.status_code
+        if response.status_code == 201:
+            result['yandex_path'] = path + '/' + name
+
+        # delete tmp files
+        os.remove(image)
+        return result
+
+    def cloud_get_image(self, yandex_path):
+        """
+        Метод для получения файла из YandexDisk.
+        """
+
+        res = requests.get(f"{self.URL}/download/?path={yandex_path}", headers=self.headers)
+        download_url = res.json().get("href")
+
+        if not download_url:
+            raise Exception("Failed to get download link for the file.")
+
+        result = {'status': res.status_code,
+                  'download_url': download_url}
+        return result

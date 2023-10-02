@@ -2,16 +2,18 @@ from utils import errorcode
 from utils.decorators import check_user_quota, check_file_type
 from utils.storage import CloudStorage
 
-from django.core.files.temp import NamedTemporaryFile
+from django.shortcuts import get_object_or_404
+
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import OrderImageModel, OrderOffer
+from .models import OrderImageModel, OrderOffer, FileData
 from .permissions import ChangePriceInOrder
 from .serializers import OrderImageSerializer, OrderOfferSerializer
 from main_page.permissions import IsSeller
+from utils.errorcode import NotAllowedUser
 
 
 class OrderImageViewSet(viewsets.ModelViewSet):
@@ -41,7 +43,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["POST"])
-@check_file_type(["jpg",])
+@check_file_type(["jpg", "jpeg", "pdf"])
 @check_user_quota
 def upload_image_order(request):
     """
@@ -56,21 +58,47 @@ def upload_image_order(request):
     if order_id == "" or not order_id.isdigit():
         raise errorcode.IncorrectImageOrderUpload()
 
-    # save temp version of the file in system, for celery task
-    temp_file = NamedTemporaryFile(delete=True)
-    for block in image.chunks():
-        temp_file.write(block)
-    temp_file.flush()
+    # temporary save file
+    with open(f'tmp/{name}', 'wb+') as file:
+        for chunk in image.chunks():
+            file.write(chunk)
+    temp_file = f'tmp/{name}'
 
     yandex = CloudStorage()
-    response_code = yandex.cloud_upload_image(temp_file.name, user_id, order_id, name)
-    temp_file.close()
+    result = yandex.cloud_upload_image(temp_file, user_id, order_id, name)
 
-    if response_code == 201:
+    if result['status_code'] == 201:
+        FileData.objects.create(user_account=request.user, yandex_path=result['yandex_path'])
+
         return Response({"status": "success"})
     return Response(
         {
             "status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {response_code}",
+            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}",
         },
     )
+
+
+@api_view(["GET"])
+def get_file_order(request, file_id):
+    """
+    Получение изображения и передача его на фронт
+    """
+
+    image_data = get_object_or_404(FileData, id=file_id)  # TODO: Добавить логику ошибки в errorcode.py
+    if request.user.id != image_data.user_account.id:
+        raise NotAllowedUser
+
+    yandex_path = image_data.yandex_path
+
+    # get download_url from Yandex
+    yandex = CloudStorage()
+    try:
+        image_data = yandex.cloud_get_image(yandex_path)
+    except Exception as e:
+        return Response(
+            {
+                "status": "failed",
+                "message": f"Failed to get image from Yandex.Disk: {str(e)}",
+            },)
+    return Response(image_data)
