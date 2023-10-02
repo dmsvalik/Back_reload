@@ -1,34 +1,18 @@
-import mimetypes
-
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
+from utils.errorcode import NotAllowedUser
 from utils.storage import CloudStorage
 
-from django.core.files.temp import NamedTemporaryFile
-from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import FileData, OrderImageModel, OrderOffer
+from .models import FileData, OrderOffer
 from .permissions import ChangePriceInOrder
-from .serializers import OrderImageSerializer, OrderOfferSerializer
+from .serializers import OrderOfferSerializer
 from main_page.permissions import IsSeller
-
-
-class OrderImageViewSet(viewsets.ModelViewSet):
-    """Проверка картинок по продукту + создание картинок с привязкой к продукту - test"""
-
-    permission_classes = [IsAuthenticated]
-    queryset = OrderImageModel.objects.all()
-    serializer_class = OrderImageSerializer
-
-    # достаем все объекты пользователя
-    def get_queryset(self):
-        user = self.request.user
-        return OrderImageModel.objects.filter(order_id__user_account=user)
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
@@ -45,11 +29,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["POST"])
-@check_file_type(
-    [
-        "jpg",
-    ]
-)
+@check_file_type(["jpg", "jpeg", "pdf"])
 @check_user_quota
 def upload_image_order(request):
     """
@@ -64,42 +44,44 @@ def upload_image_order(request):
     if order_id == "" or not order_id.isdigit():
         raise errorcode.IncorrectImageOrderUpload()
 
-    # save temp version of the file in system, for celery task
-    temp_file = NamedTemporaryFile(delete=True)
-    for block in image.chunks():
-        temp_file.write(block)
-    temp_file.flush()
+    # temporary save file
+    with open(f"tmp/{name}", "wb+") as file:
+        for chunk in image.chunks():
+            file.write(chunk)
+    temp_file = f"tmp/{name}"
 
     yandex = CloudStorage()
-    response_code, yandex_path = yandex.cloud_upload_image(
-        temp_file.name, user_id, order_id, name
-    )
-    temp_file.close()
 
-    if response_code == 201:
+    result = yandex.cloud_upload_image(temp_file, user_id, order_id, name)
+
+    if result["status_code"] == 201:
+        FileData.objects.create(
+            user_account=request.user, yandex_path=result["yandex_path"]
+        )
+
         return Response({"status": "success"})
     return Response(
         {
             "status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {response_code}",
+            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}",
         },
     )
 
 
 @api_view(["GET"])
-def get_image_order(request, id):
+def get_file_order(request, file_id):
     """
     Получение изображения и передача его на фронт
     """
-
-    # Поиск пути изображения в БД по ID
     image_data = get_object_or_404(
-        FileData, id=id
+        FileData, id=file_id
     )  # TODO: Добавить логику ошибки в errorcode.py
+    if request.user.id != image_data.user_account.id:
+        raise NotAllowedUser
 
     yandex_path = image_data.yandex_path
 
-    # Иначе получаем изображение из Yandex
+    # get download_url from Yandex
     yandex = CloudStorage()
     try:
         image_data = yandex.cloud_get_image(yandex_path)
@@ -110,14 +92,4 @@ def get_image_order(request, id):
                 "message": f"Failed to get image from Yandex.Disk: {str(e)}",
             },
         )
-
-    # передача изображения на фронт
-    # Обработка различных форматов файлов, определяем MIME-тип динамически на основе расширения файла
-    mime_type, encoding = mimetypes.guess_type(yandex_path.split("/")[-1])
-    response = FileResponse(
-        image_data, content_type=mime_type if mime_type else "application/octet-stream"
-    )
-    response[
-        "Content-Disposition"
-    ] = f'attachment; filename="{yandex_path.split("/")[-1]}"'
-    return response
+    return Response(image_data)
