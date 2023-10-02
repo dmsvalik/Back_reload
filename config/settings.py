@@ -281,20 +281,4 @@ MAX_SERVER_QUOTA = 5 * 1024 * 1024
 MAX_STORAGE_QUOTA = 10 * 1024 * 1024
 MAX_ORDERS = 50
 
-# Filesystem caching
-# CACHES = {
-#     "file_cache": {
-#         "BACKEND": "django.core.cache.backends.filebased.FileBasedCache",
-#         "LOCATION": "/var/tmp/django_cache",
-#     }
-# }
-
-# Redis
-# CACHES = {
-#     "redis_cache": {
-#         "BACKEND": "django.core.cache.backends.redis.RedisCache",
-#         "LOCATION": "redis://127.0.0.1:6379",
-#     }
-# }
-
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")

@@ -1,9 +1,12 @@
+import os
+
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
 from utils.errorcode import NotAllowedUser
 from utils.storage import CloudStorage
 
 from django.shortcuts import get_object_or_404
+from PIL import Image
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
@@ -28,6 +31,27 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return OrderOffer.objects.filter(user_account=user)
 
 
+def compress_image(image_path, max_size=1024):
+    """
+    Функция для сжатия изображения.
+    """
+
+    img = Image.open(image_path)
+
+    if os.path.getsize(image_path) > max_size * 1024:
+        width, height = img.size
+
+        while os.path.getsize(image_path) > max_size * 1024:
+            width = width - 50
+            height = height - 50
+
+            new_img = img.resize((width, height), Image.ANTIALIAS)
+            new_img.save(image_path)
+            if width <= 50 or height <= 50:
+                break
+    return image_path
+
+
 @api_view(["POST"])
 @check_file_type(["jpg", "jpeg", "pdf"])
 @check_user_quota
@@ -50,8 +74,9 @@ def upload_image_order(request):
             file.write(chunk)
     temp_file = f"tmp/{name}"
 
-    yandex = CloudStorage()
+    temp_file = compress_image(temp_file)
 
+    yandex = CloudStorage()
     result = yandex.cloud_upload_image(temp_file, user_id, order_id, name)
 
     if result["status_code"] == 201:
@@ -73,6 +98,7 @@ def get_file_order(request, file_id):
     """
     Получение изображения и передача его на фронт
     """
+
     image_data = get_object_or_404(
         FileData, id=file_id
     )  # TODO: Добавить логику ошибки в errorcode.py

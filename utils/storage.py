@@ -71,16 +71,17 @@ class CloudStorage:
             print("Failed to create path")
             return False
 
-        full_path = f"{path}/{order_id}_{name}"
         upload_link = self._get_upload_link(path, order_id, name)
 
         with open(image, "rb") as f:
-            response = requests.put(upload_link, headers=self.headers, files={"file": f})
+            response = requests.put(
+                upload_link, headers=self.headers, files={"file": f}
+            )
 
         result = dict()
-        result['status_code'] = response.status_code
+        result["status_code"] = response.status_code
         if response.status_code == 201:
-            result['yandex_path'] = path + '/' + name
+            result["yandex_path"] = path + "/" + name
 
         # delete tmp files
         os.remove(image)
@@ -91,12 +92,13 @@ class CloudStorage:
         Метод для получения файла из YandexDisk.
         """
 
-        res = requests.get(f"{self.URL}/download/?path={yandex_path}", headers=self.headers)
+        res = requests.get(
+            f"{self.URL}/download/?path={yandex_path}", headers=self.headers
+        )
         download_url = res.json().get("href")
 
         if not download_url:
             raise Exception("Failed to get download link for the file.")
 
-        result = {'status': res.status_code,
-                  'download_url': download_url}
+        result = {"status": res.status_code, "download_url": download_url}
         return result
