@@ -45,26 +45,6 @@ def nameFile(instance, filename):
     )
 
 
-class OrderImageModel(models.Model):
-    id = models.AutoField(primary_key=True, unique=True)
-    order_id = models.ForeignKey(
-        OrderModel, related_name="order_id", on_delete=models.CASCADE, null=False
-    )
-    image_1 = models.ImageField(upload_to=nameFile, blank=True, null=True)
-    image_2 = models.ImageField(upload_to=nameFile, blank=True, null=True)
-    image_3 = models.ImageField(upload_to=nameFile, blank=True, null=True)
-    image_4 = models.ImageField(upload_to=nameFile, blank=True, null=True)
-    image_5 = models.ImageField(upload_to=nameFile, blank=True, null=True)
-    image_6 = models.ImageField(upload_to=nameFile, blank=True, null=True)
-
-    class Meta:
-        verbose_name = "Изображения - заказ пользователя"
-        verbose_name_plural = "Изображения - заказ пользователя"
-
-    def __str__(self):
-        return str(self.id)
-
-
 class FileData(models.Model):
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True, blank=True)

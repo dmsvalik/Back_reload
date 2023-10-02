@@ -1,15 +1,10 @@
 from django.contrib import admin
-from .models import OrderImageModel, OrderModel, OrderOffer, FileData
+from .models import OrderModel, OrderOffer, FileData
 
 
 @admin.register(OrderModel)
 class OrderModelAdmin(admin.ModelAdmin):
     list_display = ["order_time", "id", "state", "user_account"]
-
-
-@admin.register(OrderImageModel)
-class OrderImageModelAdmin(admin.ModelAdmin):
-    list_display = ["id", "order_id"]
 
 
 @admin.register(OrderOffer)

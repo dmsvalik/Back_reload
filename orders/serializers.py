@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from .models import OrderImageModel, OrderModel, OrderOffer
+from .models import OrderModel, OrderOffer
 from main_page.models import SellerData
 
 
@@ -21,24 +21,6 @@ class OrderModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context["request"].user
         return OrderModel.objects.create(**validated_data, user_account=user)
-
-
-class OrderImageSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = OrderImageModel
-        fields = (
-            "id",
-            "order_id",
-            "image_1",
-            "image_2",
-            "image_3",
-            "image_4",
-            "image_5",
-            "image_6",
-        )
-
-    def create(self, validated_data):
-        return OrderImageModel.objects.create(**validated_data)
 
 
 class OrderOfferSerializer(serializers.ModelSerializer):
