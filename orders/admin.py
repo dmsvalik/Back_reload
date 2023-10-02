@@ -19,4 +19,4 @@ class OrderOfferAdmin(admin.ModelAdmin):
 
 @admin.register(FileData)
 class FileDataAdmin(admin.ModelAdmin):
-    list_display = ["user_account", "order_id", "date_upload"]
+    list_display = ["id", "user_account", "order_id", "date_upload"]
