@@ -16,6 +16,11 @@ class HttpValidationException(APIException):
             self.status_code = status_code
 
 
+class NotAllowedUser(HttpValidationException):
+    status_code = 403
+    detail = "Action not allowed to current user"
+
+
 class IncorrectImageOrderUpload(HttpValidationException):
     status_code = 400
     detail = "Please check the order_id field it's incorrect"
