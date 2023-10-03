@@ -1,19 +1,19 @@
 from utils import errorcode
-from utils.decorators import check_user_quota, check_file_type
+from utils.decorators import check_file_type, check_user_quota
+from utils.errorcode import NotAllowedUser
 from utils.storage import CloudStorage
 
 from django.shortcuts import get_object_or_404
-
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import OrderOffer, FileData
+from .models import FileData, OrderOffer
 from .permissions import ChangePriceInOrder
 from .serializers import OrderOfferSerializer
+from .tasks import celery_upload_image_task
 from main_page.permissions import IsSeller
-from utils.errorcode import NotAllowedUser
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
@@ -51,19 +51,22 @@ def upload_image_order(request):
             file.write(chunk)
     temp_file = f'tmp/{name}'
 
-    yandex = CloudStorage()
-    result = yandex.cloud_upload_image(temp_file, user_id, order_id, name)
-
-    if result['status_code'] == 201:
-        FileData.objects.create(user_account=request.user, yandex_path=result['yandex_path'])
-
-        return Response({"status": "success"})
-    return Response(
-        {
-            "status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}",
-        },
-    )
+    # yandex = CloudStorage()
+    # result = yandex.cloud_upload_image(temp_file, user_id, order_id, name)
+#
+    # if result['status_code'] == 201:
+    #     FileData.objects.create(user_account=request.user, yandex_path=result['yandex_path'])
+#
+    #     return Response({"status": "success"})
+    # return Response(
+    #     {
+    #         "status": "failed",
+    #         "message": f"Unexpected response from Yandex.Disk: {result['status_code']}",
+    #     },
+    # )
+    # task = celery_upload_image_task.delay(temp_file, user_id, order_id)
+    # return Response({"task_id": task.id}, status=202)
+    return celery_upload_image_task(temp_file, user_id, order_id)
 
 
 @api_view(["GET"])
