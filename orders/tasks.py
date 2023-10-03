@@ -5,15 +5,17 @@ from pathlib import Path
 
 from utils.storage import CloudStorage
 
-# from celery import shared_task
+from celery import shared_task
+from django.shortcuts import get_object_or_404
 from PIL import Image
 from rest_framework.response import Response
 
 from config.settings import BASE_DIR
-from orders.models import FileData
+from main_page.models import UserAccount
+from orders.models import FileData, OrderModel
 
 
-# @shared_task()
+@shared_task()
 def celery_upload_image_task(temp_file, user_id, order_id):
     dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
     filename = _generate_new_filename(dir_path)
@@ -21,16 +23,21 @@ def celery_upload_image_task(temp_file, user_id, order_id):
     preview = _prepare_and_save_preview_image(temp_file, file_path)
     prepared_temp_file = _prepare_image_before_upload(temp_file)
     yandex = CloudStorage()
-    result = yandex.cloud_upload_image(temp_file, user_id, order_id, prepared_temp_file)
+    result = yandex.cloud_upload_image(prepared_temp_file, user_id, order_id, filename)
+    user = get_object_or_404(UserAccount, id=user_id)
+    order = get_object_or_404(OrderModel, id=order_id)
     if result['status_code'] == 201:
         FileData.objects.create(
-            user_account=user_id,
-            order_id=order_id,
+            user_account=user,
+            order_id=order,
             yandex_path=result['yandex_path'],
             server_path=preview,
             yandex_size=os.path.getsize(prepared_temp_file),
             server_size=os.path.getsize(file_path)
         )
+        # delete tmp files
+        os.remove(prepared_temp_file)
+        print("Done")
 
         return Response({"status": "success"})
     return Response(
@@ -82,4 +89,4 @@ def _prepare_image_before_upload(image):
         img = img.resize((int(img.size[0] * new_size_ratio), int(img.size[1] * new_size_ratio)))
         img.save(image)
         image_size = os.path.getsize(image)
-    return img
+    return image

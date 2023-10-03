@@ -64,9 +64,8 @@ def upload_image_order(request):
     #         "message": f"Unexpected response from Yandex.Disk: {result['status_code']}",
     #     },
     # )
-    # task = celery_upload_image_task.delay(temp_file, user_id, order_id)
-    # return Response({"task_id": task.id}, status=202)
-    return celery_upload_image_task(temp_file, user_id, order_id)
+    task = celery_upload_image_task.delay(temp_file, user_id, order_id)
+    return Response({"task_id": task.id}, status=202)
 
 
 @api_view(["GET"])
