@@ -7,12 +7,13 @@ from utils import errorcode
 from utils.storage import CloudStorage
 
 from celery import shared_task
+from django.db.models import F
 from PIL import Image
 from rest_framework import status
 from rest_framework.response import Response
 
 from config.settings import BASE_DIR
-from main_page.models import UserAccount
+from main_page.models import UserAccount, UserQuota
 from orders.models import FileData, OrderModel
 
 
@@ -48,18 +49,19 @@ def celery_upload_image_task(temp_file, user_id, order_id):
                                        filename)
 
     if result['status_code'] == status.HTTP_201_CREATED:
+        yandex_size = os.path.getsize(prepared_temp_file)
+        server_size = os.path.getsize(file_path)
         FileData.objects.create(
             user_account=user,
             order_id=order,
             yandex_path=result['yandex_path'],
             server_path=preview,
-            yandex_size=os.path.getsize(prepared_temp_file),
-            server_size=os.path.getsize(file_path)
+            yandex_size=yandex_size,
+            server_size=server_size
         )
         # delete tmp files
         os.remove(prepared_temp_file)
-        print("Done")
-
+        recalculate_quota(user, yandex_size, server_size)
         return Response({"status": "success"})
     # If an error occurs, we delete temp files and preview
     os.remove(prepared_temp_file)
@@ -123,3 +125,10 @@ def _prepare_image_before_upload(image):
         img.save(image)
         image_size = os.path.getsize(image)
     return image
+
+
+def recalculate_quota(user_account, cloud_size, server_size):
+    return UserQuota.objects.filter(user=user_account).update(
+        total_cloud_size=F('total_cloud_size') + cloud_size,
+        total_server_size=F('total_server_size') + server_size
+    )
