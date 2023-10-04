@@ -47,8 +47,13 @@ class CloudStorage:
         Метод для создания пути для файла, если он еще не существует.
         """
         path = f"{user_id}/{order_id}"
-        if not self._check_path(path):
-            if not self._create_path(path):
+        user_directory_path = f"{user_id}"
+        order_directory_path = f"{user_id}/{order_id}"
+        if not self._check_path(order_directory_path):
+            if not self._check_path(user_directory_path):
+                if not self._create_path(user_directory_path):
+                    return False
+            if not self._create_path(order_directory_path):
                 return False
         return path
 
@@ -74,7 +79,7 @@ class CloudStorage:
         upload_link = self._get_upload_link(path, order_id, name)
 
         with open(image, "rb") as f:
-            response = requests.put(upload_link, headers=self.headers, files={"file": f})
+            response = requests.put(upload_link, headers=self.headers, data=f)
 
         result = dict()
         result['status_code'] = response.status_code
@@ -82,7 +87,7 @@ class CloudStorage:
             result['yandex_path'] = path + '/' + name
 
         # delete tmp files
-        os.remove(image)
+        # os.remove(image) - перенесено в таску
         return result
 
     def cloud_get_image(self, yandex_path):
