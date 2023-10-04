@@ -16,6 +16,19 @@ class CardModel(models.Model):
         return self.name
 
 
+class QuestionnaireModel(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    card_category = models.ForeignKey(CardModel, on_delete=models.CASCADE, null=False)
+    questionnaire_type = models.CharField("тип анкеты - короткая, длинная", max_length=20, null=True)
+
+    class Meta:
+        verbose_name = "Тип Анкеты"
+        verbose_name_plural = "Тип Анкеты"
+
+    def __str__(self):
+        return self.questionnaire_type
+
+
 class CategoryModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     card = models.ManyToManyField(CardModel)

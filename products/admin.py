@@ -1,10 +1,16 @@
 from django.contrib import admin
-from .models import (CardModel, CategoryModel, QuestionOptionsModel, QuestionsProductsModel, ResponseModel)
+from .models import (CardModel, CategoryModel, QuestionOptionsModel,
+                     QuestionsProductsModel, ResponseModel, QuestionnaireModel)
 
 
 @admin.register(CardModel)
 class CardModelAdmin(admin.ModelAdmin):
-    list_display = ["name"]
+    list_display = ["id", "name"]
+
+
+@admin.register(QuestionnaireModel)
+class QuestionnaireModelAdmin(admin.ModelAdmin):
+    list_display = ["id", "questionnaire_type"]
 
 
 @admin.register(CategoryModel)
