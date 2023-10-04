@@ -20,10 +20,24 @@ class QuestionnaireModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     card_category = models.ForeignKey(CardModel, on_delete=models.CASCADE, null=False)
     questionnaire_type = models.CharField("тип анкеты - короткая, длинная", max_length=20, null=True)
+    description = models.CharField("описание анкеты", max_length=300, null=True)
 
     class Meta:
         verbose_name = "Тип Анкеты"
         verbose_name_plural = "Тип Анкеты"
+
+    def __str__(self):
+        return self.questionnaire_type
+
+
+class QuestionnaireSection(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    questionnaire_type = models.ForeignKey(QuestionnaireModel, on_delete=models.CASCADE, null=False)
+    section = models.CharField("Раздел анкеты с определенными вопросами", max_length=20, null=True)
+
+    class Meta:
+        verbose_name = "Разделы внутри анкеты"
+        verbose_name_plural = "Разделы внутри анкеты"
 
     def __str__(self):
         return self.questionnaire_type
@@ -89,16 +103,10 @@ class QuestionOptionsModel(models.Model):
 class ResponseModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True, blank=True)
-    question = models.ForeignKey(
-        QuestionsProductsModel, on_delete=models.CASCADE, null=False
-    )
+    question = models.ForeignKey(QuestionsProductsModel, on_delete=models.CASCADE, null=False)
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
-    response = models.CharField(
-        "ответ по заказу", max_length=120, null=True, blank=True
-    )
-    position = models.CharField(
-        "номер ответа по порядку", max_length=10, null=True, blank=True
-    )
+    response = models.CharField("ответ по заказу", max_length=120, null=True, blank=True)
+    position = models.CharField("номер ответа по порядку", max_length=10, null=True, blank=True)
     # image = models.ImageField('Изображение', upload_to= , blank=True, null=True)
 
     class Meta:
