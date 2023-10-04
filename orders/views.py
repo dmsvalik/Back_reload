@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import FileData, OrderOffer
+from .models import FileData, OrderModel, OrderOffer
 from .permissions import ChangePriceInOrder
 from .serializers import OrderOfferSerializer
 from .tasks import celery_upload_image_task
@@ -42,7 +42,7 @@ def upload_image_order(request):
     user_id = request.user.id
     name = image.name
 
-    if order_id == "" or not order_id.isdigit():
+    if order_id == "" or not order_id.isdigit() or not OrderModel.objects.filter(id=order_id).exists():
         raise errorcode.IncorrectImageOrderUpload()
 
     # temporary save file

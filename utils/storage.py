@@ -79,7 +79,7 @@ class CloudStorage:
         upload_link = self._get_upload_link(path, order_id, name)
 
         with open(image, "rb") as f:
-            response = requests.put(upload_link, headers=self.headers, files={"file": f})
+            response = requests.put(upload_link, headers=self.headers, data=f)
 
         result = dict()
         result['status_code'] = response.status_code
