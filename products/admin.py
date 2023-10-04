@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import (CardModel, CategoryModel, QuestionOptionsModel,
-                     QuestionsProductsModel, ResponseModel, QuestionnaireModel)
+                     QuestionsProductsModel, ResponseModel, QuestionnaireModel,
+                     QuestionnaireSection)
 
 
 @admin.register(CardModel)
@@ -11,6 +12,11 @@ class CardModelAdmin(admin.ModelAdmin):
 @admin.register(QuestionnaireModel)
 class QuestionnaireModelAdmin(admin.ModelAdmin):
     list_display = ["id", "questionnaire_type"]
+
+
+@admin.register(QuestionnaireSection)
+class QuestionnaireSectionAdmin(admin.ModelAdmin):
+    list_display = ["id", "questionnaire_type", "section"]
 
 
 @admin.register(CategoryModel)
