@@ -8,5 +8,3 @@ class ImageWork(object):
 
     def resize_preview(self, image):
         pass
-
-    

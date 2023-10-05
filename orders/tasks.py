@@ -16,6 +16,7 @@ from config.settings import BASE_DIR
 from main_page.models import UserAccount, UserQuota
 from orders.models import FileData, OrderModel
 
+# celery -A config.celery worker
 
 MAX_IMAGE_SIZE_IN_B = 1048576
 MAXIMUM_DIMENSIONS_OF_SIDES = (300, 300)

@@ -27,7 +27,8 @@ def check_user_quota(func):
             )
         if user_quota.total_traffic < 0:
             return HttpResponse(
-                "The allowed traffic has been exceeded. Wait until next month or contact the administrators.",
+                "The allowed traffic has been exceeded. Wait until next month or contact "
+                "the administrators.",
                 status=403,
             )
         return func(request, *args, **kwargs)
