@@ -32,11 +32,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["POST"])
-@check_file_type(
-    ["image/jpg", "image/jpeg", "application/pdf"],
-    ["jpg", "jpeg", "pdf"],
-)
-# @check_file_type(["image/jpg", "image/jpeg", "image/png", "application/pdf"])
+@check_file_type(["image/jpg", "image/jpeg", "application/pdf"])
 @check_user_quota
 def upload_image_order(request):
     """
@@ -48,11 +44,7 @@ def upload_image_order(request):
     user_id = request.user.id
     name = image.name
 
-    if (
-        order_id == ""
-        or not order_id.isdigit()
-        or not OrderModel.objects.filter(id=order_id).exists()
-    ):
+    if order_id == "" or not order_id.isdigit() or not OrderModel.objects.filter(id=order_id).exists():
         raise errorcode.IncorrectImageOrderUpload()
 
     # temporary save file
@@ -73,9 +65,7 @@ def get_file_order(request, file_id):
     Получение изображения и передача его на фронт
     """
 
-    image_data = get_object_or_404(
-        FileData, id=file_id
-    )  # TODO: Добавить логику ошибки в errorcode.py
+    image_data = get_object_or_404(FileData, id=file_id)
     if request.user.id != image_data.user_account.id:
         raise NotAllowedUser
 
