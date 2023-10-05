@@ -2,11 +2,15 @@ from django.urls import path
 
 from .views import (AnswerListAPIView, CardModelAPIView, ImageResponseAPIView,
                     CategoryModelListAPIView, QuestionsModelListAPIView, CreateOrderAnswers)
+from . import views
 
 
 urlpatterns = [
     path("products/step_1/card/", CardModelAPIView.as_view()),
-    path("products/step_2/<int:card_id>", CategoryModelListAPIView.as_view()),
+
+    path("products/step_2/<int:card_id>", views.questionnaire_options, name='questionnaire_options'),
+
+    path("products/step_2_1/<int:card_id>", CategoryModelListAPIView.as_view()),
     path(
         "products/step_3_1/<int:category_id>/questions",
         QuestionsModelListAPIView.as_view(),

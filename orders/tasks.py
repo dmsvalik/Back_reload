@@ -17,6 +17,8 @@ from main_page.models import UserAccount
 from orders.models import FileData, OrderModel
 
 
+# celery -A config.celery worker
+
 MAX_IMAGE_SIZE_IN_B = 1048576
 MAXIMUM_DIMENSIONS_OF_SIDES = (300, 300)
 COEFFICIENT_OF_SIZE_CHANGING = 0.9

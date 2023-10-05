@@ -5,7 +5,6 @@ from orders.models import OrderModel
 from config.settings import MAX_SERVER_QUOTA, MAX_STORAGE_QUOTA, MAX_ORDERS
 
 
-
 def check_user_quota(func):
     @wraps(func)
     def wrapped(request, *args, **kwargs):
@@ -19,7 +18,8 @@ def check_user_quota(func):
         if user_quota.total_server_size >= MAX_SERVER_QUOTA:
             return HttpResponse("Please free up space by deleting unnecessary files.", status=403)
         if user_quota.total_traffic < 0:
-            return HttpResponse("The allowed traffic has been exceeded. Wait until next month or contact the administrators.", status=403)
+            return HttpResponse("The allowed traffic has been exceeded. Wait until next month or contact "
+                                "the administrators.", status=403)
         return func(request, *args, **kwargs)
     return wrapped
 
@@ -42,13 +42,13 @@ def check_file_type(allowed_types):
     return decorator
 
 
-
 def check_order_limit(func):
     @wraps(func)
     def wrapped(request, *args, **kwargs):
         user_id = request.user.id
         user_order_count = OrderModel.objects.filter(user_id=user_id, offer_status=False).count()
         if user_order_count >= MAX_ORDERS:
-            return HttpResponse("The order limit has been exceeded. Maximum number of orders: {}".format(MAX_ORDERS), status=403)
+            return HttpResponse("The order limit has been exceeded. Maximum number of orders: {}".format(MAX_ORDERS),
+                                status=403)
         return func(request, *args, **kwargs)
     return wrapped

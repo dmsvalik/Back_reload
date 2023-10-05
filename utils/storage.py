@@ -1,8 +1,6 @@
 """ логика для работы с сохранением на сервер / облако / yandex disk """
 import json
 import os
-from orders.models import FileData
-
 import requests
 
 from utils import errorcode

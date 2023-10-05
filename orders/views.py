@@ -1,3 +1,5 @@
+import os
+
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
 from utils.errorcode import NotAllowedUser
@@ -46,24 +48,13 @@ def upload_image_order(request):
         raise errorcode.IncorrectImageOrderUpload()
 
     # temporary save file
+    if not os.path.exists('tmp'):
+        os.mkdir('tmp')
     with open(f'tmp/{name}', 'wb+') as file:
         for chunk in image.chunks():
             file.write(chunk)
     temp_file = f'tmp/{name}'
 
-    # yandex = CloudStorage()
-    # result = yandex.cloud_upload_image(temp_file, user_id, order_id, name)
-#
-    # if result['status_code'] == 201:
-    #     FileData.objects.create(user_account=request.user, yandex_path=result['yandex_path'])
-#
-    #     return Response({"status": "success"})
-    # return Response(
-    #     {
-    #         "status": "failed",
-    #         "message": f"Unexpected response from Yandex.Disk: {result['status_code']}",
-    #     },
-    # )
     task = celery_upload_image_task.delay(temp_file, user_id, order_id)
     return Response({"task_id": task.id}, status=202)
 
