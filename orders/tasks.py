@@ -5,21 +5,22 @@ from pathlib import Path
 
 from utils import errorcode
 from utils.storage import CloudStorage
+from utils.views import recalculate_quota
 
 from celery import shared_task
-from django.db.models import F
-from PIL import Image
+from PIL import Image, ImageSequence
 from rest_framework import status
 from rest_framework.response import Response
 
 from config.settings import BASE_DIR
-from main_page.models import UserAccount, UserQuota
+from main_page.models import UserAccount
 from orders.models import FileData, OrderModel
 
 
 MAX_IMAGE_SIZE_IN_B = 1048576
 MAXIMUM_DIMENSIONS_OF_SIDES = (300, 300)
 COEFFICIENT_OF_SIZE_CHANGING = 0.9
+COEFFICIENT_OF_GIF_SIZE_CHANGING = 0.7
 NUMBER_OF_CHARACTERS_IN_FILENAME = 7
 
 
@@ -28,8 +29,9 @@ def celery_upload_image_task(temp_file, user_id, order_id):
     """Task to write a file on the server and
     create a preview of the image to it."""
     # Generate a name and create a path to store the preview image
+    file_format = temp_file.split('.')[-1]
     dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
-    filename = _generate_new_filename(dir_path)
+    filename = _generate_new_filename(dir_path, file_format)
     file_path = os.path.join(dir_path, filename)
 
     # Checking that the user and the order exist
@@ -38,11 +40,15 @@ def celery_upload_image_task(temp_file, user_id, order_id):
     user = UserAccount.objects.get(id=user_id)
     order = OrderModel.objects.get(id=order_id)
 
-    # Reducing the size of the image and saving it as a preview
-    preview = _prepare_and_save_preview_image(temp_file, file_path)
+    if file_format != 'gif':
+        # Reducing the size of the image or animation and saving it as a preview
+        preview = _prepare_and_save_preview_image(temp_file, file_path)
 
-    # Preparing an image for uploading to Yandex Disk.
-    prepared_temp_file = _prepare_image_before_upload(temp_file)
+        # Preparing an image for uploading to Yandex Disk.
+        prepared_temp_file = _prepare_image_before_upload(temp_file)
+    else:
+        preview = _prepare_and_save_preview_gif(temp_file, file_path)
+        prepared_temp_file = _prepare_gif_before_upload(temp_file)
 
     yandex = CloudStorage()
     result = yandex.cloud_upload_image(prepared_temp_file, user_id, order_id,
@@ -88,7 +94,7 @@ def _prepare_catalog_file_names(dir_path):
     return res
 
 
-def _generate_new_filename(dir_path):
+def _generate_new_filename(dir_path, file_format):
     """File Name generation."""
     existed_names = _prepare_catalog_file_names(dir_path)
     generated_file_name = ''.join(random.choices(
@@ -100,6 +106,8 @@ def _generate_new_filename(dir_path):
             string.ascii_letters + string.digits,
             k=NUMBER_OF_CHARACTERS_IN_FILENAME
         ))
+    if file_format == 'gif':
+        return f'{generated_file_name}.gif'
     return f'{generated_file_name}.jpg'
 
 
@@ -109,6 +117,30 @@ def _prepare_and_save_preview_image(image, file_path):
     img = Image.open(image)
     img.thumbnail(MAXIMUM_DIMENSIONS_OF_SIDES)
     img.save(file_path)
+    return file_path
+
+
+def _prepare_and_save_preview_gif(gif, file_path):
+    """Reducing the size of the animation image and saving it as a preview.
+    The dimensions of the sides are no more than the established."""
+    # список для обработанных фреймов
+    frames = []
+    # откроем файл который создали ранее
+    with Image.open(gif) as img:
+        for frame in ImageSequence.Iterator(img):
+            if frame.size[0] >= frame.size[1]:
+                reduction_ratio = 300 / frame.size[0]
+            else:
+                reduction_ratio = 300 / frame.size[1]
+            # и уменьшим согласно коэффициента
+            size = (int(frame.size[0] * reduction_ratio), int(frame.size[1] * reduction_ratio))
+            frame = frame.resize(size)
+            # добавляем обраборанный фрейм в список
+            frames.append(frame)
+
+    # сохраняем обработанное GIF-изображение
+    frames[0].save(file_path, save_all=True, loop=0,
+                   append_images=frames[1:], optimize=False, duration=3)
     return file_path
 
 
@@ -127,8 +159,22 @@ def _prepare_image_before_upload(image):
     return image
 
 
-def recalculate_quota(user_account, cloud_size, server_size):
-    return UserQuota.objects.filter(user=user_account).update(
-        total_cloud_size=F('total_cloud_size') + cloud_size,
-        total_server_size=F('total_server_size') + server_size
-    )
+def _prepare_gif_before_upload(gif):
+    gif_size = os.path.getsize(gif)
+    while gif_size > MAX_IMAGE_SIZE_IN_B:
+        frames = []
+        # откроем файл который создали ранее
+        with Image.open(gif) as img:
+            for frame in ImageSequence.Iterator(img):
+                # и уменьшим согласно коэффициента
+                size = (int(frame.size[0] * COEFFICIENT_OF_GIF_SIZE_CHANGING),
+                        int(frame.size[1] * COEFFICIENT_OF_GIF_SIZE_CHANGING))
+                frame = frame.resize(size)
+                # добавляем обраборанный фрейм в список
+                frames.append(frame)
+
+        # сохраняем обработанное GIF-изображение
+        frames[0].save(gif, save_all=True, loop=0,
+                       append_images=frames[1:], optimize=False, duration=3)
+        gif_size = os.path.getsize(gif)
+    return gif
