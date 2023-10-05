@@ -30,7 +30,11 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["POST"])
-@check_file_type(["image/jpg", "image/jpeg", "application/pdf"])
+@check_file_type(
+    ["image/jpg", "image/jpeg", "application/pdf"],
+    ["jpg", "jpeg", "pdf"],
+)
+# @check_file_type(["image/jpg", "image/jpeg", "image/png", "application/pdf"])
 @check_user_quota
 def upload_image_order(request):
     """

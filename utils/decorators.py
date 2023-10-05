@@ -35,7 +35,7 @@ def check_user_quota(func):
     return wrapped
 
 
-def check_file_type(allowed_types):
+def check_file_type(allowed_mime_types, allowed_file_extensions):
     def decorator(func):
         @wraps(func)
         def wrapped(request, *args, **kwargs):
@@ -50,13 +50,13 @@ def check_file_type(allowed_types):
             file_type = magic.from_buffer(uploaded_file.read(1024), mime=True)
 
             # Check the MIME type against the list of allowed types
-            if file_type not in allowed_types:
-                raise SuspiciousFileOperation("Unsupported file type: %s" % file_type)
+            if file_type not in allowed_mime_types:
+                return HttpResponse("Unsupported file type: %s" % file_type, status=400)
 
-            # else:
-            #     file_extension = uploaded_file.name.split(".")[-1].lower()
-            #     if file_extension not in allowed_types:
-            #         return HttpResponse("Invalid file type.", status=400)
+            else:
+                file_extension = uploaded_file.name.split(".")[-1].lower()
+                if file_extension not in allowed_file_extensions:
+                    return HttpResponse("Invalid file extension.", status=400)
             return func(request, *args, **kwargs)
 
         return wrapped
