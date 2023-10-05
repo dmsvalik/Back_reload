@@ -1,7 +1,6 @@
 from django.contrib import admin
 
 from .models import CooperationOffer, SellerData, UserAccount, EmailSendTime, ContactSupport
-
 from main_page.models import UserQuota
 
 
@@ -35,6 +34,7 @@ class CooperationOfferAdmin(admin.ModelAdmin):
 @admin.register(EmailSendTime)
 class EmailSendTimeAdmin(admin.ModelAdmin):
     list_display = ["id", "email", "timestamp"]
+
 
 @admin.register(UserQuota)
 class UserQuotaAdmin(admin.ModelAdmin):
