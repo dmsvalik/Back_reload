@@ -1,6 +1,5 @@
 """ логика для работы с сохранением на сервер / облако / yandex disk """
 import json
-import os
 import requests
 
 from utils import errorcode
@@ -15,7 +14,7 @@ class CloudStorage:
         self.headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "Authorization": f"OAuth {self.token}",
+            "Authorization": f"OAuth {self.token[0]}",
         }
         self.overwrite = "true"
 
@@ -74,7 +73,7 @@ class CloudStorage:
 
     def cloud_upload_image(self, image, user_id, order_id, name):
         print('-------')
-        print(self.token)
+        print(self.token[0])
         print('-------')
         path = self._ensure_path_exists(user_id, order_id)
         if not path:
