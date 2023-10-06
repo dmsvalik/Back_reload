@@ -44,10 +44,6 @@ def upload_image_order(request):
     user_id = request.user.id
     name = image.name
 
-    yandex = CloudStorage()
-    print(yandex.token)
-    print('---------')
-
     if order_id == "" or not order_id.isdigit() or not OrderModel.objects.filter(id=order_id).exists():
         raise errorcode.IncorrectImageOrderUpload()
 
