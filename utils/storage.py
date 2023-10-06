@@ -8,7 +8,6 @@ from config.settings import TOKEN
 
 class CloudStorage:
     def __init__(self):
-        # self.token = os.environ.get("TOKEN")
         self.token = TOKEN,
         self.URL = "https://cloud-api.yandex.net/v1/disk/resources"
         self.headers = {
@@ -72,9 +71,6 @@ class CloudStorage:
             return result["message"]
 
     def cloud_upload_image(self, image, user_id, order_id, name):
-        print('-------')
-        print(self.token[0])
-        print('-------')
         path = self._ensure_path_exists(user_id, order_id)
         if not path:
             print("Failed to create path")
@@ -90,8 +86,6 @@ class CloudStorage:
         if response.status_code == 201:
             result['yandex_path'] = path + '/' + name
 
-        # delete tmp files
-        # os.remove(image) - перенесено в таску
         return result
 
     def cloud_get_image(self, yandex_path):
