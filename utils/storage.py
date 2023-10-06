@@ -4,13 +4,13 @@ import os
 import requests
 
 from utils import errorcode
-from config.settings import env
+from config.settings import TOKEN
 
 
 class CloudStorage:
     def __init__(self):
         # self.token = os.environ.get("TOKEN")
-        self.token = env("TOKEN", default="TOKEN"),
+        self.token = TOKEN,
         self.URL = "https://cloud-api.yandex.net/v1/disk/resources"
         self.headers = {
             "Content-Type": "application/json",
