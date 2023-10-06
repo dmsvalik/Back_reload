@@ -41,13 +41,9 @@ def celery_upload_image_task(temp_file, user_id, order_id):
         )
         os.remove(image.temp_file)
         recalculate_quota(image.user, image.upload_file_size, image.preview_file_size)
-        return Response({"status": "success"})
+        return {"status": "success"}
         # If an error occurs, we delete temp files and preview
     os.remove(image.temp_file)
     os.remove(image.preview_path)
-    return Response(
-        {
-            "status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}",
-        },
-    )
+    return {"status": "failed",
+            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
