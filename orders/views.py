@@ -1,4 +1,5 @@
 import os
+
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
 from utils.errorcode import NotAllowedUser
@@ -31,7 +32,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["POST"])
-@check_file_type(["jpg", "jpeg", "pdf"])
+@check_file_type(["image/jpg", "image/jpeg", "application/pdf"])
 @check_user_quota
 def upload_image_order(request):
     """
@@ -47,12 +48,12 @@ def upload_image_order(request):
         raise errorcode.IncorrectImageOrderUpload()
 
     # temporary save file
-    if not os.path.exists('tmp'):
-        os.mkdir('tmp')
-    with open(f'tmp/{name}', 'wb+') as file:
+    if not os.path.exists("tmp"):
+        os.mkdir("tmp")
+    with open(f"tmp/{name}", "wb+") as file:
         for chunk in image.chunks():
             file.write(chunk)
-    temp_file = f'tmp/{name}'
+    temp_file = f"tmp/{name}"
 
     task = celery_upload_image_task.delay(temp_file, user_id, order_id)
     return Response({"task_id": task.id}, status=202)
@@ -64,7 +65,7 @@ def get_file_order(request, file_id):
     Получение изображения и передача его на фронт
     """
 
-    image_data = get_object_or_404(FileData, id=file_id)  # TODO: Добавить логику ошибки в errorcode.py
+    image_data = get_object_or_404(FileData, id=file_id)
     if request.user.id != image_data.user_account.id:
         raise NotAllowedUser
 
@@ -79,5 +80,6 @@ def get_file_order(request, file_id):
             {
                 "status": "failed",
                 "message": f"Failed to get image from Yandex.Disk: {str(e)}",
-            },)
+            },
+        )
     return Response(image_data)
