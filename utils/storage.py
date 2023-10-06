@@ -3,6 +3,8 @@ import json
 import os
 import requests
 
+from utils import errorcode
+
 
 class CloudStorage:
     def __init__(self):
@@ -102,3 +104,13 @@ class CloudStorage:
         result = {'status': res.status_code,
                   'download_url': download_url}
         return result
+
+    def cloud_delete_image(self, yandex_path):
+        """ Метод для удаления файла из YandexDisk."""
+        res = requests.delete(
+            f"{self.URL}?path={yandex_path}&permanently=True",
+            headers=self.headers)
+        # если файл на сервере удален или не найден возвращаем True
+        if not res.status_code == 204 or not res.status_code == 404:
+            raise errorcode.IncorrectImageDeleting
+        return True
