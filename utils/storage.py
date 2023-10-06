@@ -73,6 +73,9 @@ class CloudStorage:
             return result["message"]
 
     def cloud_upload_image(self, image, user_id, order_id, name):
+        print('-------')
+        print(self.token)
+        print('-------')
         path = self._ensure_path_exists(user_id, order_id)
         if not path:
             print("Failed to create path")
