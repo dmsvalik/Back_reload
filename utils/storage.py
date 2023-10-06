@@ -112,5 +112,5 @@ class CloudStorage:
             headers=self.headers)
         # если файл на сервере удален или не найден возвращаем True
         if not res.status_code == 204 or not res.status_code == 404:
-            raise errorcode.IncorrectImageOrderUpload
+            raise errorcode.IncorrectImageDeleting
         return True
