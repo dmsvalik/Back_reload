@@ -8,8 +8,8 @@ import os
 
 
 ALLOWED_TYPES_EXTENSIONS = {
-    "image/jpg": [".jpg"],
-    "image/jpeg": [".jpeg"],
+    "image/jpg": [".jpg", ".jpeg"],
+    "image/jpeg": [".jpg", ".jpeg"],
     "image/gif": [".gif"],
     "application/pdf": [".pdf"],
     "image/png": [".png"],
@@ -58,7 +58,7 @@ def check_file_type(allowed_mime_types):
 
             # Check the file extension is not the expected one
             extension = os.path.splitext(uploaded_file.name)[1]
-            if file_type in ALLOWED_TYPES_EXTENSIONS and extension.lower() not in ALLOWED_TYPES_EXTENSIONS[file_type]:
+            if extension.lower() not in ALLOWED_TYPES_EXTENSIONS[file_type]:
                 return HttpResponse(f"File extension doesn't match file type: {file_type}", status=400)
 
             return func(request, *args, **kwargs)
