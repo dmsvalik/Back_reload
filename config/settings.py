@@ -157,6 +157,9 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="email_pass")
 EMAIL_PORT = env("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env("EMAIL_USE_TLS", default=True)
 
+# yandex-disk token
+TOKEN = env("TOKEN", default="TOKEN")
+
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 

@@ -56,3 +56,8 @@ class IncorrectPasswordCreateUser(HttpValidationException):
     detail = {"Field": "password",
               "Description": "Length from 8 to 20 characters, english alphabet, number, symbols. "
                              "Including at least one numeric and one non-alphanumeric character"}
+
+
+class IncorrectImageDeleting(HttpValidationException):
+    status_code = 400
+    detail = "Error when deleting an image"

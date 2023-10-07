@@ -1,17 +1,19 @@
 """ логика для работы с сохранением на сервер / облако / yandex disk """
 import json
-import os
 import requests
+
+from utils import errorcode
+from config.settings import TOKEN
 
 
 class CloudStorage:
     def __init__(self):
-        self.token = os.environ.get("TOKEN")
+        self.token = TOKEN,
         self.URL = "https://cloud-api.yandex.net/v1/disk/resources"
         self.headers = {
             "Content-Type": "application/json",
             "Accept": "application/json",
-            "Authorization": f"OAuth {self.token}",
+            "Authorization": f"OAuth {self.token[0]}",
         }
         self.overwrite = "true"
 
@@ -84,8 +86,6 @@ class CloudStorage:
         if response.status_code == 201:
             result['yandex_path'] = path + '/' + name
 
-        # delete tmp files
-        # os.remove(image) - перенесено в таску
         return result
 
     def cloud_get_image(self, yandex_path):
@@ -102,3 +102,13 @@ class CloudStorage:
         result = {'status': res.status_code,
                   'download_url': download_url}
         return result
+
+    def cloud_delete_image(self, yandex_path):
+        """ Метод для удаления файла из YandexDisk."""
+        res = requests.delete(
+            f"{self.URL}?path={yandex_path}&permanently=True",
+            headers=self.headers)
+        # если файл на сервере удален или не найден возвращаем True
+        if not res.status_code == 204 or not res.status_code == 404:
+            raise errorcode.IncorrectImageDeleting
+        return True
