@@ -1,3 +1,7 @@
+from celery.result import AsyncResult
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+
 from main_page.models import UserQuota
 
 
@@ -19,3 +23,14 @@ def recalculate_quota(user_account, cloud_size, server_size):
         total_cloud_size=new_total_cloud_size,
         total_server_size=new_total_server_size
     )
+
+
+@api_view(["GET"])
+def get_task_status(request, task_id):
+    task_result = AsyncResult(task_id)
+    result = {
+        "task_id": task_id,
+        "task_status": task_result.status,
+        "task_result": task_result.result
+    }
+    return Response(result, status=200)
