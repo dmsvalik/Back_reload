@@ -1,9 +1,63 @@
-""" логика для работы с сохранением на сервер / облако / yandex disk """
+"""
+    Логика для работы с сохранением на сервер / облако / yandex disk.
+
+"""
+
+import os
 import json
 import requests
+import random
+import string
 
 from utils import errorcode
 from config.settings import TOKEN
+from config.settings import BASE_DIR
+from main_page.models import UserAccount
+from pathlib import Path
+
+
+class ServerFileSystem:
+    NUMBER_OF_CHARACTERS_IN_FILENAME = 7
+
+    def __init__(self, file_name, user_id, order_id=None):
+
+        # there may be documents without an order, in this case we save them in a special folder
+        if order_id is None:
+            order_id = 'no_order'
+
+        self.user = UserAccount.objects.get(id=user_id)
+        self.file_format = file_name.split('.')[-1]
+        self.dir_path = os.path.join(BASE_DIR, "files", str(self.user.id), str(order_id))
+        self.filename = self.generate_new_filename
+
+    def _prepare_catalog_file_names(self, dir_path):
+        """Parsing a list of all file names in the user's order directory."""
+        res = []
+        if Path(dir_path).is_dir():
+            for path in os.listdir(dir_path):
+                # check if current path is a file
+                if os.path.isfile(os.path.join(dir_path, path)):
+                    filename = path.split('.')[0]
+                    res.append(filename)
+        else:
+            os.makedirs(dir_path)
+        return res
+
+    def generate_new_filename(self):
+        """File Name generation for differents documents (images, pdf ...)"""
+
+        existed_names = self._prepare_catalog_file_names(self.dir_path)
+        generated_file_name = ''.join(random.choices(
+            string.ascii_letters + string.digits,
+            k=self.NUMBER_OF_CHARACTERS_IN_FILENAME
+        ))
+        while generated_file_name in existed_names:
+            generated_file_name = ''.join(random.choices(
+                string.ascii_letters + string.digits,
+                k=self.NUMBER_OF_CHARACTERS_IN_FILENAME
+            ))
+
+        return f'{generated_file_name}.{self.file_format}'
 
 
 class CloudStorage:

@@ -1,16 +1,12 @@
 import os
 
-from utils import errorcode
 from utils.image_work import GifWork, ImageWork
 from utils.storage import CloudStorage
 from utils.views import recalculate_quota
+from orders.models import FileData, OrderModel
 
 from celery import shared_task
 from rest_framework import status
-from rest_framework.response import Response
-
-from main_page.models import UserAccount
-from orders.models import FileData, OrderModel
 
 
 # celery -A config.celery worker
@@ -20,20 +16,20 @@ from orders.models import FileData, OrderModel
 def celery_upload_image_task(temp_file, user_id, order_id):
     """Task to write a file on the server and
     create a preview of the image to it."""
-    if not UserAccount.objects.filter(id=user_id).exists() or not OrderModel.objects.filter(id=order_id).exists():
-        raise errorcode.IncorrectImageOrderUpload()
+
+    order = OrderModel.objects.get(id=order_id)
     file_format = temp_file.split('.')[-1]
     if file_format != 'gif':
         image = ImageWork(temp_file, user_id, order_id)
     else:
         image = GifWork(temp_file, user_id, order_id)
     yandex = CloudStorage()
-    result = yandex.cloud_upload_image(image.temp_file, image.user.id, image.order.id,
+    result = yandex.cloud_upload_image(image.temp_file, image.user.id, image.order,
                                        image.filename)
     if result['status_code'] == status.HTTP_201_CREATED:
         FileData.objects.create(
             user_account=image.user,
-            order_id=image.order,
+            order_id=order,
             yandex_path=result['yandex_path'],
             server_path=image.preview_path,
             yandex_size=image.upload_file_size,
