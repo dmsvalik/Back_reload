@@ -292,3 +292,4 @@ MAX_STORAGE_QUOTA = 10 * 1024 * 1024
 MAX_ORDERS = 50
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://localhost:6379/0")
