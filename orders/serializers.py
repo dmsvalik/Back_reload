@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from rest_framework.fields import SerializerMethodField
 
 from .models import OrderModel, OrderOffer
 from main_page.models import SellerData
@@ -21,6 +22,29 @@ class OrderModelSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context["request"].user
         return OrderModel.objects.create(**validated_data, user_account=user)
+
+
+class OrderModelMinifieldSerializer(serializers.ModelSerializer):
+    """Сериализатор для вывода краткой информации по всем заказам пользователя."""
+
+    contractor = SerializerMethodField()
+
+    class Meta:
+        model = OrderModel
+        fields = [
+            "id",
+            "order_description",
+            "order_time",
+            "state",
+            "contractor",
+        ]
+        read_only_fields = [
+            "id",
+        ]
+
+    def get_contractor(self, obj):
+        """Метод для подсчета оферов на конкретный заказ."""
+        return OrderOffer.objects.filter(order_id=obj.id).count()
 
 
 class OrderOfferSerializer(serializers.ModelSerializer):
