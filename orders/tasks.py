@@ -17,7 +17,10 @@ def celery_upload_image_task(temp_file, user_id, order_id):
     """Task to write a file on the server and
     create a preview of the image to it."""
 
-    order = OrderModel.objects.get(id=order_id)
+    if order_id is not None:
+        order = OrderModel.objects.get(id=order_id)
+    else:
+        order = None
     file_format = temp_file.split('.')[-1]
     if file_format != 'gif':
         image = ImageWork(temp_file, user_id, order_id)
