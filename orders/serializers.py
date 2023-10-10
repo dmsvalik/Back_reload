@@ -33,7 +33,7 @@ class OrderModelMinifieldSerializer(serializers.ModelSerializer):
         model = OrderModel
         fields = [
             "id",
-            "order_description",
+            "name",
             "order_time",
             "state",
             "contractor",
