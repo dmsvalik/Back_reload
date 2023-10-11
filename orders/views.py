@@ -13,7 +13,7 @@ from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
 from .permissions import ChangePriceInOrder
-from .serializers import OrderModelMinifieldSerializer, OrderOfferSerializer
+from .serializers import OrderOfferSerializer
 from .tasks import celery_upload_image_task
 from main_page.permissions import IsSeller
 
@@ -29,18 +29,6 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return OrderOffer.objects.filter(user_account=user)
-
-
-class OrderModelMinifieldViewSet(viewsets.ModelViewSet):
-    """Поведение Заказа для отображения в личном кабинете."""
-
-    queryset = OrderModel.objects.all()
-    serializer_class = OrderModelMinifieldSerializer
-
-    # достаем все объекты пользователя
-    def get_queryset(self):
-        user = self.request.user
-        return OrderModel.objects.filter(user_account=user)
 
 
 @api_view(["POST"])
