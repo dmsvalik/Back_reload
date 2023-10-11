@@ -1,10 +1,11 @@
 from django.contrib import admin
-from .models import OrderModel, OrderOffer, FileData
+
+from .models import FileData, OrderModel, OrderOffer
 
 
 @admin.register(OrderModel)
 class OrderModelAdmin(admin.ModelAdmin):
-    list_display = ["order_time", "id", "state", "user_account"]
+    list_display = ["order_time", "id", "state", "user_account", "name"]
 
 
 @admin.register(OrderOffer)
