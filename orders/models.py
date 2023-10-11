@@ -19,9 +19,9 @@ class OrderModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
     order_time = models.DateTimeField("Дата создания заказа", auto_now=True)
-    name = models.CharField("Название заказа", max_length=150, null=False)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
-    card_category = models.ForeignKey("products.CardModel", on_delete=models.CASCADE, null=True)
+    order_deliver_price = models.CharField("Цена доставки", max_length=300, blank=True)
+    order_courier_service = models.CharField("Цена доставки", max_length=300, blank=True)
     state = models.CharField(
         verbose_name="Статус", choices=STATE_CHOICES, max_length=15
     )
