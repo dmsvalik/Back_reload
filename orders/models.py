@@ -21,7 +21,7 @@ class OrderModel(models.Model):
     order_time = models.DateTimeField("Дата создания заказа", auto_now=True)
     name = models.CharField("Название заказа", max_length=150, null=False)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
-    # card_category = models.ForeignKey(CardModel, on_delete=models.CASCADE, null=False)
+    card_category = models.ForeignKey("products.CardModel", on_delete=models.CASCADE, null=True)
     state = models.CharField(
         verbose_name="Статус", choices=STATE_CHOICES, max_length=15
     )
