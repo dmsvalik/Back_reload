@@ -3,7 +3,7 @@ import os
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
 from utils.errorcode import NotAllowedUser
-from utils.storage import CloudStorage
+from utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
@@ -44,7 +44,7 @@ class OrderModelMinifieldViewSet(viewsets.ModelViewSet):
 
 
 @api_view(["POST"])
-@check_file_type(["image/jpg", "image/jpeg", "application/pdf"])
+@check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
 def upload_image_order(request):
     """
@@ -55,17 +55,21 @@ def upload_image_order(request):
     image = request.FILES["upload_file"]
     user_id = request.user.id
     name = image.name
+    # create new name for image file
+    new_name = ServerFileSystem(name, user_id, order_id).generate_new_filename()
 
+    if order_id is None:
+        raise errorcode.IncorrectImageOrderUpload()
     if order_id == "" or not order_id.isdigit() or not OrderModel.objects.filter(id=order_id).exists():
         raise errorcode.IncorrectImageOrderUpload()
 
     # temporary save file
     if not os.path.exists("tmp"):
         os.mkdir("tmp")
-    with open(f"tmp/{name}", "wb+") as file:
+    with open(f"tmp/{new_name}", "wb+") as file:
         for chunk in image.chunks():
             file.write(chunk)
-    temp_file = f"tmp/{name}"
+    temp_file = f"tmp/{new_name}"
 
     task = celery_upload_image_task.delay(temp_file, user_id, order_id)
     return Response({"task_id": task.id}, status=202)
