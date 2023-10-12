@@ -129,11 +129,11 @@ class EmailSendTime(models.Model):
         verbose_name_plural = "Email - Send Control"
 
 
-class SellerData(models.Model):
+class ContractorData(models.Model):
     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
-    is_activ = models.BooleanField("Активен / Не активен", default=False)
+    is_active = models.BooleanField("Активен / Не активен", default=False)
     company_name = models.CharField("Имя компании", max_length=100, blank=True)
-    created_date = models.DateTimeField("Дата создания аккаунта продавца", auto_now=True)
+    created_date = models.DateTimeField("Дата создания аккаунта исполнителя", auto_now=True)
     phone_number = models.CharField("Телефон компании", max_length=12, blank=True)
     requisites = models.CharField("Реквизиты компании", max_length=100, blank=True)
     activity_type = models.CharField(
@@ -143,8 +143,8 @@ class SellerData(models.Model):
     )
 
     class Meta:
-        verbose_name = "Продавцы"
-        verbose_name_plural = "Продавцы"
+        verbose_name = "Исполнители"
+        verbose_name_plural = "Исполнители"
 
 
 class CooperationOffer(models.Model):
