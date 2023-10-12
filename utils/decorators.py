@@ -4,6 +4,16 @@ from main_page.models import UserQuota
 from orders.models import OrderModel
 from config.settings import MAX_SERVER_QUOTA, MAX_STORAGE_QUOTA, MAX_ORDERS
 import magic
+import os
+
+
+ALLOWED_TYPES_EXTENSIONS = {
+    "image/jpg": [".jpg", ".jpeg"],
+    "image/jpeg": [".jpg", ".jpeg"],
+    "image/gif": [".gif"],
+    "application/pdf": [".pdf"],
+    "image/png": [".png"],
+}
 
 
 def check_user_quota(func):
@@ -45,6 +55,11 @@ def check_file_type(allowed_mime_types):
             # Check the MIME type against the list of allowed types
             if file_type not in allowed_mime_types:
                 return HttpResponse(f"Unsupported file type: {file_type}", status=400)
+
+            # Check the file extension is not the expected one
+            extension = os.path.splitext(uploaded_file.name)[1]
+            if extension.lower() not in ALLOWED_TYPES_EXTENSIONS[file_type]:
+                return HttpResponse(f"File extension doesn't match file type: {file_type}", status=400)
 
             return func(request, *args, **kwargs)
 
