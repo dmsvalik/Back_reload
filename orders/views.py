@@ -18,7 +18,7 @@ from .models import FileData, OrderModel, OrderOffer
 from .permissions import ChangePriceInOrder
 from .serializers import OrderModelMinifieldSerializer, OrderOfferSerializer
 from .tasks import celery_upload_image_task
-from main_page.permissions import IsSeller
+# from main_page.permissions import IsSeller
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
@@ -32,7 +32,8 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, ]
         if self.action == 'create':
             # уточнить пермишены
-            permission_classes = [IsAuthenticated, IsSeller, ChangePriceInOrder]
+            permission_classes = [IsAuthenticated, ChangePriceInOrder]
+            # permission_classes = [IsAuthenticated, IsSeller, ChangePriceInOrder]
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
