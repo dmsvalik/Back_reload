@@ -48,6 +48,7 @@ class OrderModelMinifieldSerializer(serializers.ModelSerializer):
 
 
 class OrderOfferSerializer(serializers.ModelSerializer):
+
     class Meta:
         model = OrderOffer
         fields = [
@@ -58,6 +59,11 @@ class OrderOfferSerializer(serializers.ModelSerializer):
             "offer_execution_time",
             "offer_description",
         ]
+        read_only_fields = (
+            "id",
+            "user_account",
+            "order_id",
+        )
 
     def create(self, validated_data):
         user = self.context["request"].user

@@ -5,7 +5,7 @@ from .views import OrderModelMinifieldViewSet, OrderOfferViewSet
 
 
 urlpatterns = [
-    path("offers/", OrderOfferViewSet.as_view({"get": "list"})),
+    path("order/<int:pk>/offers/", OrderOfferViewSet.as_view({"get": "list"})),
     path("offer/", OrderOfferViewSet.as_view({"post": "create"})),
     path("offer/<int:pk>/", OrderOfferViewSet.as_view({"get": "retrieve", "delete": "destroy", "put": "update"}),),
 
