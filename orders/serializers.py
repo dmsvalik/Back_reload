@@ -2,7 +2,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
 from .models import OrderModel, OrderOffer
-from main_page.models import SellerData
+# from main_page.models import SellerData
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -65,19 +65,19 @@ class OrderOfferSerializer(serializers.ModelSerializer):
             "order_id",
         )
 
-    def create(self, validated_data):
-        user = self.context["request"].user
-        seller_data = SellerData.objects.get(user=user)
-        # try:
-        #     seller_data = SellerData.objects.get(user_account_id=user)
-        # except TypeError:
-        #     raise serializers.ValidationError("Вы не являетесь продавцом")
-        """проверяем если продавец активен, не заблокирован"""
-        if not seller_data.is_activ:
-            raise serializers.ValidationError("Вы не можете сделать оффер")
-        # """ставим заглушку на цену, тк ее можно указать только через 24 часа после оффера"""
-        # validated_data["offer_price"] = " "
-        validated_data.pop(
-            "user_account", None
-        )  # Ensure 'user_account' is not in validated_data
-        return OrderOffer.objects.create(**validated_data, user_account=user)
+    # def create(self, validated_data):
+    #     user = self.context["request"].user
+    #     seller_data = SellerData.objects.get(user=user)
+    #     # try:
+    #     #     seller_data = SellerData.objects.get(user_account_id=user)
+    #     # except TypeError:
+    #     #     raise serializers.ValidationError("Вы не являетесь продавцом")
+    #     """проверяем если продавец активен, не заблокирован"""
+    #     if not seller_data.is_activ:
+    #         raise serializers.ValidationError("Вы не можете сделать оффер")
+    #     # """ставим заглушку на цену, тк ее можно указать только через 24 часа после оффера"""
+    #     # validated_data["offer_price"] = " "
+    #     validated_data.pop(
+    #         "user_account", None
+    #     )  # Ensure 'user_account' is not in validated_data
+    #     return OrderOffer.objects.create(**validated_data, user_account=user)
