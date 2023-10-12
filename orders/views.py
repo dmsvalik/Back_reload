@@ -1,4 +1,5 @@
 import os
+from datetime import datetime, timedelta, timezone
 
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
@@ -6,6 +7,8 @@ from utils.errorcode import NotAllowedUser
 from utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
@@ -20,15 +23,41 @@ from main_page.permissions import IsSeller
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
     """Поведение Оффера"""
-
-    permission_classes = [IsAuthenticated, IsSeller, ChangePriceInOrder]
-    queryset = OrderOffer.objects.all()
     serializer_class = OrderOfferSerializer
 
-    # достаем все объекты пользователя
+    def get_permissions(self):
+        permission_classes = [IsAuthenticated, ]
+        if self.action == 'list':
+            # уточнить пермишены
+            permission_classes = [IsAuthenticated, ]
+        if self.action == 'create':
+            # уточнить пермишены
+            permission_classes = [IsAuthenticated, IsSeller, ChangePriceInOrder]
+        return [permission() for permission in permission_classes]
+
     def get_queryset(self):
-        user = self.request.user
-        return OrderOffer.objects.filter(user_account=user)
+        order_id = self.kwargs['pk']
+        if OrderModel.objects.filter(id=order_id).exists():
+            date = OrderModel.objects.get(id=order_id).order_time
+            if (datetime.now(timezone.utc) - date) > timedelta(hours=24):
+                return OrderOffer.objects.filter(order_id=order_id).all()
+        return []
+
+    @swagger_auto_schema(
+        operation_description="Вывод всех офферов к заказу.",
+        responses={
+            200: openapi.Response("Success response", OrderOfferSerializer(many=True)),
+            404: openapi.Response("Not found", openapi.Schema(
+                type=openapi.TYPE_STRING))
+        }
+    )
+    def list(self, request, *args, **kwargs):
+        order_id = self.kwargs['pk']
+        if not OrderModel.objects.filter(id=order_id).exists():
+            return Response('Заказ не найден', status=404)
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class OrderModelMinifieldViewSet(viewsets.ModelViewSet):
