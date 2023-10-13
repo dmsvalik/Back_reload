@@ -14,6 +14,11 @@ STATE_CHOICES = (
     ("canceled", "Отменен"),
 )
 
+# Заказ создан
+# Создание предложений
+# Рассмотрение предложений
+# Исполнитель выбран
+
 
 class OrderModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)

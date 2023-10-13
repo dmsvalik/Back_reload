@@ -16,7 +16,7 @@ from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
 from .permissions import ChangePriceInOrder
-from .serializers import OrderModelMinifieldSerializer, OrderOfferSerializer
+from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from .tasks import celery_upload_image_task
 from main_page.permissions import IsContractor
 
@@ -69,11 +69,11 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-class OrderModelMinifieldViewSet(viewsets.ModelViewSet):
+class AllOrdersClientViewSet(viewsets.ModelViewSet):
     """Поведение Заказа для отображения в личном кабинете."""
 
     queryset = OrderModel.objects.all()
-    serializer_class = OrderModelMinifieldSerializer
+    serializer_class = AllOrdersClientSerializer
 
     # достаем все объекты пользователя
     def get_queryset(self):
