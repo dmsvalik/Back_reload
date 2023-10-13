@@ -48,13 +48,22 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         responses={
             200: openapi.Response("Success response", OrderOfferSerializer(many=True)),
             404: openapi.Response("Not found", openapi.Schema(
-                type=openapi.TYPE_STRING))
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "detail": openapi.Schema(type=openapi.TYPE_STRING)
+                }
+            ), examples={
+                "application/json": {
+                    "detail": "Order nor found.",
+                }
+            },
+            )
         }
     )
     def list(self, request, *args, **kwargs):
         order_id = self.kwargs['pk']
         if not OrderModel.objects.filter(id=order_id).exists():
-            return Response('Заказ не найден', status=404)
+            raise errorcode.OrderIdNotFound()
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
