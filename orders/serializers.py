@@ -1,8 +1,10 @@
+from utils import errorcode
+
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
 from .models import OrderModel, OrderOffer
-from main_page.models import ContractorData
+from main_page.serializers import UserAccountSerializer
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -48,6 +50,8 @@ class OrderModelMinifieldSerializer(serializers.ModelSerializer):
 
 
 class OrderOfferSerializer(serializers.ModelSerializer):
+    user_account = UserAccountSerializer(read_only=True, default=serializers.CurrentUserDefault())
+    order_id = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = OrderOffer
@@ -65,19 +69,31 @@ class OrderOfferSerializer(serializers.ModelSerializer):
             "order_id",
         )
 
-    def create(self, validated_data):
-        user = self.context["request"].user
-        contractor_data = ContractorData.objects.get(user=user)
-        # try:
-        #     contractor_data = ContractorData.objects.get(user_account_id=user)
-        # except TypeError:
-        #     raise serializers.ValidationError("Вы не являетесь продавцом")
-        """проверяем если продавец активен, не заблокирован"""
-        if not contractor_data.is_active:
-            raise serializers.ValidationError("Вы не можете сделать оффер")
-        # """ставим заглушку на цену, тк ее можно указать только через 24 часа после оффера"""
-        # validated_data["offer_price"] = " "
-        validated_data.pop(
-            "user_account", None
-        )  # Ensure 'user_account' is not in validated_data
-        return OrderOffer.objects.create(**validated_data, user_account=user)
+    def get_order_id(self, value):
+        return self.context['view'].kwargs['pk']
+
+    def validate(self, data):
+        order_id = self.context['view'].kwargs['pk']
+        if not OrderModel.objects.filter(id=order_id).exists():
+            raise errorcode.OrderIdNotFound()
+        user = self.context['view'].request.user
+        if OrderOffer.objects.filter(user_account=user, order_id=order_id).exists():
+            raise errorcode.UniquieOrderOffer()
+        return data
+
+    # def create(self, validated_data):
+    #     user = self.context["request"].user
+    #     contractor_data = ContractorData.objects.get(user=user)
+    #     # try:
+    #     #     contractor_data = ContractorData.objects.get(user_account_id=user)
+    #     # except TypeError:
+    #     #     raise serializers.ValidationError("Вы не являетесь продавцом")
+    #     """проверяем если продавец активен, не заблокирован"""
+    #     if not contractor_data.is_active:
+    #         raise serializers.ValidationError("Вы не можете сделать оффер")
+    #     # """ставим заглушку на цену, тк ее можно указать только через 24 часа после оффера"""
+    #     # validated_data["offer_price"] = " "
+    #     validated_data.pop(
+    #         "user_account", None
+    #     )  # Ensure 'user_account' is not in validated_data
+    #     return OrderOffer.objects.create(**validated_data, user_account=user)

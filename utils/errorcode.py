@@ -66,3 +66,8 @@ class IncorrectImageDeleting(HttpValidationException):
 class OrderIdNotFound(HttpValidationException):
     status_code = 404
     detail = "Order nor found."
+
+
+class UniquieOrderOffer(HttpValidationException):
+    status_code = 400
+    detail = "Only one offer to one order."
