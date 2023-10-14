@@ -15,8 +15,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
-from .permissions import ChangePriceInOrder
-from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
+from .serializers import OrderModelMinifieldSerializer, OrderOfferSerializer
+
 from .tasks import celery_upload_image_task
 from main_page.error_message import error_responses
 from main_page.permissions import IsContractor
@@ -33,7 +33,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, ]
         if self.action == 'create':
             # уточнить пермишены
-            permission_classes = [IsAuthenticated, IsContractor, ChangePriceInOrder]
+            permission_classes = [IsAuthenticated, IsContractor,]
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
@@ -68,6 +68,15 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    # тут дописать декоратор свагера
+    def create(self, request, *args, **kwargs):
+        return super().create(request)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.is_valid()
+        serializer.save(user_account=user)
 
 
 class AllOrdersClientViewSet(viewsets.ModelViewSet):
