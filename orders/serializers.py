@@ -27,7 +27,7 @@ class OrderModelSerializer(serializers.ModelSerializer):
         return OrderModel.objects.create(**validated_data, user_account=user)
 
 
-class OrderModelMinifieldSerializer(serializers.ModelSerializer):
+class AllOrdersClientSerializer(serializers.ModelSerializer):
     """Сериализатор для вывода краткой информации по всем заказам пользователя."""
 
     contractor = SerializerMethodField()
