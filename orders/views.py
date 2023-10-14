@@ -76,13 +76,13 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
     queryset = OrderModel.objects.all()
     serializer_class = AllOrdersClientSerializer
 
-    # достаем все объекты пользователя
+    # достаем все заказы пользователя, кроме выполненных
     def get_queryset(self):
         user = self.request.user
-        return OrderModel.objects.filter(user_account=user)
+        return OrderModel.objects.filter(user_account=user).exclude(state="completed")
 
     @swagger_auto_schema(
-        operation_description="Краткая информации обо всех заказах, связанных с определенным пользователем.",
+        operation_description="Краткая информации обо всех заказах пользователя, кроме выполненных.",
         responses={
             200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
             status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
