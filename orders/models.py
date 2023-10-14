@@ -4,14 +4,10 @@ from main_page.models import UserAccount
 
 
 STATE_CHOICES = (
-    ("creating", "Создание заказа"),
-    ("auction", "Аукцион"),
-    ("new", "Новый"),
-    ("confirmed", "Подтвержден"),
-    ("assembled", "Собран"),
-    ("sent", "Отправлен"),
-    ("delivered", "Доставлен"),
-    ("canceled", "Отменен"),
+    ("created", "Заказ создан"),
+    ("offer", "Создание предложений"),
+    ("review", "Рассмотрение предложений"),
+    ("selected", "Исполнитель выбран"),
 )
 
 

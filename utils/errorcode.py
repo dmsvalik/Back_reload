@@ -61,3 +61,8 @@ class IncorrectPasswordCreateUser(HttpValidationException):
 class IncorrectImageDeleting(HttpValidationException):
     status_code = 400
     detail = "Error when deleting an image"
+
+
+class OrderIdNotFound(HttpValidationException):
+    status_code = 404
+    detail = "Order nor found."
