@@ -4,6 +4,7 @@ from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
 from .models import OrderModel, OrderOffer
+from main_page.models import ContractorData
 from main_page.serializers import UserAccountSerializer
 
 
@@ -77,8 +78,15 @@ class OrderOfferSerializer(serializers.ModelSerializer):
         if not OrderModel.objects.filter(id=order_id).exists():
             raise errorcode.OrderIdNotFound()
         user = self.context['view'].request.user
+        if user.role != 'contractor':
+            raise errorcode.NotContractorOffer()
+        # Вот тут надо продумать как автоматически создавать ContractorData
+        # если у пользователя role = 'contractor'
+        if not ContractorData.objects.get(user=user).is_active:
+            raise errorcode.ContractorIsInactive()
         if OrderOffer.objects.filter(user_account=user, order_id=order_id).exists():
             raise errorcode.UniquieOrderOffer()
+
         return data
 
     # def create(self, validated_data):
