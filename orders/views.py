@@ -15,7 +15,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
-from .serializers import OrderModelMinifieldSerializer, OrderOfferSerializer
+from .serializers import OrderOfferSerializer
 
 from .tasks import celery_upload_image_task
 from main_page.error_message import error_responses
