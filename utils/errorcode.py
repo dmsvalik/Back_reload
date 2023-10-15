@@ -69,15 +69,20 @@ class OrderIdNotFound(HttpValidationException):
 
 
 class UniquieOrderOffer(HttpValidationException):
-    status_code = 400
+    status_code = 403
     detail = "Only one offer to one order."
 
 
 class NotContractorOffer(HttpValidationException):
-    status_code = 400
+    status_code = 403
     detail = "Only contractor can create offer."
 
 
 class ContractorIsInactive(HttpValidationException):
-    status_code = 400
+    status_code = 403
     detail = "Contactor is inactive."
+
+
+class OrderInWrongStatus(HttpValidationException):
+    status_code = 403
+    detail = "Order state does not allow to add offer."
