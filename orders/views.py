@@ -7,18 +7,16 @@ from utils.errorcode import NotAllowedUser
 from utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
-from drf_yasg import openapi
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, viewsets
+from rest_framework import viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
-from .swagger_documentation.orders import OfferCreate, OfferGetList
+from .swagger_documentation.orders import AllOrdersClientGetList, OfferCreate, OfferGetList
 from .tasks import celery_upload_image_task
-from main_page.error_message import error_responses
 from main_page.permissions import IsContractor
 
 
@@ -82,14 +80,10 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
         return OrderModel.objects.filter(user_account=user).exclude(state="completed")
 
     @swagger_auto_schema(
-        operation_description="Краткая информации обо всех заказах пользователя, кроме выполненных.",
-        responses={
-            200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
-            status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
-            status.HTTP_403_FORBIDDEN: error_responses[status.HTTP_403_FORBIDDEN],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
-        },
-        manual_parameters=[openapi.Parameter('Authorization', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)]
+        operation_description=AllOrdersClientGetList.operation_description,
+        request_body=AllOrdersClientGetList.request_body,
+        responses=AllOrdersClientGetList.responses,
+        manual_parameters=AllOrdersClientGetList.manual_parameters
     )
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

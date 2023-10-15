@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from drf_yasg import openapi
 
-from orders.serializers import OrderOfferSerializer
+from orders.serializers import AllOrdersClientSerializer, OrderOfferSerializer
 
 
 def generate_400_response(fields: List[str]):
@@ -21,6 +21,20 @@ def generate_400_response(fields: List[str]):
 
 DEFAULT_RESPONSES = {
     204: openapi.Response("Success response"),
+    401: openapi.Response(
+        description="Unauthorized",
+        schema=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "detail": openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        examples={
+            "application/json": {
+                "detail": "Authentication credentials were not provided.",
+            }
+        }
+    ),
     403: openapi.Response("Forbidden", openapi.Schema(
         type=openapi.TYPE_OBJECT,
         properties={
@@ -32,7 +46,21 @@ DEFAULT_RESPONSES = {
         properties={
             'detail': openapi.Schema(type=openapi.TYPE_STRING)
         }
-    ))
+    )),
+    500: openapi.Response(
+        description="INTERNAL_SERVER_ERROR",
+        schema=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "error": openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        examples={
+            "application/json": {
+                "detail": "Internal server error occurred.",
+            }
+        },
+    )
 }
 
 
@@ -80,3 +108,15 @@ class OfferCreate(BaseSwaggerSchema):
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404],
     }
+
+
+class AllOrdersClientGetList(BaseSwaggerSchema):
+    operation_description = "Краткая информации обо всех заказах пользователя, кроме выполненных."
+    request_body = None
+    responses = {
+        200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
+        401: DEFAULT_RESPONSES[401],
+        403: DEFAULT_RESPONSES[403],
+        500: DEFAULT_RESPONSES[500],
+    }
+    manual_parameters = [openapi.Parameter('Authorization', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)]
