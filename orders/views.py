@@ -15,8 +15,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
-from .serializers import OrderOfferSerializer, AllOrdersClientSerializer
-
+from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
+from .swagger_documentation.orders import OfferCreate, OfferGetList
 from .tasks import celery_upload_image_task
 from main_page.error_message import error_responses
 from main_page.permissions import IsContractor
@@ -45,21 +45,8 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return []
 
     @swagger_auto_schema(
-        operation_description="Вывод всех офферов к заказу.",
-        responses={
-            200: openapi.Response("Success response", OrderOfferSerializer(many=True)),
-            404: openapi.Response("Not found", openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "detail": openapi.Schema(type=openapi.TYPE_STRING)
-                }
-            ), examples={
-                "application/json": {
-                    "detail": "Order nor found.",
-                }
-            },
-            )
-        }
+        operation_description=OfferGetList.operation_description,
+        responses=OfferGetList.responses
     )
     def list(self, request, *args, **kwargs):
         order_id = self.kwargs['pk']
@@ -69,7 +56,11 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    # тут дописать декоратор свагера
+    @swagger_auto_schema(
+        operation_description=OfferCreate.operation_description,
+        request_body=OfferCreate.request_body,
+        responses=OfferCreate.responses
+    )
     def create(self, request, *args, **kwargs):
         return super().create(request)
 

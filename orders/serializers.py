@@ -82,6 +82,8 @@ class OrderOfferSerializer(serializers.ModelSerializer):
             raise errorcode.NotContractorOffer()
         # Вот тут надо продумать как автоматически создавать ContractorData
         # если у пользователя role = 'contractor'
+        if OrderModel.objects.get(id=order_id).state != "offer":
+            raise errorcode.OrderInWrongStatus()
         if not ContractorData.objects.get(user=user).is_active:
             raise errorcode.ContractorIsInactive()
         if OrderOffer.objects.filter(user_account=user, order_id=order_id).exists():
