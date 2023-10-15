@@ -15,8 +15,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
-from .permissions import ChangePriceInOrder
-from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
+from .serializers import OrderOfferSerializer, AllOrdersClientSerializer
+
 from .tasks import celery_upload_image_task
 from main_page.error_message import error_responses
 from main_page.permissions import IsContractor
@@ -33,7 +33,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, ]
         if self.action == 'create':
             # уточнить пермишены
-            permission_classes = [IsAuthenticated, IsContractor, ChangePriceInOrder]
+            permission_classes = [IsAuthenticated, IsContractor,]
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
@@ -69,6 +69,15 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
+    # тут дописать декоратор свагера
+    def create(self, request, *args, **kwargs):
+        return super().create(request)
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        serializer.is_valid()
+        serializer.save(user_account=user)
+
 
 class AllOrdersClientViewSet(viewsets.ModelViewSet):
     """Поведение Заказа для отображения в личном кабинете."""
@@ -76,13 +85,13 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
     queryset = OrderModel.objects.all()
     serializer_class = AllOrdersClientSerializer
 
-    # достаем все объекты пользователя
+    # достаем все заказы пользователя, кроме выполненных
     def get_queryset(self):
         user = self.request.user
-        return OrderModel.objects.filter(user_account=user)
+        return OrderModel.objects.filter(user_account=user).exclude(state="completed")
 
     @swagger_auto_schema(
-        operation_description="Краткая информации обо всех заказах, связанных с определенным пользователем.",
+        operation_description="Краткая информации обо всех заказах пользователя, кроме выполненных.",
         responses={
             200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
             status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
