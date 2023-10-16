@@ -15,7 +15,7 @@ from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
-from .swagger_documentation.orders import AllOrdersClientGetList, OfferCreate, OfferGetList
+from .swagger_documentation.orders import AllOrdersClientGetList, ArchiveOrdersClientGetList, OfferCreate, OfferGetList
 from .tasks import celery_upload_image_task
 from main_page.permissions import IsContractor
 
@@ -100,6 +100,17 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         return OrderModel.objects.filter(user_account=user, state="completed")
+
+    @swagger_auto_schema(
+        operation_description=ArchiveOrdersClientGetList.operation_description,
+        request_body=ArchiveOrdersClientGetList.request_body,
+        responses=ArchiveOrdersClientGetList.responses,
+        manual_parameters=ArchiveOrdersClientGetList.manual_parameters
+    )
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 @api_view(["POST"])
