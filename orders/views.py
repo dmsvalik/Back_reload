@@ -91,6 +91,17 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
+    """Получение списка архивных заказов клиента."""
+
+    queryset = OrderModel.objects.all()
+    serializer_class = AllOrdersClientSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return OrderModel.objects.filter(user_account=user, state="completed")
+
+
 @api_view(["POST"])
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
