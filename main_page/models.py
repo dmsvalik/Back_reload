@@ -10,7 +10,7 @@ import re
 
 
 def validate_password(password):
-    if len(password) < 8 or len(password) > 20:
+    if len(password) < 8 or len(password) > 64:
         return False
     if not re.search(r"\d", password):
         return False
@@ -46,10 +46,11 @@ class UserAccountManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, name=name, person_telephone=person_telephone, surname=surname)
 
-        if validate_password(password):
-            user.set_password(password)
-        else:
+        if not re.match(r'^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,:\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$', password) \
+                or len(re.findall(r'\d+', password)) == 0:
             raise IncorrectPasswordCreateUser
+        else:
+            user.set_password(password)
         user.save()
 
         return user
@@ -76,27 +77,18 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         ("contractor", 'Исполнитель'),
         ('client', 'Заказчик')
     ]
-    email = models.EmailField(max_length=50, unique=True,
-                              validators=[
-                                  MinLengthValidator(5, 'the field must contain at least 5 characters')
-                              ])
-    name = models.CharField(max_length=50,
-                            validators=[
-                                MinLengthValidator(2, 'the field must contain at least 2 characters')
-                            ])
-    surname = models.CharField(max_length=50, blank=True, unique=True, null=True,
-                               validators=[
-                                   MinLengthValidator(2, 'the field must contain at least 2 characters')
-                               ])
+    email = models.EmailField(max_length=50, unique=True, validators=[
+                                  MinLengthValidator(5, 'the field must contain at least 5 characters')])
+    name = models.CharField(max_length=50, validators=[
+                                  MinLengthValidator(2, 'the field must contain at least 2 characters')])
+    surname = models.CharField(max_length=50, blank=True, unique=False, null=True, validators=[
+                                   MinLengthValidator(2, 'the field must contain at least 2 characters')])
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     person_rating = models.IntegerField("Рейтинг клиента", blank=True, null=True)
     person_created = models.DateTimeField("Дата создания аккаунта", auto_now=True)
-    person_telephone = models.CharField("Номер телефона", max_length=12, unique=True, blank=True, null=True,
-        validators=[
-            MinLengthValidator(7, 'the field must contain at least 7 numbers')
-        ]
-    )
+    person_telephone = models.CharField("Номер телефона", max_length=12, unique=True, blank=True, null=True, validators=[
+            MinLengthValidator(7, 'the field must contain at least 7 numbers')])
     person_address = models.CharField("Адрес", max_length=200, blank=True, null=True)
     role = models.CharField('Роль', max_length=11, choices=ROLES_CHOICES, default='client')
 
