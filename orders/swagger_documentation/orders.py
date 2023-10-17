@@ -111,7 +111,19 @@ class OfferCreate(BaseSwaggerSchema):
 
 
 class AllOrdersClientGetList(BaseSwaggerSchema):
-    operation_description = "Краткая информации обо всех заказах пользователя, кроме выполненных."
+    operation_description = "Краткая информация обо всех заказах пользователя, кроме выполненных."
+    request_body = None
+    responses = {
+        200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
+        401: DEFAULT_RESPONSES[401],
+        403: DEFAULT_RESPONSES[403],
+        500: DEFAULT_RESPONSES[500],
+    }
+    manual_parameters = [openapi.Parameter('Authorization', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)]
+
+
+class ArchiveOrdersClientGetList(BaseSwaggerSchema):
+    operation_description = "Краткая информация о выполненных заказах пользователя."
     request_body = None
     responses = {
         200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
