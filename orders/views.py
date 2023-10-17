@@ -148,7 +148,7 @@ def upload_image_order(request):
 @api_view(["GET"])
 def get_file_order(request, file_id):
     """
-    Получение изображения и передача его на фронт
+    Получение изображения из Yandex и передача ссылки на его получение для фронта
     """
 
     image_data = get_object_or_404(FileData, id=file_id)
