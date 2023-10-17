@@ -18,7 +18,6 @@ class ContractorDataAdmin(admin.ModelAdmin):
         "company_name",
         "phone_number",
         "requisites",
-        "activity_type",
     ]
 
 
