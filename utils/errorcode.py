@@ -54,8 +54,8 @@ class IncorrectTelephoneCreateUser(HttpValidationException):
 class IncorrectPasswordCreateUser(HttpValidationException):
     status_code = 400
     detail = {"Field": "password",
-              "Description": "Length from 8 to 20 characters, english alphabet, number, symbols. "
-                             "Including at least one numeric and one non-alphanumeric character"}
+              "Description": "Length from 8 to 64 characters, english alphabet, at least 1 number and symbols: "
+                             "~ ! ? @ # $ % ^ & * _ - + ( ) [ ] { } > < / \ | ' . , :"}
 
 
 class IncorrectImageDeleting(HttpValidationException):
