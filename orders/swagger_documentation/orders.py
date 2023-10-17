@@ -132,3 +132,22 @@ class ArchiveOrdersClientGetList(BaseSwaggerSchema):
         500: DEFAULT_RESPONSES[500],
     }
     manual_parameters = [openapi.Parameter('Authorization', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)]
+
+
+class FileOrderGet(BaseSwaggerSchema):
+    operation_description = "Получение изображения и передача его на фронт."
+    manual_parameters = [
+        openapi.Parameter(
+            "file_id",
+            openapi.IN_PATH,
+            description="ID записи файла в БД",
+            type=openapi.TYPE_INTEGER,
+            required=True,
+        ),
+    ]
+    responses = {
+        200: openapi.Response("Success response"),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
+    }
