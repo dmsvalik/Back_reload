@@ -47,6 +47,15 @@ DEFAULT_RESPONSES = {
             'detail': openapi.Schema(type=openapi.TYPE_STRING)
         }
     )),
+    413: openapi.Response(
+        description="Request Entity Too Large",
+        schema=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'detail': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        )
+    ),
     500: openapi.Response(
         description="INTERNAL_SERVER_ERROR",
         schema=openapi.Schema(
@@ -150,4 +159,30 @@ class FileOrderGet(BaseSwaggerSchema):
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
+    }
+
+
+class UploadImageOrderPost(BaseSwaggerSchema):
+    operation_description = "Загрузка изображения заказа."
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["order_id", "upload_file"],
+        properties={
+            "order_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID заказа"),
+            "upload_file": openapi.Schema(type=openapi.TYPE_FILE, description="Файл изображения для загрузки")
+        }
+    )
+    responses = {
+        202: openapi.Response(
+            description="Accepted",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "task_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID задачи обработки изображения")
+                }
+            )
+        ),
+        400: generate_400_response(["order_id", "upload_file"]),
+        403: DEFAULT_RESPONSES[403],
+        413: DEFAULT_RESPONSES[413],
     }

@@ -21,6 +21,7 @@ from .swagger_documentation.orders import (
     FileOrderGet,
     OfferCreate,
     OfferGetList,
+    UploadImageOrderPost,
 )
 from .tasks import celery_upload_image_task
 from main_page.permissions import IsContractor
@@ -119,6 +120,12 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@swagger_auto_schema(
+    operation_description=UploadImageOrderPost.operation_description,
+    request_body=UploadImageOrderPost.request_body,
+    responses=UploadImageOrderPost.responses,
+    method="post",
+)
 @api_view(["POST"])
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
