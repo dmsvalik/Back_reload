@@ -1,8 +1,10 @@
 from celery.result import AsyncResult
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from main_page.models import UserQuota
+from utils.permissions import IsContactor, IsFileExist, IsFileOwner
 
 
 def recalculate_quota(user_account, cloud_size, server_size):
@@ -34,3 +36,15 @@ def get_task_status(request, task_id):
         "task_result": task_result.result
     }
     return Response(result, status=200)
+
+
+@api_view(('GET',))
+@permission_classes([
+    IsAuthenticated,
+    IsFileExist,
+    IsAdminUser | IsContactor | IsFileOwner,
+])
+def document_view(request, path):
+    res = Response()
+    res["X-Accel-Redirect"] = "/files/" + path
+    return res
