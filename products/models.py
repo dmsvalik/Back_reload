@@ -6,11 +6,11 @@ from orders.models import OrderModel
 
 class CardModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    name = models.CharField("тип - кухня, гостиная", max_length=20, null=True)
+    name = models.CharField("тип - кухня, шкафы, кровати", max_length=20, null=True)
 
     class Meta:
-        verbose_name = "Тип комнаты - CardModel"
-        verbose_name_plural = "Тип комнаты - CardModel"
+        verbose_name = "Тип мебели на заказ - CardModel"
+        verbose_name_plural = "Тип мебели на заказ - CardModel"
 
     def __str__(self):
         return self.name
