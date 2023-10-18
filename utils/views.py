@@ -4,8 +4,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from main_page.models import UserQuota
-from utils import errorcode
-from utils.permissions import IsContactorOrOwner
+from utils.permissions import IsContactor, IsFileExist, IsFileOwner
 
 
 def recalculate_quota(user_account, cloud_size, server_size):
@@ -40,7 +39,11 @@ def get_task_status(request, task_id):
 
 
 @api_view(('GET',))
-@permission_classes([IsAuthenticated, IsAdminUser | IsContactorOrOwner, ])
+@permission_classes([
+    IsAuthenticated,
+    IsFileExist,
+    IsAdminUser | IsContactor | IsFileOwner,
+])
 def document_view(request, path):
     res = Response()
     res["X-Accel-Redirect"] = "/files/" + path
