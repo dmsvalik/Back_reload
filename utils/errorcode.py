@@ -86,3 +86,13 @@ class ContractorIsInactive(HttpValidationException):
 class OrderInWrongStatus(HttpValidationException):
     status_code = 403
     detail = "Order state does not allow to add offer."
+
+
+class DocumentPermission(HttpValidationException):
+    status_code = 403
+    detail = "You do not have access to this document."
+
+
+class FileNotFound(HttpValidationException):
+    status_code = 404
+    detail = "File not found."
