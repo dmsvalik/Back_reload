@@ -47,6 +47,15 @@ DEFAULT_RESPONSES = {
             'detail': openapi.Schema(type=openapi.TYPE_STRING)
         }
     )),
+    413: openapi.Response(
+        description="Request Entity Too Large",
+        schema=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'detail': openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        )
+    ),
     500: openapi.Response(
         description="INTERNAL_SERVER_ERROR",
         schema=openapi.Schema(
@@ -132,3 +141,48 @@ class ArchiveOrdersClientGetList(BaseSwaggerSchema):
         500: DEFAULT_RESPONSES[500],
     }
     manual_parameters = [openapi.Parameter('Authorization', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)]
+
+
+class FileOrderGet(BaseSwaggerSchema):
+    operation_description = "Получение изображения и передача его на фронт."
+    manual_parameters = [
+        openapi.Parameter(
+            "file_id",
+            openapi.IN_PATH,
+            description="ID записи файла в БД",
+            type=openapi.TYPE_INTEGER,
+            required=True,
+        ),
+    ]
+    responses = {
+        200: openapi.Response("Success response"),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
+    }
+
+
+class UploadImageOrderPost(BaseSwaggerSchema):
+    operation_description = "Загрузка изображения заказа."
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=["order_id", "upload_file"],
+        properties={
+            "order_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID заказа"),
+            "upload_file": openapi.Schema(type=openapi.TYPE_FILE, description="Файл изображения для загрузки")
+        }
+    )
+    responses = {
+        202: openapi.Response(
+            description="Accepted",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "task_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID задачи обработки изображения")
+                }
+            )
+        ),
+        400: generate_400_response(["order_id", "upload_file"]),
+        403: DEFAULT_RESPONSES[403],
+        413: DEFAULT_RESPONSES[413],
+    }

@@ -15,7 +15,14 @@ from rest_framework.response import Response
 
 from .models import FileData, OrderModel, OrderOffer
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
-from .swagger_documentation.orders import AllOrdersClientGetList, ArchiveOrdersClientGetList, OfferCreate, OfferGetList
+from .swagger_documentation.orders import (
+    AllOrdersClientGetList,
+    ArchiveOrdersClientGetList,
+    FileOrderGet,
+    OfferCreate,
+    OfferGetList,
+    UploadImageOrderPost,
+)
 from .tasks import celery_upload_file_task, celery_upload_image_task
 from main_page.permissions import IsContractor
 
@@ -116,6 +123,12 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+@swagger_auto_schema(
+    operation_description=UploadImageOrderPost.operation_description,
+    request_body=UploadImageOrderPost.request_body,
+    responses=UploadImageOrderPost.responses,
+    method="post",
+)
 @api_view(["POST"])
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
@@ -150,12 +163,17 @@ def upload_image_order(request):
     return Response({"task_id": task.id}, status=202)
 
 
+@swagger_auto_schema(
+    operation_description=FileOrderGet.operation_description,
+    responses=FileOrderGet.responses,
+    manual_parameters=FileOrderGet.manual_parameters,
+    method="get",
+)
 @api_view(["GET"])
 def get_file_order(request, file_id):
     """
     Получение изображения из Yandex и передача ссылки на его получение для фронта
     """
-
     image_data = get_object_or_404(FileData, id=file_id)
     if request.user.id != image_data.user_account.id:
         raise NotAllowedUser
