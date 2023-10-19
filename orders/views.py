@@ -16,8 +16,11 @@ from rest_framework.response import Response
 from .models import FileData, OrderModel, OrderOffer
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from .swagger_documentation.orders import AllOrdersClientGetList, ArchiveOrdersClientGetList, OfferCreate, OfferGetList
-from .tasks import celery_upload_image_task
+from .tasks import celery_upload_file_task, celery_upload_image_task
 from main_page.permissions import IsContractor
+
+
+IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
@@ -122,10 +125,10 @@ def upload_image_order(request):
 
     """
     order_id = request.POST.get("order_id")
-    image = request.FILES["upload_file"]
+    upload_file = request.FILES["upload_file"]
     user_id = request.user.id
-    name = image.name
-    # create new name for image file
+    name = upload_file.name
+    # create new name for file
     new_name = ServerFileSystem(name, user_id, order_id).generate_new_filename()
 
     if order_id is None:
@@ -137,11 +140,13 @@ def upload_image_order(request):
     if not os.path.exists("tmp"):
         os.mkdir("tmp")
     with open(f"tmp/{new_name}", "wb+") as file:
-        for chunk in image.chunks():
+        for chunk in upload_file.chunks():
             file.write(chunk)
     temp_file = f"tmp/{new_name}"
-
-    task = celery_upload_image_task.delay(temp_file, user_id, order_id)
+    if temp_file.split('.')[-1] in IMAGE_FILE_FORMATS:
+        task = celery_upload_image_task.delay(temp_file, user_id, order_id)
+    else:
+        task = celery_upload_file_task.delay(temp_file, user_id, order_id)
     return Response({"task_id": task.id}, status=202)
 
 
