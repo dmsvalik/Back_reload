@@ -4,7 +4,9 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 
 from main_page.models import UserQuota
+from orders.models import OrderModel, OrderOffer
 from utils.permissions import IsContactor, IsFileExist, IsFileOwner
+from datetime import datetime, timedelta, timezone
 
 
 def recalculate_quota(user_account, cloud_size, server_size):
@@ -48,3 +50,23 @@ def document_view(request, path):
     res = Response()
     res["X-Accel-Redirect"] = "/files/" + path
     return res
+
+
+
+@api_view(('GET',))
+def check_expired_auction_orders(request):
+    """ проверка заказов в статусе аукциона """
+
+    all_orders = OrderModel.objects.filter(state='auction')
+
+    for item in all_orders:
+        if datetime.now() > item.order_time.replace(tzinfo=None) + timedelta(days=1):
+            check_offers = OrderOffer.objects.filter(order_id=item).count()
+            if check_offers == 0:
+                item.state = 'auction_expired_no_offers'
+            else:
+                item.state = 'auction_expired'
+            item.save()
+
+    # надо логи добавить сюда, что таска была запущена и завершилась или сделать отправку на почту
+    return Response({'success': 'all orders auctions were checked'})

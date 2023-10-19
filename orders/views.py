@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
-from utils.errorcode import NotAllowedUser
+from utils.errorcode import NotAllowedUser, IncorrectPostParameters, CategoryIdNotFound
 from utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
@@ -25,9 +25,40 @@ from .swagger_documentation.orders import (
 )
 from .tasks import celery_upload_file_task, celery_upload_image_task
 from main_page.permissions import IsContractor
+from products.models import CardModel
 
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
+
+
+@api_view(["POST"])
+def create_order(request):
+
+    """ Создание заказа клиента """
+
+    order_name = request.POST.get("order_name")
+    order_description = request.POST.get("order_description")
+    order_category = request.POST.get("order_category")
+    order_state = request.POST.get("order_state", default='created')
+
+    if order_name is None or order_description is None or order_category is None:
+        raise IncorrectPostParameters
+
+    if CardModel.objects.filter(id=order_category).exists() is False:
+        raise CategoryIdNotFound
+
+    OrderModel.objects.create(
+        user_account=request.user,
+        order_time=datetime.now(tz=timezone.utc),
+        name=order_name,
+        order_description=order_description,
+        card_category=CardModel.objects.get(id=order_category),
+        state=order_state
+    )
+
+    return Response({'success': 'the order was created'})
+
+
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):

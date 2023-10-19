@@ -21,6 +21,11 @@ class NotAllowedUser(HttpValidationException):
     detail = "Action not allowed to current user"
 
 
+class IncorrectPostParameters(HttpValidationException):
+    status_code = 400
+    detail = "Please check all required fields"
+
+
 class IncorrectImageOrderUpload(HttpValidationException):
     status_code = 400
     detail = "Please check the order_id field it's incorrect"
@@ -65,7 +70,7 @@ class IncorrectImageDeleting(HttpValidationException):
 
 class OrderIdNotFound(HttpValidationException):
     status_code = 404
-    detail = "Order nor found."
+    detail = "Order not found."
 
 
 class UniquieOrderOffer(HttpValidationException):
@@ -96,3 +101,8 @@ class DocumentPermission(HttpValidationException):
 class FileNotFound(HttpValidationException):
     status_code = 404
     detail = "File not found."
+
+
+class CategoryIdNotFound(HttpValidationException):
+    status_code = 404
+    detail = "Category not found."
