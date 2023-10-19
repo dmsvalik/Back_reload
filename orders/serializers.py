@@ -3,9 +3,28 @@ from utils import errorcode
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
-from .models import OrderModel, OrderOffer
+from .models import FileData, OrderModel, OrderOffer
 from main_page.models import ContractorData
 from main_page.serializers import UserAccountSerializer
+
+
+class FilePreviewSerializer(serializers.ModelSerializer):
+    preview_path = SerializerMethodField()
+
+    class Meta:
+        model = FileData
+        fields = [
+            "id",
+            "preview_path",
+        ]
+        read_only_fields = [
+            "id",
+            "preview_path",
+        ]
+
+    def get_preview_path(self, obj):
+        server_path = obj.server_path
+        return '/documents/' + server_path.split('files/')[-1]
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -31,6 +50,7 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
     """Сериализатор для вывода краткой информации по всем заказам пользователя."""
 
     contractor = SerializerMethodField()
+    files = SerializerMethodField()
 
     class Meta:
         model = OrderModel
@@ -40,6 +60,7 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             "order_time",
             "state",
             "contractor",
+            "files",
         ]
         read_only_fields = [
             "id",
@@ -48,6 +69,11 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
     def get_contractor(self, obj):
         """Метод для подсчета оферов на конкретный заказ."""
         return OrderOffer.objects.filter(order_id=obj.id).count()
+
+    def get_files(self, obj):
+        queryset = FileData.objects.filter(order_id=obj.id)
+        serializer = FilePreviewSerializer(queryset, many=True, )
+        return serializer.data
 
 
 class OrderOfferSerializer(serializers.ModelSerializer):
