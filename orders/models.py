@@ -6,7 +6,9 @@ from main_page.models import UserAccount, ContractorData
 STATE_CHOICES = (
     ("created", "Заказ создан"),
     ("offer", "Создание предложений"),
-    ("review", "Рассмотрение предложений"),
+    ("auction", "Заказ на аукционе"),
+    ("auction_expired_no_offers", "Аукцион завершен, предложений нет"),
+    ("auction_expired", "Аукцион завершен"),
     ("selected", "Исполнитель выбран"),
     ("completed", "Заказ выполнен"),
 )
@@ -15,11 +17,11 @@ STATE_CHOICES = (
 class OrderModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
-    order_time = models.DateTimeField("Дата создания заказа", auto_now=True)
+    order_time = models.DateTimeField("Дата создания заказа")
     name = models.CharField("Название заказа", max_length=150, null=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
     card_category = models.ForeignKey("products.CardModel", on_delete=models.CASCADE, null=True)
-    state = models.CharField(verbose_name="Статус", choices=STATE_CHOICES, max_length=15)
+    state = models.CharField(verbose_name="Статус", choices=STATE_CHOICES, max_length=50)
 
     contractor_selected = models.ForeignKey(ContractorData, on_delete=models.SET_NULL, null=True, blank=True)
 
