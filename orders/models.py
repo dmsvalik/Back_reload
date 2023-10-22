@@ -4,11 +4,8 @@ from main_page.models import ContractorData, UserAccount
 
 
 STATE_CHOICES = (
-    ("created", "Заказ создан"),
+    ("draft", "Черновик"),
     ("offer", "Создание предложений"),
-    ("auction", "Заказ на аукционе"),
-    ("auction_expired_no_offers", "Аукцион завершен, предложений нет"),
-    ("auction_expired", "Аукцион завершен"),
     ("selected", "Исполнитель выбран"),
     ("completed", "Заказ выполнен"),
 )
