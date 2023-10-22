@@ -1,6 +1,6 @@
 from django.db import models
 
-from main_page.models import UserAccount, ContractorData
+from main_page.models import ContractorData, UserAccount
 
 
 STATE_CHOICES = (
@@ -16,7 +16,7 @@ STATE_CHOICES = (
 
 class OrderModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
     order_time = models.DateTimeField("Дата создания заказа")
     name = models.CharField("Название заказа", max_length=150, null=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
@@ -24,7 +24,6 @@ class OrderModel(models.Model):
     state = models.CharField(verbose_name="Статус", choices=STATE_CHOICES, max_length=50)
 
     contractor_selected = models.ForeignKey(ContractorData, on_delete=models.SET_NULL, null=True, blank=True)
-
 
     class Meta:
         verbose_name = "Заказ клиента"
@@ -53,12 +52,13 @@ class FileData(models.Model):
     date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
     yandex_size = models.CharField("Размер файла в облаке", max_length=150, blank=True)
     server_size = models.CharField("Размер файла на сервере", max_length=150, blank=True)
+    # Дописать удаление файлов с сервера и яндекса
 
 
 class OrderOffer(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
-    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
+    order_id = models.ForeignKey(OrderModel, on_delete=models.SET_NULL, null=True)
     offer_create_at = models.DateTimeField("Дата создания офера", auto_now=True)
     offer_price = models.CharField("Цена офера", max_length=300, blank=True, default="")
     offer_execution_time = models.CharField("Время выполнения офера", max_length=300, blank=True)

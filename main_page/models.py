@@ -1,12 +1,17 @@
-from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager,
-                                        PermissionsMixin)
+import re
+
+from utils.errorcode import (
+    IncorrectEmailCreateUser,
+    IncorrectNameCreateUser,
+    IncorrectPasswordCreateUser,
+    IncorrectSurnameCreateUser,
+    IncorrectTelephoneCreateUser,
+)
+
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.core.validators import MinLengthValidator
 from django.db import models
 from rest_framework.exceptions import ValidationError
-from utils.errorcode import IncorrectEmailCreateUser, IncorrectSurnameCreateUser, IncorrectTelephoneCreateUser, \
-                            IncorrectPasswordCreateUser, IncorrectNameCreateUser
-
-from django.core.validators import MinLengthValidator
-import re
 
 
 class UserAccountManager(BaseUserManager):
@@ -34,11 +39,11 @@ class UserAccountManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, name=name, person_telephone=person_telephone, surname=surname)
 
-        if not re.match(r'^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,:\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$', password) \
-                or len(re.findall(r'\d+', password)) == 0:
+        if not re.match(
+                r'^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,:\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$', password
+        ) or len(re.findall(r'\d+', password)) == 0:
             raise IncorrectPasswordCreateUser
-        else:
-            user.set_password(password)
+        user.set_password(password)
         user.save()
 
         return user
@@ -66,17 +71,19 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         ('client', 'Заказчик')
     ]
     email = models.EmailField(max_length=50, unique=True, validators=[
-                                  MinLengthValidator(5, 'the field must contain at least 5 characters')])
+        MinLengthValidator(5, 'the field must contain at least 5 characters')])
     name = models.CharField(max_length=50, validators=[
-                                  MinLengthValidator(2, 'the field must contain at least 2 characters')])
+        MinLengthValidator(2, 'the field must contain at least 2 characters')])
     surname = models.CharField(max_length=50, blank=True, unique=False, null=True, validators=[
-                                   MinLengthValidator(2, 'the field must contain at least 2 characters')])
+        MinLengthValidator(2, 'the field must contain at least 2 characters')])
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
     person_rating = models.IntegerField("Рейтинг клиента", blank=True, null=True)
     person_created = models.DateTimeField("Дата создания аккаунта", auto_now=True)
-    person_telephone = models.CharField("Номер телефона", max_length=12, unique=True, blank=True, null=True, validators=[
-            MinLengthValidator(7, 'the field must contain at least 7 numbers')])
+    person_telephone = models.CharField(
+        "Номер телефона", max_length=12, unique=True, blank=True, null=True,
+        validators=[MinLengthValidator(7, 'the field must contain at least 7 numbers')]
+    )
     person_address = models.CharField("Адрес", max_length=200, blank=True, null=True)
     role = models.CharField('Роль', max_length=11, choices=ROLES_CHOICES, default='client')
 
@@ -125,13 +132,13 @@ class ContractorData(models.Model):
 
 class CooperationOffer(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
     text = models.CharField("Запрос от пользователя", max_length=250, blank=True, null=True)
     created = models.DateTimeField("Дата создания обращения", auto_now=True)
 
 
 class ContactSupport(models.Model):
-    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
     user_question = models.CharField("Вопрос от пользователя", max_length=250, blank=True, null=True)
     admin_response = models.CharField("Ответ пользователю", max_length=250, blank=True, null=True)
     created = models.DateTimeField("Дата создания обращения", auto_now=True)
@@ -141,8 +148,8 @@ class ContactSupport(models.Model):
 class UserQuota(models.Model):
     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
     total_cloud_size = models.PositiveIntegerField(default=0)
-    total_server_size = models.PositiveIntegerField(default=0) 
-    total_traffic = models.PositiveIntegerField(default=1000)  
+    total_server_size = models.PositiveIntegerField(default=0)
+    total_traffic = models.PositiveIntegerField(default=1000)
 
     def reset_traffic(self):
         self.total_traffic = 0
