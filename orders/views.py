@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 
 from utils import errorcode
 from utils.decorators import check_file_type, check_user_quota
-from utils.errorcode import NotAllowedUser, IncorrectPostParameters, CategoryIdNotFound
+from utils.errorcode import CategoryIdNotFound, IncorrectPostParameters, NotAllowedUser
 from utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
@@ -13,7 +13,7 @@ from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import FileData, OrderModel, OrderOffer
+from .models import STATE_CHOICES, FileData, OrderModel, OrderOffer
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from .swagger_documentation.orders import (
     AllOrdersClientGetList,
@@ -36,12 +36,12 @@ def create_order(request):
 
     """ Создание заказа клиента """
 
-    order_name = request.POST.get("order_name")
-    order_description = request.POST.get("order_description")
-    order_category = request.POST.get("order_category")
-    order_state = request.POST.get("order_state", default='created')
+    order_name = request.data.get("order_name")
+    order_description = request.data.get("order_description")
+    order_category = request.data.get("order_category")
+    order_state = request.data.get("order_state", default='draft')
 
-    if order_name is None or order_description is None or order_category is None:
+    if order_name is None or order_description is None or order_category is None or order_name not in STATE_CHOICES:
         raise IncorrectPostParameters
 
     if CardModel.objects.filter(id=order_category).exists() is False:
@@ -57,8 +57,6 @@ def create_order(request):
     )
 
     return Response({'success': 'the order was created'})
-
-
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
@@ -168,7 +166,7 @@ def upload_image_order(request):
     Процесс приема изображения и последующего сохранения
 
     """
-    order_id = request.POST.get("order_id")
+    order_id = request.data.get("order_id")
     upload_file = request.FILES["upload_file"]
     user_id = request.user.id
     name = upload_file.name
