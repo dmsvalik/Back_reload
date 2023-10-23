@@ -1,3 +1,5 @@
+# добавляем пакеты poetry add и название пакета
+
 [tool.poetry]
 name = "back-reload"
 version = "0.1.0"
