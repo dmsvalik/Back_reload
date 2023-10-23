@@ -20,7 +20,9 @@ celery = {extras = ["redis"], version = "^5.3.4"}
 django-cors-headers = "^4.2.0"
 python-magic = "^0.4.27"
 drf-api-logger = "^1.1.14"
-
+channels = "^4.0.0"
+channels-redis = "^4.1.0"
+daphne = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 drf-yasg = "^1.21.6"
