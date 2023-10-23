@@ -15,7 +15,9 @@ psycopg2-binary = "^2.9.6"
 python-environ = "^0.4.54"
 gunicorn = "^20.1.0"
 setuptools = "^68.0.0"
-
+channels = "^4.0.0"
+channels-redis = "^4.1.0"
+daphne = "^4.0.0"
 
 [tool.poetry.group.dev.dependencies]
 drf-yasg = "^1.21.6"
