@@ -17,6 +17,7 @@ setuptools = "^68.0.0"
 celery = {extras = ["redis"], version = "^5.3.4"}
 django-cors-headers = "^4.2.0"
 python-magic = "^0.4.27"
+drf-api-logger = "^1.1.14"
 
 
 [tool.poetry.group.dev.dependencies]
