@@ -12,3 +12,6 @@ Pillow==9.5.0
 pre-commit==3.3.3
 django-cors-headers==4.2.0
 python-magic==0.4.27
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
