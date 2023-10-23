@@ -5,10 +5,9 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from rest_framework.views import APIView
-from utils import errorcode
 
 from .models import ResponseModel
-from .models import (CardModel, CategoryModel, QuestionsProductsModel)
+from .models import (CardModel, CategoryModel, QuestionsProductsModel, QuestionnaireModel)
 from orders.models import OrderModel
 from orders.serializers import OrderModelSerializer
 
@@ -19,7 +18,7 @@ from .serializers import (AnswerCreateSerializer, CardModelSerializer,
 
 class CardModelAPIView(APIView):
     """
-    ORDER. STEP 1. Получить список комнат - кухня, спалья и т.д.
+    ORDER. STEP 1. Получить список товаров для заказа и создания ответов по анкете.
 
     """
 
@@ -33,9 +32,27 @@ class CardModelAPIView(APIView):
         return Response({"card_rooms": CardModelSerializer(result, many=True).data})
 
 
+@api_view(["GET"])
+def questionnaire_options(request, card_id):
+    """
+    ORDER. STEP 2. Получаем с Front card_id, выводим все доступные анкеты для выбора.
+
+    """
+
+    all_forms = QuestionnaireModel.objects.filter(card_category__id=card_id)
+    result = list()
+    for item in all_forms:
+        result.append({
+            "id": item.id,
+            "questionnaire_type": item.questionnaire_type
+        })
+
+    return Response(result)
+
+
 class CategoryModelListAPIView(ListAPIView):
     """
-    ORDER. STEP 2. Получить список категорий (возможных товаров) по id карточки (раздела)
+    ORDER - OLD. STEP 2. Получить список категорий (возможных товаров) по id карточки (раздела)
 
     """
 
@@ -116,19 +133,3 @@ class ImageResponseAPIView(CreateAPIView):
 
     permission_classes = [IsAuthenticated]
     serializer_class = AnswerImageSerializer
-
-
-@api_view(['POST'])
-def upload_image_order(request):
-    """
-    Процесс приема изображения и последующего сохранения
-
-    """
-
-    order_id = request.POST.get('order_id')
-    image = request.FILES["image"]
-
-    if order_id == '' or not order_id.isdigit():
-        raise errorcode.IncorrectImageOrderUpload()
-
-    return Response({'status': 'success'})

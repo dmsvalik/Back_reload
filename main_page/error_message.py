@@ -1,5 +1,6 @@
-from rest_framework import status
 from drf_yasg import openapi
+from rest_framework import status
+
 
 authentication_error_schema = openapi.Schema(
     type=openapi.TYPE_ARRAY,
@@ -36,6 +37,20 @@ error_responses = {
         examples={
             "application/json": {
                 "detail": "Authentication credentials were not provided.",
+            }
+        },
+    ),
+    status.HTTP_403_FORBIDDEN: openapi.Response(
+        description="Error: Forbidden",
+        schema=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                "detail": openapi.Schema(type=openapi.TYPE_STRING)
+            }
+        ),
+        examples={
+            "application/json": {
+                "detail": "Access to the requested resource is denied.",
             }
         },
     ),

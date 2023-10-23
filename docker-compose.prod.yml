@@ -19,6 +19,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - db
+      - redis
     environment:
       SECRET_KEY: ${SECRET_KEY}
       EMAIL_HOST: ${EMAIL_HOST}
@@ -26,11 +27,14 @@ services:
       EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD}
       EMAIL_PORT: ${EMAIL_PORT}
       EMAIL_USE_TLS: ${EMAIL_USE_TLS}
+      TOKEN: ${TOKEN}
       DB_ENGINE: django.db.backends.postgresql
       DB_HOST: db
       DB_NAME: whywe
       DB_USER: whywe
       DB_PASS: whywe
+      CELERY_BROKER_URL: "redis://redis:6379/0"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/0"
 
     restart: always
 
@@ -43,6 +47,12 @@ services:
     volumes:
       - db:/var/lib/postgresql/data
     restart: always
+
+
+  redis:
+    image: redis:6-alpine
+    ports:
+      - 6379:6379
 
 
 volumes:

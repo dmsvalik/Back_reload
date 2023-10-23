@@ -1,11 +1,10 @@
-from rest_framework.exceptions import PermissionDenied, ValidationError
+from rest_framework.exceptions import APIException
 from rest_framework import status
 
 
-class HttpValidationException(ValidationError):
+class HttpValidationException(APIException):
     """
         Шаблон для создания ошибок на базе ValidationError
-
     """
 
     status_code = status.HTTP_400_BAD_REQUEST
@@ -17,10 +16,93 @@ class HttpValidationException(ValidationError):
             self.status_code = status_code
 
 
+class NotAllowedUser(HttpValidationException):
+    status_code = 403
+    detail = "Action not allowed to current user"
+
+
+class IncorrectPostParameters(HttpValidationException):
+    status_code = 400
+    detail = "Please check all required fields"
+
+
 class IncorrectImageOrderUpload(HttpValidationException):
     status_code = 400
     detail = "Please check the order_id field it's incorrect"
 
 
+class IncorrectEmailCreateUser(HttpValidationException):
+    status_code = 400
+    detail = {"Field": "email",
+              "Description": "English letters, numbers, dashes, dots, @. "
+                             "Length is not less than 5 and not more than 50 characters. "}
 
 
+class IncorrectSurnameCreateUser(HttpValidationException):
+    status_code = 400
+    detail = {"Field": "surname",
+              "Description": "English or Russian letters. Length is not less than 2 and not more than 20 characters."}
+
+
+class IncorrectNameCreateUser(HttpValidationException):
+    status_code = 400
+    detail = {"Field": "name",
+              "Description": "English or Russian letters. Length is not less than 2 and not more than 20 characters."}
+
+
+class IncorrectTelephoneCreateUser(HttpValidationException):
+    status_code = 400
+    detail = {"Field": "telephone",
+              "Description": "The phone number must start with +7 and have 12 characters (digits)."}
+
+
+class IncorrectPasswordCreateUser(HttpValidationException):
+    status_code = 400
+    detail = {"Field": "password",
+              "Description": "Length from 8 to 64 characters, english alphabet, at least 1 number and symbols: "
+                             "~ ! ? @ # $ % ^ & * _ - + ( ) [ ] { } > < / \ | ' . , :"}
+
+
+class IncorrectImageDeleting(HttpValidationException):
+    status_code = 400
+    detail = "Error when deleting an image"
+
+
+class OrderIdNotFound(HttpValidationException):
+    status_code = 404
+    detail = "Order not found."
+
+
+class UniquieOrderOffer(HttpValidationException):
+    status_code = 403
+    detail = "Only one offer to one order."
+
+
+class NotContractorOffer(HttpValidationException):
+    status_code = 403
+    detail = "Only contractor can create offer."
+
+
+class ContractorIsInactive(HttpValidationException):
+    status_code = 403
+    detail = "Contactor is inactive."
+
+
+class OrderInWrongStatus(HttpValidationException):
+    status_code = 403
+    detail = "Order state does not allow to add offer."
+
+
+class DocumentPermission(HttpValidationException):
+    status_code = 403
+    detail = "You do not have access to this document."
+
+
+class FileNotFound(HttpValidationException):
+    status_code = 404
+    detail = "File not found."
+
+
+class CategoryIdNotFound(HttpValidationException):
+    status_code = 404
+    detail = "Category not found."

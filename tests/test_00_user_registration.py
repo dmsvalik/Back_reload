@@ -5,10 +5,18 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from rest_framework import status as st
 
-from tests.fixtures.fixture_user import (
-    url_users, test_user_data_1, user_invalid_data_1, user_invalid_data_2, test_user_data_2, test_user_data_3,
-    url_activation
-)
+from tests.fixtures.fixture_user import (url_users, test_user_data_1, test_user_data_2, test_user_data_3, url_activation)
+
+from tests.fixtures.fixture_user import (user_invalid_data_email_1, user_invalid_password_2, user_invalid_name_3,
+                                         user_invalid_telephone_4)
+
+
+"""
+    Пример запуска тестов:
+    - Весь модуль -  pytest tests/test_00_user_registration.py
+    - Весь класс - pytest tests/test_00_user_registration.py::Test00UserRegistration
+    - Метод - pytest tests/test_00_user_registration.py::Test00UserRegistration::test_00_valid_data_user_signup
+"""
 
 
 User = get_user_model()
@@ -33,18 +41,11 @@ class Test00UserRegistration:
         request_type = 'POST'
         response = api_client.post(url_users, data=valid_data)
         outbox_after = mail.outbox
-        assert response.status_code != st.HTTP_404_NOT_FOUND, (
-            f'Эндпойнт `{url_users}` не найден, проверьте этот адрес в *urls.py*'
-        )
-        assert response.status_code != st.HTTP_400_BAD_REQUEST, (
-            f'Проверьте, что при {request_type} запросе `{url_users}` с валидными данными '
-            f'передаются все обязательные поля'
-        )
-        code = st.HTTP_201_CREATED
-        assert response.status_code == code, (
-            f'Проверьте, что при {request_type} запросе `{url_users}` с валидными данными '
-            f'создаётся пользователь и возвращается статус {code}'
-        )
+
+        assert response.status_code != st.HTTP_404_NOT_FOUND, (f'Эндпойнт `{url_users}` не найден - {response.content}')
+        assert response.status_code != st.HTTP_400_BAD_REQUEST, (f'Ошибка при {request_type} запросе `{url_users}` - {response.content}')
+        assert response.status_code == st.HTTP_201_CREATED, (f'Запрос был выполнен - {response.content} ')
+
         response_json = response.json()
         for field in valid_data:
             if field == 'password':
@@ -63,6 +64,26 @@ class Test00UserRegistration:
             f'пользователю отправляется email с кодом подтверждения'
         )
         new_user.delete()
+
+    @pytest.mark.django_db(transaction=True)
+    @pytest.mark.parametrize(
+        "invalid_data", [
+            user_invalid_data_email_1,
+            user_invalid_password_2,
+            user_invalid_name_3,
+            user_invalid_telephone_4,
+        ]
+    )
+    def test_00_invalid_data_signup(self, api_client, invalid_data):
+        """Тест регистрации пользователей с невалидными данными."""
+        request_type = 'POST'
+        response = api_client.post(url_users, data=invalid_data)
+
+        assert response.status_code == st.HTTP_400_BAD_REQUEST, (
+            f'{request_type} запрос - `{url_users}` с невалидными данными - {response.content}'
+        )
+
+
 
     @pytest.mark.django_db
     def test_00_unauthorized_request(self, api_client):
@@ -96,33 +117,6 @@ class Test00UserRegistration:
                     and isinstance(response_json[field], list)), (
                 f'Проверьте, что при {request_type} запросе `{url_users}` без параметров '
                 f'в ответе есть сообщение о том, какие поля не заполнены'
-            )
-
-    @pytest.mark.skip(reason='Добавить валидацию всех полей')
-    @pytest.mark.django_db(transaction=True)
-    @pytest.mark.parametrize(
-        "invalid_data", [
-            user_invalid_data_1,
-            user_invalid_data_2,
-        ]
-    )
-    def test_00_invalid_data_signup(self, api_client, invalid_data):
-        """Тест регистрации пользователей с невалидными данными."""
-        request_type = 'POST'
-        response = api_client.post(url_users, data=invalid_data)
-
-        assert response.status_code == st.HTTP_400_BAD_REQUEST, (
-            f'Проверьте, что при {request_type} запросе `{url_users}` с невалидными данными - '
-            f'не создается пользователь и возвращается статус 400'
-        )
-
-        response_json = response.json()
-        invalid_fields = ['email', 'name', 'password', 'person_telephone', 'surname']
-        for field in invalid_fields:
-            assert (field in response_json.keys()
-                    and isinstance(response_json[field], list)), (
-                f'Проверьте, что при {request_type} запросе `{url_users}` с невалидными данными - '
-                f'в ответе есть сообщение о том, какие поля заполнены неправильно'
             )
 
     @pytest.mark.django_db(transaction=True)

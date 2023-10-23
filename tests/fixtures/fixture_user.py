@@ -60,6 +60,13 @@ url_users = '/auth/users/'
 url_activation = '/auth/users/activation/'
 url_token = '/auth/jwt/create/'
 url_profile = '/auth/users/me/'
+
+valid_name = 'user'
+valid_surname = 'Стив'
+valid_email = 'user@mail.ru'
+valid_password = 'userPassword!1'
+valid_telephone = '+7911000230'
+
 test_admin = {
     'email': 'testadmin@project.fake',
     'name': 'TestAdmin',
@@ -67,34 +74,37 @@ test_admin = {
     'person_telephone': '+79000000000',
     'surname': 'TestAdminoff',
 }
+
+# валидные пользователи для тестов
 test_user_data = {
-    'email': 'testuser@project.fake',
-    'name': 'TestUser',
-    'password': 'L1Z,D2xo=x]!XbqQ',
-    'person_telephone': '+79000000000',
-    'surname': 'TestUseroff',
+    'email': valid_email,
+    'name': valid_name,
+    'password': valid_password,
+    'person_telephone': valid_telephone + '0',
+    'surname': valid_surname,
 }
 test_user_data_1 = {
-    'email': 'test_user_1@project.fake',
-    'name': 'Первый',
-    'password': '_>Ke:[Bs<kSo[H9T',
-    'person_telephone': '+79000000000',
-    'surname': 'Пользователь',
+    'email': '1' + valid_email,
+    'name': 'a' + valid_name,
+    'password': valid_password,
+    'person_telephone': valid_telephone + '1',
+    'surname': 'a' + valid_surname,
 }
 test_user_data_2 = {
-    'email': 'fulluser2@mail.fake',
-    'name': 'Второй',
-    'password': 'C1Pt}&Rq*4^!A*)A',
-    'person_telephone': '89000000000',
-    'surname': 'Пользователь',
+    'email': '2' + valid_email,
+    'name': 'b' + valid_name,
+    'password': valid_password,
+    'person_telephone': valid_telephone + '2',
+    'surname': 'b' + valid_surname,
 }
 test_user_data_3 = {
-    'email': 'fulluser3@mail.fake',
-    'name': 'TestUser',
-    'password': '>-Kc-k]_1UwVy1>^',
-    'person_telephone': '9000000000',
-    'surname': 'TestUseroff',
+    'email': '3' + valid_email,
+    'name': 'c' + valid_name,
+    'password': valid_password,
+    'person_telephone': valid_telephone + '3',
+    'surname': 'c' + valid_surname,
 }
+
 test_user_new_data = {
     'email': 'new_test_user@project.fake',
     'name': 'UpdatedName',
@@ -102,22 +112,39 @@ test_user_new_data = {
     'person_telephone': '+79000000001',
     'surname': 'UpdatedSurname',
 }
+
 user_minimum_data = {
     'email': 'minuser@mail.fake',
     'name': 'MinUserName',
     'password': 's.GD4bBXo#;JS#Dt',
 }
-user_invalid_data_1 = {
+
+# невалидные пользователи для тестов
+user_invalid_data_email_1 = {
     'email': 'invalid_email',
-    'name': '123',
-    'password': '1234578',
-    'person_telephone': '8900',
-    'surname': '321',
+    'name': valid_name,
+    'password': valid_password,
+    'person_telephone': valid_telephone,
+    'surname': valid_surname,
 }
-user_invalid_data_2 = {
-    'email': 'invalid@email',
-    'name': '@!=+-',
+user_invalid_password_2 = {
+    'email': valid_email,
+    'name': valid_name,
     'password': '!@#',
-    'person_telephone': '0000000000',
-    'surname': '-+=!@',
+    'person_telephone': valid_telephone,
+    'surname': valid_surname,
+}
+user_invalid_name_3 = {
+    'email': valid_email,
+    'name': valid_name,
+    'password': '!@#',
+    'person_telephone': valid_telephone,
+    'surname': valid_surname,
+}
+user_invalid_telephone_4 = {
+    'email': valid_email,
+    'name': valid_name,
+    'password': valid_password,
+    'person_telephone': '+783433',
+    'surname': valid_surname,
 }

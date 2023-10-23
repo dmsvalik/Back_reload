@@ -315,3 +315,7 @@ sketch
 pyvenv.cfg
 pip-selfcheck.json
 .env
+
+files/
+static/
+tmp/

@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
-    'channels',
+    "tests",
+    "channels",
 ]
 
 DOMAIN = ("185.244.173.82")
@@ -173,6 +174,9 @@ EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", default="email_pass")
 EMAIL_PORT = env("EMAIL_PORT", default=587)
 EMAIL_USE_TLS = env("EMAIL_USE_TLS", default=True)
 
+# yandex-disk token
+TOKEN = env("TOKEN", default="TOKEN")
+
 SERVER_EMAIL = EMAIL_HOST_USER
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
@@ -200,7 +204,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Europe/Moscow"
 
 USE_I18N = True
 
@@ -299,3 +303,10 @@ SWAGGER_SETTINGS = {
     },
     "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
 }
+
+MAX_SERVER_QUOTA = 5 * 1024 * 1024
+MAX_STORAGE_QUOTA = 10 * 1024 * 1024
+MAX_ORDERS = 50
+
+CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://localhost:6379/0")
