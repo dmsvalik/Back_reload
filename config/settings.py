@@ -27,7 +27,8 @@ ALLOWED_HOSTS = [
     "http://localhost:3000",
     "http://localhost",
     "https://www.whywe.ru/",
-    "www.whywe.ru"
+    "www.whywe.ru",
+    "*"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -36,6 +37,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -48,11 +50,13 @@ INSTALLED_APPS = [
     "products",
     "orders",
     "utils",
+    "chat",
     "rest_framework",
     "djoser",
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
+    'channels',
 ]
 
 DOMAIN = ("185.244.173.82")
@@ -137,6 +141,19 @@ WSGI_APPLICATION = "config.wsgi.application"
 INTERNAL_IPS = [
     "127.0.0.1",
 ]
+
+# Daphne
+ASGI_APPLICATION = "config.asgi.application"
+
+# Channels
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
 
 DATABASES = {
     "default": {
