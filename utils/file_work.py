@@ -14,7 +14,7 @@ class FileWork(object):
         self.temp_file = temp_file
         self.user = UserAccount.objects.get(id=user_id)
         self.order = order_id
-        self.dir_path = os.path.join(BASE_DIR, "files", "media_type")
+        self.dir_path = os.path.join(BASE_DIR, "media_type")
         self.filename = temp_file.split('/')[-1]
         self.upload_file_size = self._upload_file_size()
         self.preview_file_size = self._preview_file_size()

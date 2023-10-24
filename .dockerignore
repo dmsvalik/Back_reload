@@ -1,0 +1,7 @@
+.idea/
+.venv/
+files/
+static/
+media/
+infra/
+infra-dev/
