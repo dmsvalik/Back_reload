@@ -1,3 +1,6 @@
+# files
+dev-env/.redisdata
+dev-env/.postgres_data
 
 # pycharm
 .idea/

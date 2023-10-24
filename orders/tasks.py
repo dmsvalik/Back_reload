@@ -61,7 +61,6 @@ def celery_upload_file_task(temp_file, user_id, order_id):
         order = None
     file = FileWork(temp_file, user_id, order_id)
     filename = temp_file.split('/')[-1]
-    print(filename)
     yandex = CloudStorage()
     result = yandex.cloud_upload_image(file.temp_file, file.user.id, file.order,
                                        filename)
