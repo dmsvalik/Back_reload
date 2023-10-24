@@ -9,8 +9,8 @@ version: '3.8'
 #to create new admin just do in command
 #docker exec -it <container_id - app> python manage.py createsuperuser
 
-#login: admin@admin.ru
-#password: admin007
+#docker compose build app  -remake only app container after changes
+
 
 services:
 
@@ -20,7 +20,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile-dev
-#    restart: always
+    restart: always
     ports:
       - "8000:8000"
     command: >
@@ -28,7 +28,7 @@ services:
              python3 manage.py makemigrations &&
              python3 manage.py migrate &&
              python3 manage.py collectstatic --no-input &&
-             daphne -b 0.0.0.0 -p 8000 config.asgi:application"
+             python3 manage.py runserver 0.0.0.0:8000"
 
     environment:
       - DB_HOST=db
@@ -42,6 +42,28 @@ services:
       - db
       - redis
 
+  daphne:
+    container_name: app-daphne-backend
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+    restart: always
+    ports:
+      - "8001:8001"
+    command: >
+      sh -c "daphne -b 0.0.0.0 -p 8001 config.asgi:application"
+
+    environment:
+      - DB_HOST=db
+      - DB_NAME=market
+      - DB_USER=postgres
+      - DB_PASS=1221
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
 
 # Postgres DB
   db:
@@ -55,7 +77,8 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=1221
     volumes:
-      - ./dev-env/.postgres_data:/var/lib/postgresql/data
+      - /var/lib/postgresql/data
+#      - ./dev-env/.postgres_data:/var/lib/postgresql/data
 
 # Celery Worker
 #  worker:
@@ -97,7 +120,8 @@ services:
     expose:
       - 6379
     volumes:
-      - ./dev-env/.redisdata:/data
+      - /data
+#      - ./dev-env/.redisdata:/data
 
   pgadmin:
     container_name: db_pg_admin
