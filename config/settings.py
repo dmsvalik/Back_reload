@@ -160,11 +160,11 @@ CHANNEL_LAYERS = {
 DATABASES = {
     "default": {
         "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
-        "NAME": env("DB_NAME", default="whywe"),
-        "USER": env("DB_USER", default="whywe"),
-        "PASSWORD": env("DB_PASS", default="whywe"),
-        "HOST": env("DB_HOST", default="localhost"),
-        "PORT": env("DB_PORT", default=5432),
+        "NAME": env("POSTGRES_DB", default="whywe"),
+        "USER": env("POSTGRES_USER", default="whywe"),
+        "PASSWORD": env("POSTGRES_PASSWORD", default="whywe"),
+        "HOST": env("POSTGRES_HOST", default="localhost"),
+        "PORT": env("POSTGRES_PORT", default=5432),
     }
 }
 

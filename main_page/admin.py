@@ -7,7 +7,7 @@ from main_page.models import UserQuota
 
 @admin.register(UserAccount)
 class UserAccountAdmin(admin.ModelAdmin):
-    list_display = ["email", "id", "name", "is_active", "is_staff"]
+    list_display = ["email", "id", "name", "is_active", "role"]
 
 
 @admin.register(ContractorData)
