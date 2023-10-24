@@ -1,0 +1,126 @@
+version: '3.8'
+
+# if port 5432 is in use check it:
+# sudo lsof -i tcp:5432
+# than kill process to start postgresql
+#and then: kill -9 <process id> (macOS) or sudo kill <process id> (Linux).
+
+#https://saasitive.com/tutorial/django-celery-redis-postgres-docker-compose/:
+#to create new admin just do in command
+#docker exec -it <container_id - app> python manage.py createsuperuser
+
+#login: admin@admin.ru
+#password: admin007
+
+services:
+
+# Backend-project
+  app:
+    container_name: app-backend
+    build:
+      context: .
+      dockerfile: Dockerfile-dev
+#    restart: always
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "python3 manage.py migrate &&
+             python3 manage.py makemigrations &&
+             python3 manage.py migrate &&
+             python3 manage.py collectstatic --no-input &&
+             daphne -b 0.0.0.0 -p 8000 config.asgi:application"
+
+    environment:
+      - DB_HOST=db
+      - DB_NAME=market
+      - DB_USER=postgres
+      - DB_PASS=1221
+      - DB_PORT=5432
+      - CELERY_BROKER_URL=redis://redis:6379/0
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+    depends_on:
+      - db
+      - redis
+
+
+# Postgres DB
+  db:
+    image: postgres
+    container_name: db
+    restart: always
+    ports:
+      - "5433:5433"
+    environment:
+      - POSTGRES_DB=market
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=1221
+    volumes:
+      - ./dev-env/.postgres_data:/var/lib/postgresql/data
+
+# Celery Worker
+#  worker:
+#    build: .
+#    command: >-
+#         celery -A config.celery worker
+#         -l info --concurrency=1 --queues a,b
+##    volumes:
+##      - .:/app
+#    links:
+#      - db
+#    environment:
+#      - CELERY_BROKER_URL=redis://redis:6379/0
+#      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+#    depends_on:
+#      - app
+#      - redis
+
+# Celery Beat Worker
+#  worker-beat:
+#    build: .
+#    command: >-
+#         celery -A config beat -l info
+#    volumes:
+#      - .:/app
+#    links:
+#      - db
+#    environment:
+#      - CELERY_BROKER_URL=redis://redis:6379/0
+#      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+#    depends_on:
+#      - app
+#      - redis
+
+  redis:
+    image: 'redis:7.2'
+    ports:
+      - '6379:6379'
+    expose:
+      - 6379
+    volumes:
+      - ./dev-env/.redisdata:/data
+
+  pgadmin:
+    container_name: db_pg_admin
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: eraspb@mail.ru
+      PGADMIN_DEFAULT_PASSWORD: 1221
+    ports:
+      - "5050:80"
+
+  nginx:
+    image: nginx:1.19.3
+    build:
+      context: .
+      dockerfile: dev-env/nginx/Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - app
+    restart: always
+    volumes:
+      - ./dev-env/nginx.conf:/etc/nginx/conf.d/default.conf
+      - ./static/:/var/html/static/
+      - ./media/:/var/html/media/
+      - ./files/:/var/html/files/
