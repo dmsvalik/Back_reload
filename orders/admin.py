@@ -10,7 +10,7 @@ class OrderModelAdmin(admin.ModelAdmin):
 
 @admin.register(OrderOffer)
 class OrderOfferAdmin(admin.ModelAdmin):
-    list_display = ["offer_create_at", "id", "order_id"]
+    list_display = ["offer_create_at", "id", "user_account", "order_id"]
 
 
 @admin.register(FileData)
