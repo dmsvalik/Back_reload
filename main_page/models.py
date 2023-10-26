@@ -45,6 +45,7 @@ class UserAccountManager(BaseUserManager):
             raise IncorrectPasswordCreateUser
         user.set_password(password)
         user.save()
+        UserQuota.objects.create(user=user)
 
         return user
 
