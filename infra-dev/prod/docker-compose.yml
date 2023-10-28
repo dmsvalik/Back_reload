@@ -26,10 +26,10 @@ services:
 #    entrypoint:
 #      [ "/app/docker-entrypoint.sh" ]
     volumes:
-      - static_value:/app/static/
-      - media_value:/app/media/
-      - files:/app/files/
-      - media_type:/app/media_type/
+      - $FILE_PATH/static/:/app/static/
+      - $FILE_PATH/media/:/app/media/
+      - $FILE_PATH/files/:/app/files/
+      - $FILE_PATH/media_type/:/app/media_type/
     depends_on:
       - db
       - redis
