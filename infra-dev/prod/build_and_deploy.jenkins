@@ -55,7 +55,7 @@ pipeline {
         }
         stage('Docker compose up') {
             steps{
-                sh 'docker compose -f infra-dev/prod/docker-compose.yml up -d'
+                sh 'docker compose -f infra-dev/prod/docker-compose.yml up -d --build'
             }
         }
         stage('Delete old images') {
