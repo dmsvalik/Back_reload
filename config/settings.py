@@ -1,7 +1,6 @@
 import os
 from datetime import timedelta
 from pathlib import Path
-
 import environ
 
 
@@ -27,7 +26,8 @@ ALLOWED_HOSTS = [
     "http://localhost:3000",
     "http://localhost",
     "https://www.whywe.ru/",
-    "www.whywe.ru"
+    "www.whywe.ru",
+    "*"
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -36,6 +36,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -48,12 +49,15 @@ INSTALLED_APPS = [
     "products",
     "orders",
     "utils",
+    "chat",
     "rest_framework",
     "djoser",
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
     "tests",
+    'drf_api_logger',
+    "channels",
 ]
 
 DOMAIN = ("185.244.173.82")
@@ -70,6 +74,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "debug_toolbar.middleware.DebugToolbarMiddleware",
+    'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware',
 ]
 
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
@@ -139,14 +144,27 @@ INTERNAL_IPS = [
     "127.0.0.1",
 ]
 
+# Daphne
+ASGI_APPLICATION = "config.asgi.application"
+
+# Channels
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("127.0.0.1", 6379)],
+        },
+    },
+}
+
 DATABASES = {
     "default": {
         "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),
-        "NAME": env("DB_NAME", default="whywe"),
-        "USER": env("DB_USER", default="whywe"),
-        "PASSWORD": env("DB_PASS", default="whywe"),
-        "HOST": env("DB_HOST", default="localhost"),
-        "PORT": env("DB_PORT", default=5432),
+        "NAME": env("POSTGRES_DB", default="whywe"),
+        "USER": env("POSTGRES_USER", default="whywe"),
+        "PASSWORD": env("POSTGRES_PASSWORD", default="whywe"),
+        "HOST": env("POSTGRES_HOST", default="localhost"),
+        "PORT": env("POSTGRES_PORT", default=5432),
     }
 }
 
@@ -293,3 +311,19 @@ MAX_ORDERS = 50
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://localhost:6379/0")
+
+# записывать логи
+# документация https://pypi.org/project/drf-api-logger/
+DRF_API_LOGGER_DATABASE = True
+# максимум 50 записей держит в кэше до записи в таблицу
+DRF_LOGGER_QUEUE_MAX_SIZE = 50
+# максимум раз в десять секунд пишет в таблицу
+DRF_LOGGER_INTERVAL = 10
+# плюс 180 минут к UTС часовой пояс мск
+DRF_API_LOGGER_TIMEDELTA = 180
+# формат ссылки на ручку
+DRF_API_LOGGER_PATH_TYPE = 'FULL_PATH'
+# регистрируемые статусы сейчас все, можно отрегулировать
+# DRF_API_LOGGER_STATUS_CODES = ['400', '401', '403', '404', '405', '500', '503']
+# Отслеживаем медленные команды
+DRF_API_LOGGER_SLOW_API_ABOVE = 200

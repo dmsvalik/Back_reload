@@ -1,0 +1,67 @@
+pipeline {
+    agent any
+    environment {
+        SECRET_KEY=credentials('django_secret_key')
+        EMAIL_HOST=credentials('EMAIL_HOST')
+        EMAIL_HOST_USER=credentials('EMAIL_HOST_USER')
+        EMAIL_HOST_PASSWORD=credentials('EMAIL_HOST_PASSWORD')
+        EMAIL_PORT=credentials('EMAIL_PORT')
+        EMAIL_USE_TLS=credentials('EMAIL_USE_TLS')
+        TOKEN=credentials('TOKEN')
+        CELERY_BROKER_URL=credentials('CELERY_BROKER_URL')
+        CELERY_RESULT_BACKEND=credentials('CELERY_RESULT_BACKEND')
+        POSTGRES_DB=credentials('POSTGRES_DB')
+        POSTGRES_USER=credentials('POSTGRES_USER')
+        POSTGRES_PASSWORD=credentials('POSTGRES_PASSWORD')
+        POSTGRES_HOST=credentials('POSTGRES_HOST')
+        POSTGRES_PORT=credentials('POSTGRES_PORT')
+        PGADMIN_DEFAULT_EMAIL=credentials('PGADMIN_DEFAULT_EMAIL')
+        PGADMIN_DEFAULT_PASSWORD=credentials('PGADMIN_DEFAULT_PASSWORD')
+        DJANGO_SUPERUSER_PASSWORD=credentials('DJANGO_SUPERUSER_PASSWORD')
+        DJANGO_SUPERUSER_EMAIL=credentials('DJANGO_SUPERUSER_EMAIL')
+        DJANGO_SUPERUSER_NAME=credentials('DJANGO_SUPERUSER_NAME')
+        DJANGO_SUPERUSER_PERSON_TELEPHONE=credentials('DJANGO_SUPERUSER_PERSON_TELEPHONE')
+        DJANGO_SUPERUSER_SURNAME=credentials('DJANGO_SUPERUSER_SURNAME')
+        FILE_PATH=credentials('FILE_PATH')
+    }
+    stages {
+        stage('Delete workspace before build starts') {
+            steps {
+                echo 'Deleting workspace'
+                deleteDir()
+            }
+        }
+        stage('Checkout') {
+            steps{
+                    git branch: 'main',
+                    credentialsId: 'GitHub-ssh',
+                    url: 'https://github.com/TyuMeb/Back_reload.git'
+                }
+        }
+        stage('Build docker image') {
+            steps{
+                sh 'ls'
+                sh 'docker build -t whywe/prod_image:latest -f Dockerfile_1 .'
+            }
+        }
+        stage('Push docker image to DockerHub') {
+            steps{
+                withDockerRegistry(credentialsId: 'docker_credential', url: 'https://index.docker.io/v1/') {
+                    sh '''
+                        docker push whywe/prod_image:latest
+                    '''
+                }
+            }
+        }
+        stage('Docker compose up') {
+            steps{
+                sh 'docker compose -f infra-dev/prod/docker-compose.yml up -d --build'
+            }
+        }
+        stage('Delete old images') {
+            steps{
+                sh 'docker image prune --force'
+            }
+        }
+    }
+}

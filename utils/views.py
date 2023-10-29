@@ -1,9 +1,9 @@
 from celery.result import AsyncResult
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.response import Response
 
-from main_page.models import UserQuota
+from main_page.models import UserQuota, UserAccount
 from orders.models import OrderModel, OrderOffer
 from utils.permissions import IsContactor, IsFileExist, IsFileOwner
 from datetime import datetime, timedelta, timezone
@@ -40,6 +40,7 @@ def get_task_status(request, task_id):
     return Response(result, status=200)
 
 
+
 @api_view(('GET',))
 @permission_classes([
     IsAuthenticated,
@@ -50,7 +51,6 @@ def document_view(request, path):
     res = Response()
     res["X-Accel-Redirect"] = "/files/" + path
     return res
-
 
 
 @api_view(('GET',))
