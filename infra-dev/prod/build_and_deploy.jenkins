@@ -33,7 +33,7 @@ pipeline {
         }
         stage('Checkout') {
             steps{
-                    git branch: 'pre-main',
+                    git branch: 'main',
                     credentialsId: 'GitHub-ssh',
                     url: 'https://github.com/TyuMeb/Back_reload.git'
                 }
