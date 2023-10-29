@@ -1,12 +1,43 @@
 from celery.result import AsyncResult
+from datetime import datetime, timedelta
+import random
+from rest_framework import viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 
 from main_page.models import UserQuota, UserAccount
 from orders.models import OrderModel, OrderOffer
 from utils.permissions import IsContactor, IsFileExist, IsFileOwner
-from datetime import datetime, timedelta, timezone
+
+from .serializers import GalleryImagesSerializer
+from .models import GalleryImages
+
+
+class GalleryImagesViewSet(viewsets.ModelViewSet):
+    """
+    Отображение картинок на главной странице
+    """
+    queryset = GalleryImages.objects.all()
+    permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
+    serializer_class = GalleryImagesSerializer
+    http_method_names = ["get"]
+
+    def get_queryset(self):
+        """ получение изображений по параметру переданному с фронтенда """
+
+        position = self.kwargs['position']
+        queryset = self.queryset.filter(type_place=position)
+        if len(queryset) <= 6:
+            return queryset
+        # get random choices from list(dict()) if there are more than 6 images in server storage
+        queryset = random.sample(list(queryset), 6)
+        return queryset
+
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
 
 def recalculate_quota(user_account, cloud_size, server_size):
@@ -38,7 +69,6 @@ def get_task_status(request, task_id):
         "task_result": task_result.result
     }
     return Response(result, status=200)
-
 
 
 @api_view(('GET',))
