@@ -1,6 +1,6 @@
 from django.urls import path
 
-from utils.views import get_task_status, document_view, check_expired_auction_orders
+from utils.views import get_task_status, document_view, check_expired_auction_orders, GalleryImagesViewSet
 from utils.initial_data_work import create_admin, create_users
 
 urlpatterns = [
@@ -12,4 +12,5 @@ urlpatterns = [
     path("documents/<path:path>", document_view),
 
     path("check_expired_auction_orders/", check_expired_auction_orders),
+    path("utils/gallery/<position>", GalleryImagesViewSet.as_view({"get": "list"})),
 ]

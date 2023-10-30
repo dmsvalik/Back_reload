@@ -113,7 +113,7 @@ class OrderOfferSerializer(serializers.ModelSerializer):
         if not ContractorData.objects.get(user=user).is_active:
             raise errorcode.ContractorIsInactive()
         if OrderOffer.objects.filter(user_account=user, order_id=order_id).exists():
-            raise errorcode.UniquieOrderOffer()
+            raise errorcode.UniqueOrderOffer()
 
         return data
 

@@ -18,91 +18,103 @@ class HttpValidationException(APIException):
 
 class NotAllowedUser(HttpValidationException):
     status_code = 403
-    detail = "Action not allowed to current user"
+    detail = {"errors": "NotAllowedUser",
+              "Description": "Доступ запрещен."}
 
 
 class IncorrectPostParameters(HttpValidationException):
     status_code = 400
-    detail = "Please check all required fields"
+    detail = {"errors": "IncorrectPostParameters",
+              "Description": "Пожалуйста, проверьете если заполнены все необходимые поля."}
 
 
 class IncorrectImageOrderUpload(HttpValidationException):
     status_code = 400
-    detail = "Please check the order_id field it's incorrect"
+    detail = {"errors": "IncorrectImageOrderUpload",
+              "Description": "Указан неправильный id заказа."}
 
 
 class IncorrectEmailCreateUser(HttpValidationException):
     status_code = 400
-    detail = {"Field": "email",
-              "Description": "English letters, numbers, dashes, dots, @. "
-                             "Length is not less than 5 and not more than 50 characters. "}
+    detail = {"errors": "IncorrectEmailCreateUser",
+              "Description": "Допускаются англиский буквы, числа, точки, знаки: '-' и '@'. "
+                             "Длинна почты не менее 5 и не более 50 знаков. "}
 
 
 class IncorrectSurnameCreateUser(HttpValidationException):
     status_code = 400
-    detail = {"Field": "surname",
-              "Description": "English or Russian letters. Length is not less than 2 and not more than 20 characters."}
+    detail = {"errors": "IncorrectSurnameCreateUser",
+              "message": "Допускаются только английские и русские буквы. Длинна фамилии не менее 2 букв и не более 20."}
 
 
 class IncorrectNameCreateUser(HttpValidationException):
     status_code = 400
-    detail = {"Field": "name",
-              "Description": "English or Russian letters. Length is not less than 2 and not more than 20 characters."}
+    detail = {"errors": "IncorrectNameCreateUser",
+              "message": "Допускаются только английские и русские буквы. Длинна имени не менее 2 букв и не более 20."}
 
 
 class IncorrectTelephoneCreateUser(HttpValidationException):
     status_code = 400
-    detail = {"Field": "telephone",
-              "Description": "The phone number must start with +7 and have 12 characters (digits)."}
+    detail = {"errors": "IncorrectTelephoneCreateUser",
+              "message": "Номер телефона должен начинаться на +7 и иметь 12 цифровых символов."}
 
 
 class IncorrectPasswordCreateUser(HttpValidationException):
     status_code = 400
-    detail = {"Field": "password",
-              "Description": "Length from 8 to 64 characters, english alphabet, at least 1 number and symbols: "
-                             "~ ! ? @ # $ % ^ & * _ - + ( ) [ ] { } > < / \ | ' . , :"}
+    detail = {"errors": "IncorrectPasswordCreateUser",
+              "message": "Длинна пароля не менее 8 и не более 64 знаков, английский алфавит, использование не менне 1 цифры."
+                         "Разрешены следующие символы: ~ ! ? @ # $ % ^ & * _ - + ( ) [ ] { } > < / \ | ' . , :"}
 
 
 class IncorrectImageDeleting(HttpValidationException):
     status_code = 400
-    detail = "Error when deleting an image"
+    detail = {"errors": "IncorrectImageDeleting",
+              "message": "Возникла ошибка при удалении изображения."}
 
 
 class OrderIdNotFound(HttpValidationException):
     status_code = 404
-    detail = "Order not found."
+    detail = {"errors": "OrderIdNotFound",
+              "message": "Заказ не найдет."}
 
 
-class UniquieOrderOffer(HttpValidationException):
+class UniqueOrderOffer(HttpValidationException):
     status_code = 403
-    detail = "Only one offer to one order."
+    detail = {"errors": "UniqueOrderOffer",
+              "message": "Вы можете создать только одно предложение на каждый заказ."}
 
 
 class NotContractorOffer(HttpValidationException):
     status_code = 403
-    detail = "Only contractor can create offer."
+    detail = {"errors": "NotContractorOffer",
+              "message": "Только исполнитель может создать предложение к заказу."}
 
 
 class ContractorIsInactive(HttpValidationException):
     status_code = 403
-    detail = "Contactor is inactive."
+    detail = {"errors": "ContractorIsInactive",
+              "message": "Исполнитель не активен."}
 
 
 class OrderInWrongStatus(HttpValidationException):
     status_code = 403
-    detail = "Order state does not allow to add offer."
+    detail = {"errors": "OrderInWrongStatus",
+              "message": "Статус заказа не позволяет сейчас сделать предложение."}
 
 
 class DocumentPermission(HttpValidationException):
     status_code = 403
-    detail = "You do not have access to this document."
+    detail = {"errors": "DocumentPermission",
+              "message": "У Вас нет доступа к этому файлу."}
 
 
 class FileNotFound(HttpValidationException):
     status_code = 404
-    detail = "File not found."
+    detail = {"errors": "FileNotFound",
+              "message": "Файл не найден."}
 
 
 class CategoryIdNotFound(HttpValidationException):
     status_code = 404
-    detail = "Category not found."
+    detail = {"errors": "CategoryIdNotFound",
+              "message": "Категория не найдена."}
