@@ -137,6 +137,10 @@ class CooperationOffer(models.Model):
     telephone = models.CharField("Телефон", max_length=12, blank=True, null=True)
     created = models.DateTimeField("Дата создания обращения", auto_now=True)
 
+    class Meta:
+        verbose_name = "Предложения на сотрудничество"
+        verbose_name_plural = "Предложения на сотрудничество"
+
 
 class ContactSupport(models.Model):
     user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
@@ -144,6 +148,10 @@ class ContactSupport(models.Model):
     admin_response = models.CharField("Ответ пользователю", max_length=250, blank=True, null=True)
     created = models.DateTimeField("Дата создания обращения", auto_now=True)
     resolved = models.BooleanField("Проблема решена?", default=False)
+
+    class Meta:
+        verbose_name = "Обращения в поддержку"
+        verbose_name_plural = "Обращения в поддержку"
 
 
 class UserQuota(models.Model):

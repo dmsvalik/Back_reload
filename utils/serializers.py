@@ -1,20 +1,17 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
 from .models import GalleryImages
-from django.core.files import File
-
-import base64
 
 
 class GalleryImagesSerializer(ModelSerializer):
-    base64_image = serializers.SerializerMethodField()
+    slider_number = serializers.CharField(source='slider.name')
+    image_url = serializers.SerializerMethodField()
 
     class Meta:
         model = GalleryImages
-        fields = ["id", "name", "price", "type_place", "base64_image"]
+        fields = ["slider_number", "name", "image_url", "price", "position"]
 
-    def get_base64_image(self, obj):
-        with open(obj.image.path, 'rb') as f:
-            image = File(f)
-            data = base64.b64encode(image.read())
-        return data
+    # change url without domain
+    def get_image_url(self, galleryimages):
+        image_url = galleryimages.image.url
+        return image_url
