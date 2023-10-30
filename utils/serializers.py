@@ -14,8 +14,7 @@ class GalleryImagesSerializer(ModelSerializer):
         fields = ["id", "name", "price", "type_place", "base64_image"]
 
     def get_base64_image(self, obj):
-        f = open(obj.image.path, 'rb')
-        image = File(f)
-        data = base64.b64encode(image.read())
-        f.close()
+        with open(obj.image.path, 'rb') as f:
+            image = File(f)
+            data = base64.b64encode(image.read())
         return data
