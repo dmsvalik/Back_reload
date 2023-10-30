@@ -1,5 +1,6 @@
 from django.urls import path
 
+from utils.user_generator import user_generator
 from utils.views import get_task_status, document_view, check_expired_auction_orders, GalleryImagesViewSet
 from utils.initial_data_work import create_admin, create_users
 
@@ -13,4 +14,5 @@ urlpatterns = [
 
     path("check_expired_auction_orders/", check_expired_auction_orders),
     path("utils/gallery/<position>", GalleryImagesViewSet.as_view({"get": "list"})),
+    path("utils/generate_user/", user_generator)
 ]
