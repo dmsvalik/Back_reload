@@ -3,13 +3,11 @@ from rest_framework import routers
 
 from .views import ActivateUser, CooperationViewSet, SupportViewSet, reset_password
 
-
 router = routers.SimpleRouter()
-
-router.register(r"cooperation", CooperationViewSet)
 router.register(r"support", SupportViewSet)
 
 urlpatterns = [
+    path("contact/cooperation/", CooperationViewSet.as_view({"post": "create"})),
     path("contact/", include(router.urls)),
     path(
         "activate/<uid>/<token>",
