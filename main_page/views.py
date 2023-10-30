@@ -5,7 +5,9 @@ from django.shortcuts import render
 
 from djoser.views import UserViewSet
 from rest_framework import viewsets, status
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 
 from .models import CooperationOffer, ContactSupport
 from .serializers import CooperationOfferSerializer, ContactSupportSerializer
@@ -39,11 +41,13 @@ from .error_message import error_responses
     }))
 class CooperationViewSet(viewsets.ModelViewSet):
     """
-    Сохранение обращения клиента на сотрудничество
+    Сохранение обращения аниноминого пользователя на сотрудничество
     """
     queryset = CooperationOffer.objects.all()
+    permission_classes = [AllowAny]
+    throttle_classes = [AnonRateThrottle]
     serializer_class = CooperationOfferSerializer
-    http_method_names = ["get", "post", "delete"]
+    http_method_names = ["post"]
 
     @swagger_auto_schema(
         operation_description="Получить запрос на сотрудничество",
