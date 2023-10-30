@@ -133,8 +133,8 @@ class ContractorData(models.Model):
 
 class CooperationOffer(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
-    text = models.CharField("Запрос от пользователя", max_length=250, blank=True, null=True)
+    name = models.CharField("Имя компании", max_length=100, blank=True, null=True)
+    telephone = models.CharField("Телефон", max_length=12, blank=True, null=True)
     created = models.DateTimeField("Дата создания обращения", auto_now=True)
 
 
