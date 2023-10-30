@@ -37,7 +37,6 @@ def user_generator(request):
             string.digits,
             k=10
         ))
-    print(type(generated_telephone))
     try:
         fake_user = UserAccount.objects.create(
             email=generated_email,
