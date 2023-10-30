@@ -19,25 +19,25 @@ class HttpValidationException(APIException):
 class NotAllowedUser(HttpValidationException):
     status_code = 403
     detail = {"errors": "NotAllowedUser",
-              "Description": "Доступ запрещен."}
+              "message": "Доступ запрещен."}
 
 
 class IncorrectPostParameters(HttpValidationException):
     status_code = 400
     detail = {"errors": "IncorrectPostParameters",
-              "Description": "Пожалуйста, проверьете если заполнены все необходимые поля."}
+              "message": "Пожалуйста, проверьете если заполнены все необходимые поля."}
 
 
 class IncorrectImageOrderUpload(HttpValidationException):
     status_code = 400
     detail = {"errors": "IncorrectImageOrderUpload",
-              "Description": "Указан неправильный id заказа."}
+              "message": "Указан неправильный id заказа."}
 
 
 class IncorrectEmailCreateUser(HttpValidationException):
     status_code = 400
     detail = {"errors": "IncorrectEmailCreateUser",
-              "Description": "Допускаются англиский буквы, числа, точки, знаки: '-' и '@'. "
+              "message": "Допускаются англиский буквы, числа, точки, знаки: '-' и '@'. "
                              "Длинна почты не менее 5 и не более 50 знаков. "}
 
 
