@@ -2,5 +2,5 @@
 .venv/
 files/
 static/
-media/
+#media/
 infra-dev/
