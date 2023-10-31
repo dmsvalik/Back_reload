@@ -12,18 +12,11 @@ from main_page.serializers import TokenObtainSerializer
 @api_view(["GET"])
 @permission_classes([AllowAny, ])
 def user_generator(request):
-    users = UserAccount.objects.all()
-    emails = []
-    telephone_numbers = []
-    if users:
-        emails = [user.email for user in users]
-        telephone_numbers = [user.person_telephone for user in users]
-
     generated_email = ''.join(random.choices(
         string.ascii_lowercase,
         k=10
     )) + '@fakeuser.fake'
-    while generated_email in emails:
+    while UserAccount.objects.filter(email=generated_email).exists():
         generated_email = ''.join(random.choices(
             string.ascii_lowercase,
             k=10
@@ -32,7 +25,7 @@ def user_generator(request):
         string.digits,
         k=10
     ))
-    while generated_telephone in telephone_numbers:
+    while UserAccount.objects.filter(person_telephone=generated_telephone).exists():
         generated_telephone = '+7' + ''.join(random.choices(
             string.digits,
             k=10
