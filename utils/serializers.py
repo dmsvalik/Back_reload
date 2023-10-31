@@ -9,7 +9,7 @@ class GalleryImagesSerializer(ModelSerializer):
 
     class Meta:
         model = GalleryImages
-        fields = ["slider_number", "name", "image_url", "price", "position"]
+        fields = ["id", "slider_number", "name", "image_url", "price", "position"]
 
     # change url without domain
     def get_image_url(self, galleryimages):
