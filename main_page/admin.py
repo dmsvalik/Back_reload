@@ -28,7 +28,7 @@ class ContactSupportAdmin(admin.ModelAdmin):
 
 @admin.register(CooperationOffer)
 class CooperationOfferAdmin(admin.ModelAdmin):
-    list_display = ["user_account", "text", "created"]
+    list_display = ["name", "telephone", "created"]
 
 
 @admin.register(EmailSendTime)

@@ -71,6 +71,7 @@ class InitialData(object):
     def create_initial_users(self):
         self.create_initial_categories()
         self.create_initial_contractors()
+        self.create_initial_admin()
 
         names = ['Алексей', 'Александр', 'Мария', 'Оксана', 'Егор']
         surname = ['Иванов', 'Смирнов', 'Кузнецова', 'Михайлова', 'Пронин']
