@@ -316,8 +316,7 @@ CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://localhost:6379/
 CELERY_BEAT_SCHEDULE = {
     "check_expired_auction_orders": {
         "task": "utils.views.check_expired_auction_orders",
-        "schedule": crontab(minute="*/5"),
-        # "schedule": crontab(minute="0", hour="*/12"),
+        "schedule": crontab(minute="0", hour="*/12"),
     },
 }
 
