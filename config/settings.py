@@ -1,6 +1,7 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+
 import environ
 
 
@@ -58,6 +59,7 @@ INSTALLED_APPS = [
     "tests",
     'drf_api_logger',
     "channels",
+    "questionnaire",
 ]
 
 DOMAIN = ("185.244.173.82")
