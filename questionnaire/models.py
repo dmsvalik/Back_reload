@@ -1,5 +1,7 @@
 from django.db import models
 
+from orders.models import OrderModel
+from products.models import CardModel
 
 ANSWER_TYPES = {
     ("text_field", 'text_field'),
@@ -16,19 +18,19 @@ OPTION_TYPES = {
 
 class QuestionnaireCategory(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    name = models.CharField("тип - кухня, шкафы, кровати", max_length=20)
+    card_id = models.ForeignKey(CardModel, on_delete=models.CASCADE, null=False)
 
     class Meta:
         verbose_name = "Категория анкеты"
         verbose_name_plural = "Категории анкеты"
 
     def __str__(self):
-        return self.name
+        return self.card_id.name
 
 
 class QuestionnaireType(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    card_category = models.ForeignKey(QuestionnaireCategory, on_delete=models.CASCADE, null=False)
+    questionnaire_category = models.ForeignKey(QuestionnaireCategory, on_delete=models.CASCADE, null=False)
     questionnaire_type = models.CharField("тип анкеты - короткая, длинная", max_length=20, null=True)
     description = models.CharField("описание анкеты", max_length=300, null=True)
 
@@ -84,3 +86,24 @@ class Options(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class QuestionResponse(models.Model):
+    id = models.AutoField(primary_key=True, unique=True)
+    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=False)
+    question = models.ForeignKey(Question, on_delete=models.CASCADE, null=False)
+    response = models.CharField("Ответ по заказу", max_length=500, null=True, blank=True)
+    # position = models.CharField("номер ответа по порядку", max_length=10, null=True, blank=True)
+    # image = models.ImageField('Изображение', upload_to= , blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Бланк ответов клиента"
+        verbose_name_plural = "Бланк ответов клиента"
+
+    def __str__(self):
+        return str(self.response)
+
+
+# class QuestionResponseFile(models.Model):
+#     response = models.ForeignKey(QuestionResponse, on_delete=models.CASCADE, related_name='files')
+#     file = models.FileField('Файлы ответов', upload_to=)

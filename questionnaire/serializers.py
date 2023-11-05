@@ -55,8 +55,42 @@ class QuestionnaireTypeSerializer(serializers.ModelSerializer):
         model = QuestionnaireType
         fields = ["id", "questionnaire_type", "description", "chapters"]
 
-
     def get_chapters(self, obj):
         queryset = QuestionnaireChapter.objects.filter(questionnaire_type=obj)
         serializer = QuestionnaireChapterSerializer(queryset, read_only=True, many=True)
         return serializer.data
+
+
+# class CategoryModelSeializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = CategoryModel
+#         fields = ["id", "card", "name"]
+#
+#
+# class QuestionModelSerializer(serializers.ModelSerializer):
+#     options = serializers.SerializerMethodField()
+#
+#     class Meta:
+#         model = QuestionsProductsModel
+#         exclude = ["category"]
+#
+#     @staticmethod
+#     def get_options(obj):
+#         return QuestionOptionsModel.objects.filter(question=obj).values_list("option", flat=True)
+#
+#
+# class AnswerCreateSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ResponseModel
+#         exclude = ["user_account", "order_id"]
+#
+#     def create(self, validated_data):
+#         user = self.context["request"].user
+#         order_id = self.context["request"].order
+#         return ResponseModel.objects.create(**validated_data, user_account=user, order_id_id=order_id)
+#
+#
+# class AnswerImageSerializer(serializers.ModelSerializer):
+#     class Meta:
+#         model = ResponsesImage
+#         fields = ['response', 'image']

@@ -1,16 +1,17 @@
 from django.contrib import admin
 
-from questionnaire.models import QuestionnaireCategory, QuestionnaireType, Question, Options, QuestionnaireChapter
+from questionnaire.models import QuestionnaireCategory, QuestionnaireType, Question, Options, QuestionnaireChapter, \
+    QuestionResponse
 
 
 @admin.register(QuestionnaireCategory)
 class QuestionnaireCategoryAdmin(admin.ModelAdmin):
-    list_display = ["id", "name"]
+    list_display = ["id", "card_id"]
 
 
 @admin.register(QuestionnaireType)
 class QuestionnaireTypeAdmin(admin.ModelAdmin):
-    list_display = ["id", "card_category", "questionnaire_type", "description"]
+    list_display = ["id", "questionnaire_category", "questionnaire_type", "description"]
 
 
 @admin.register(QuestionnaireChapter)
@@ -26,3 +27,8 @@ class QuestionAdmin(admin.ModelAdmin):
 @admin.register(Options)
 class OptionsAdmin(admin.ModelAdmin):
     list_display = ["id", "text", "question"]
+
+
+@admin.register(QuestionResponse)
+class QuestionResponseAdmin(admin.ModelAdmin):
+    list_display = ["id", "question", "response", "order_id"]
