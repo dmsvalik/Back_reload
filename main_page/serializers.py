@@ -5,7 +5,7 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import ContactSupport, CooperationOffer, UserAccount
+from .models import ContactSupport, ContractorAgreement, CooperationOffer, UserAccount
 from .validators import UserValidationFields
 
 
@@ -62,3 +62,9 @@ class TokenObtainSerializer(TokenObtainPairSerializer):
 
 class CutomObtainPairView(TokenObtainPairView):
     serializer_class = TokenObtainSerializer
+
+
+class ContractorAgreementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContractorAgreement
+        fields = ['user_account', 'created_date']
