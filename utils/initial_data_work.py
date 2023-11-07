@@ -5,7 +5,10 @@ from datetime import datetime, timedelta, timezone
 
 from main_page.models import UserQuota, UserAccount, ContractorData
 from orders.models import OrderModel, STATE_CHOICES, OrderOffer
+
 from products.models import Category
+from .models import GallerySlider, GalleryImages
+
 
 
 class InitialData(object):
@@ -17,6 +20,8 @@ class InitialData(object):
     password = 'User007!'
 
     def create_initial_admin(self):
+        """ создание админа """
+
         try:
             UserAccount.objects.create_superuser(
                 email=f'admin{self.domain}',
@@ -31,6 +36,8 @@ class InitialData(object):
             return Response({'error': str(e)})
 
     def create_initial_categories(self):
+        """ создание категорий """
+
         categories = ['kitchen', 'table']
         try:
             for x in range(len(categories)):
@@ -41,6 +48,8 @@ class InitialData(object):
             return Response({'error': str(e)})
 
     def create_initial_contractors(self):
+        """ создание начальных исполнителей """
+
         names = ['Дмитрий', 'Анна', 'Олег']
         surname = ['Карпачин', 'Верескина', 'Донской']
         company_name = ['Икеа', 'Мебельный Центр', 'Кухни Мария']
@@ -68,10 +77,58 @@ class InitialData(object):
                 pass
         return Response({'success': f'contractors created'})
 
-    def create_initial_users(self):
+    def create_prepare_gallery(self):
+        """ подготовка галереи на главной странице """
+        furniture = [
+            ['Кухня Сканди', 'Стол ЖК Орлов', 'Кровать Neo', 'Стеллаж Дельта'],
+            ['Кухня Ikea', 'Комод Стиль', 'Зеркала Строганов', 'Шкаф Нуллэн'],
+            ['Гардероб Прима', 'Табуретка ЖК БауХаус', 'Стол ЖК Вива', 'Сервант Москва'],
+        ]
+
+        price = [
+            ['240000', '24000', '15000', '32400'],
+            ['355000', '45000', '4500', '56000'],
+            ['75000', '2500', '28900', '53600'],
+        ]
+
+        images = [
+            ['/media/main_page_images/gallery_images/kitchen_skandi.jpg', '/media/main_page_images/gallery_images/table_orlov.jpg',
+             '/media/main_page_images/gallery_images/bed_neo.jpg', '/media/main_page_images/gallery_images/delta.jpg'],
+
+            ['/media/main_page_images/gallery_images/kitchen_ikea.jpg', '/media/main_page_images/gallery_images/komod_style.jpg',
+             '/media/main_page_images/gallery_images/mirror_str.jpg', '/media/main_page_images/gallery_images/arm_null.jpg'],
+
+            ['/media/main_page_images/gallery_images/kitchen_skandi.jpg', '/media/main_page_images/gallery_images/table_orlov.jpg',
+             '/media/main_page_images/gallery_images/bed_neo.jpg', '/media/main_page_images/gallery_images/delta.jpg'],
+
+            ['/media/main_page_images/gallery_images/prima.jpg', '/media/main_page_images/gallery_images/tab.jpg',
+             '/media/main_page_images/gallery_images/table_viva.jpg', '/media/main_page_images/gallery_images/mosc.jpg'],
+        ]
+
+        # create 3 sliders and data images
+        try:
+            for x in range(3):
+                GallerySlider.objects.create(name=x+1)
+
+                for y in range(4):
+                    GalleryImages.objects.create(
+                        slider=GallerySlider.objects.get(name=x + 1),
+                        name=furniture[x][y],
+                        price=price[x][y],
+                        position=y+1,
+                        image=images[x][y]
+                    )
+        except Exception as e:
+            print(e)
+            pass
+
+    def create_all_data(self):
+        """ создание начальных пользователей и заказов + оферов """
+
         self.create_initial_categories()
         self.create_initial_contractors()
         self.create_initial_admin()
+        self.create_prepare_gallery()
 
         names = ['Алексей', 'Александр', 'Мария', 'Оксана', 'Егор']
         surname = ['Иванов', 'Смирнов', 'Кузнецова', 'Михайлова', 'Пронин']
@@ -133,7 +190,7 @@ class InitialData(object):
                             offer_description=f'Добрый день, мы представляем компанию - {all_contractors[x].company_name}'
                                               f' Нам необходимо уточнить некоторые моменты, напишите мне в чате',
                         )
-        return Response({'success': f'users created'})
+        return Response({'success': f'all data created'})
 
 
 initial_db = InitialData()
@@ -149,7 +206,7 @@ def create_admin(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
-def create_users(request):
-    """ Create initial 4 users with company-users + orders + offers """
-    result = initial_db.create_initial_users()
+def create_all_data(request):
+    """ Create initial data """
+    result = initial_db.create_all_data()
     return result
