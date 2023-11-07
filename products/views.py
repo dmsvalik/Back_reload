@@ -1,26 +1,23 @@
-# from rest_framework import status
-# from rest_framework.decorators import api_view
-# from rest_framework.generics import CreateAPIView, ListAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
 from rest_framework.views import APIView
 
-from .models import CardModel
-from .serializers import CardModelSerializer
+from .models import Category
+from .serializers import CategorySerializer
 
 
-class CardModelAPIView(APIView):
+class CategoryAPIView(APIView):
     """
     ORDER. STEP 1. Получить список товаров для заказа и создания ответов по анкете.
 
     """
 
     permission_classes = [AllowAny]
-    model = CardModel
-    serializer_class = CardModelSerializer
+    model = Category
+    serializer_class = CategorySerializer
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
     def get(self, request):
-        result = CardModel.objects.all()
-        return Response({"card_rooms": CardModelSerializer(result, many=True).data})
+        result = Category.objects.all()
+        return Response({"category_rooms": CategorySerializer(result, many=True).data})

@@ -119,7 +119,7 @@ class EmailSendTime(models.Model):
 
 class ContractorData(models.Model):
     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
-    card_permissions = models.ManyToManyField("products.CardModel", blank=True)
+    card_permissions = models.ManyToManyField("products.Category", blank=True)
     is_active = models.BooleanField("Активен / Не активен", default=False)
     company_name = models.CharField("Имя компании", max_length=100, blank=True)
     created_date = models.DateTimeField("Дата создания аккаунта исполнителя", auto_now=True)

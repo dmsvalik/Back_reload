@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from questionnaire.models import QuestionnaireCategory, QuestionnaireType, Question, Options, QuestionnaireChapter
+from questionnaire.models import QuestionnaireCategory, QuestionnaireType, Question, Option, QuestionnaireChapter
 
 
 class QuestionnaireCategorySerializer(serializers.ModelSerializer):
@@ -9,15 +9,15 @@ class QuestionnaireCategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
-class OptionsSerializer(serializers.ModelSerializer):
+class OptionSerializer(serializers.ModelSerializer):
     questions = serializers.SerializerMethodField()
 
     class Meta:
-        model = Options
-        fields = ["id", "text", "option_type", "file_required", "questions"]
+        model = Option
+        fields = ["id", "text", "option_type", "questions"]
 
     def get_questions(self, obj):
-        queryset = Question.objects.filter(option=obj)
+        queryset = Question.objects.filter(option=obj).order_by("position")
         serializer = QuestionSerializer(queryset, read_only=True, many=True)
         return serializer.data
 
@@ -30,8 +30,8 @@ class QuestionSerializer(serializers.ModelSerializer):
         fields = ["id", "text", "answer_type", "file_required", "options"]
 
     def get_options(self, obj):
-        queryset = Options.objects.filter(question=obj)
-        serializer = OptionsSerializer(queryset, read_only=True, many=True)
+        queryset = Option.objects.filter(question=obj)
+        serializer = OptionSerializer(queryset, read_only=True, many=True)
         return serializer.data
 
 
@@ -43,7 +43,7 @@ class QuestionnaireChapterSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "questions"]
 
     def get_questions(self, obj):
-        queryset = Question.objects.filter(questionnaire_chapter=obj, option__isnull=True)
+        queryset = Question.objects.filter(chapter=obj, option__isnull=True).order_by("position")
         serializer = QuestionSerializer(queryset, read_only=True, many=True)
         return serializer.data
 
@@ -53,44 +53,9 @@ class QuestionnaireTypeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = QuestionnaireType
-        fields = ["id", "questionnaire_type", "description", "chapters"]
+        fields = ["id", "type", "description", "chapters"]
 
     def get_chapters(self, obj):
-        queryset = QuestionnaireChapter.objects.filter(questionnaire_type=obj)
+        queryset = QuestionnaireChapter.objects.filter(type=obj)
         serializer = QuestionnaireChapterSerializer(queryset, read_only=True, many=True)
         return serializer.data
-
-
-# class CategoryModelSeializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = CategoryModel
-#         fields = ["id", "card", "name"]
-#
-#
-# class QuestionModelSerializer(serializers.ModelSerializer):
-#     options = serializers.SerializerMethodField()
-#
-#     class Meta:
-#         model = QuestionsProductsModel
-#         exclude = ["category"]
-#
-#     @staticmethod
-#     def get_options(obj):
-#         return QuestionOptionsModel.objects.filter(question=obj).values_list("option", flat=True)
-#
-#
-# class AnswerCreateSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ResponseModel
-#         exclude = ["user_account", "order_id"]
-#
-#     def create(self, validated_data):
-#         user = self.context["request"].user
-#         order_id = self.context["request"].order
-#         return ResponseModel.objects.create(**validated_data, user_account=user, order_id_id=order_id)
-#
-#
-# class AnswerImageSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = ResponsesImage
-#         fields = ['response', 'image']

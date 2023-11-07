@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from products.models import CardModel
+from products.models import Category
 
 
-class CardModelSerializer(serializers.ModelSerializer):
+class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = CardModel
+        model = Category
         fields = ["id", "name"]

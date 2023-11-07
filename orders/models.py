@@ -17,7 +17,7 @@ class OrderModel(models.Model):
     order_time = models.DateTimeField("Дата создания заказа")
     name = models.CharField("Название заказа", max_length=150, null=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
-    card_category = models.ForeignKey("products.CardModel", on_delete=models.CASCADE, null=True)
+    card_category = models.ForeignKey("products.Category", on_delete=models.CASCADE, null=True)
     state = models.CharField(verbose_name="Статус", choices=STATE_CHOICES, max_length=50)
 
     contractor_selected = models.ForeignKey(ContractorData, on_delete=models.SET_NULL, null=True, blank=True)
@@ -30,17 +30,6 @@ class OrderModel(models.Model):
         return str(self.id)
 
 
-def nameFile(instance, filename):
-    return "/".join(
-        [
-            "data",
-            str(instance.order_id.user_account.id),
-            str(instance.order_id.id),
-            filename,
-        ]
-    )
-
-
 class FileData(models.Model):
     user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=True, blank=True)
@@ -49,6 +38,18 @@ class FileData(models.Model):
     date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
     yandex_size = models.CharField("Размер файла в облаке", max_length=150, blank=True)
     server_size = models.CharField("Размер файла на сервере", max_length=150, blank=True)
+    # Дописать удаление файлов с сервера и яндекса
+
+
+class OrderFileData(models.Model):
+    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE)
+    question_id = models.ForeignKey("questionnaire.Question", on_delete=models.SET_NULL, null=True)
+    original_name = models.CharField("Имя файла", max_length=250)
+    yandex_path = models.CharField("Путь в облаке", max_length=250, blank=True)
+    server_path = models.CharField("Путь на сервере", max_length=250, blank=True)
+    date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
+    yandex_size = models.IntegerField("Размер файла в облаке, б")
+    server_size = models.IntegerField("Размер файла на сервер, б")
     # Дописать удаление файлов с сервера и яндекса
 
 
