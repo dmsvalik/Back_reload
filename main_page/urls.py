@@ -20,5 +20,5 @@ urlpatterns = [
         reset_password,
         name="reset_password",
     ),
-    path("contractor", ContractorAgreementViewSet.as_view({"post": "create"})),
+    path("contractor_agreement", ContractorAgreementViewSet.as_view({"post": "create"})),
 ]

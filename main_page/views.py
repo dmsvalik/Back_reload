@@ -142,6 +142,13 @@ def reset_password(request, uid, token):
     )
 
 
+@method_decorator(name='create', decorator=swagger_auto_schema(
+    operation_description="Создание соглашения с исполнителем.",
+    responses={
+        status.HTTP_400_BAD_REQUEST: error_responses[status.HTTP_400_BAD_REQUEST],
+        status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
+        status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+    }))
 class ContractorAgreementViewSet(viewsets.ModelViewSet):
     queryset = ContractorAgreement.objects.all()
     serializer_class = ContractorAgreementSerializer
