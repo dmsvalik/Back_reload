@@ -25,7 +25,7 @@ from .swagger_documentation.orders import (
 )
 from .tasks import celery_upload_file_task, celery_upload_image_task
 from main_page.permissions import IsContractor
-from products.models import CardModel
+from products.models import Category
 
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
@@ -44,7 +44,7 @@ def create_order(request):
     if order_name is None or order_description is None or order_category is None or order_name not in STATE_CHOICES:
         raise IncorrectPostParameters
 
-    if CardModel.objects.filter(id=order_category).exists() is False:
+    if Category.objects.filter(id=order_category).exists() is False:
         raise CategoryIdNotFound
 
     OrderModel.objects.create(
@@ -52,7 +52,7 @@ def create_order(request):
         order_time=datetime.now(tz=timezone.utc),
         name=order_name,
         order_description=order_description,
-        card_category=CardModel.objects.get(id=order_category),
+        card_category=Category.objects.get(id=order_category),
         state=order_state
     )
 
@@ -70,7 +70,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
             permission_classes = [IsAuthenticated, ]
         if self.action == 'create':
             # уточнить пермишены
-            permission_classes = [IsAuthenticated, IsContractor,]
+            permission_classes = [IsAuthenticated, IsContractor, ]
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):

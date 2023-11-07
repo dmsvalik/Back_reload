@@ -5,8 +5,10 @@ from datetime import datetime, timedelta, timezone
 
 from main_page.models import UserQuota, UserAccount, ContractorData
 from orders.models import OrderModel, STATE_CHOICES, OrderOffer
-from products.models import CardModel
+
+from products.models import Category
 from .models import GallerySlider, GalleryImages
+
 
 
 class InitialData(object):
@@ -39,7 +41,7 @@ class InitialData(object):
         categories = ['kitchen', 'table']
         try:
             for x in range(len(categories)):
-                CardModel.objects.get_or_create(
+                Category.objects.get_or_create(
                     name=categories[x],)
             return Response({'success': f'categories created'})
         except Exception as e:
@@ -162,7 +164,7 @@ class InitialData(object):
                         order_time=datetime.now(tz=timezone.utc),
                         name=f'order_N_{last_id+x}_{client.email}',
                         order_description=self.description,
-                        card_category=CardModel.objects.get(name='kitchen'),
+                        card_category=Category.objects.get(name='kitchen'),
                         state=STATE_CHOICES[x][0]
                     )
 
@@ -172,7 +174,7 @@ class InitialData(object):
                     order_time=datetime.now(tz=timezone.utc) + timedelta(days=1),
                     name=f'order_OFFER_EXPIRED_{client.email}',
                     order_description=f'',
-                    card_category=CardModel.objects.get(name='kitchen'),
+                    card_category=Category.objects.get(name='kitchen'),
                     state='offer'
                 )
 
