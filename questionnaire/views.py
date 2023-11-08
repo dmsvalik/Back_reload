@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -5,8 +6,16 @@ from rest_framework.permissions import AllowAny
 from orders.models import OrderModel
 from questionnaire.models import QuestionnaireType
 from questionnaire.serializers import QuestionnaireTypeSerializer, QuestionnaireShortTypeSerializer
+from questionnaire.swagger_documentation.questionnaire import \
+    QuestionnaireGetList, QuestionnaireTypeGetList
 
 
+@swagger_auto_schema(
+        operation_description=QuestionnaireGetList.operation_description,
+        request_body=QuestionnaireGetList.request_body,
+        responses=QuestionnaireGetList.responses,
+        method="GET"
+    )
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_questionnaire(request, questionnaire_id):
@@ -25,7 +34,12 @@ def get_questionnaire(request, questionnaire_id):
         print(request.COOKIES.get('key'))
     return response
 
-
+@swagger_auto_schema(
+        operation_description=QuestionnaireTypeGetList.operation_description,
+        request_body=QuestionnaireTypeGetList.request_body,
+        responses=QuestionnaireTypeGetList.responses,
+        method="GET"
+    )
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_questionnaire_types(request, category_id):
