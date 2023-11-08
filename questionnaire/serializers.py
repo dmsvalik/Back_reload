@@ -3,10 +3,16 @@ from rest_framework import serializers
 from questionnaire.models import QuestionnaireCategory, QuestionnaireType, Question, Option, QuestionnaireChapter
 
 
+class QuestionnaireShortTypeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionnaireType
+        fields = ["id", "type", "description"]
+
+
 class QuestionnaireCategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionnaireCategory
-        fields = ["id", "name"]
+        fields = ["id", "category"]
 
 
 class OptionSerializer(serializers.ModelSerializer):

@@ -5,7 +5,9 @@ from .models import FileData, OrderModel, OrderOffer
 
 @admin.register(OrderModel)
 class OrderModelAdmin(admin.ModelAdmin):
-    list_display = ["order_time", "id", "state", "user_account", "name"]
+    list_display = ["id", "name", "state", "user_account", "order_time", ]
+    fields = ["name", "state", "user_account", "order_time", "key", ]
+    readonly_fields = ("order_time", "key")
 
 
 @admin.register(OrderOffer)
