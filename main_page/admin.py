@@ -1,7 +1,6 @@
 from django.contrib import admin
 
-from .models import CooperationOffer, UserAccount, EmailSendTime, ContactSupport
-from .models import ContractorData
+from .models import ContactSupport, ContractorAgreement, ContractorData, CooperationOffer, EmailSendTime, UserAccount
 from main_page.models import UserQuota
 
 
@@ -39,3 +38,8 @@ class EmailSendTimeAdmin(admin.ModelAdmin):
 @admin.register(UserQuota)
 class UserQuotaAdmin(admin.ModelAdmin):
     list_display = ["user", "total_cloud_size", "total_server_size", "total_traffic"]
+
+
+@admin.register(ContractorAgreement)
+class ContractorAgreementAdmin(admin.ModelAdmin):
+    list_display = ["user_account", "created_date"]

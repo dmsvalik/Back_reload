@@ -163,3 +163,18 @@ class UserQuota(models.Model):
     def reset_traffic(self):
         self.total_traffic = 0
         self.save()
+
+
+class ContractorAgreement(models.Model):
+    user_account = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
+    created_date = models.DateTimeField("Дата подписания соглашения", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Соглашение с исполнителем"
+        verbose_name_plural = "Соглашения с исполнителями"
+
+    def save(self, *args, **kwargs):
+        contractor = ContractorData.objects.get(user_id=self.user_account.id)
+        contractor.is_active = True
+        contractor.save()
+        super().save(*args, **kwargs)

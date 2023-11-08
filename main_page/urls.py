@@ -1,7 +1,8 @@
 from django.urls import include, path
 from rest_framework import routers
 
-from .views import ActivateUser, CooperationViewSet, SupportViewSet, reset_password
+from .views import ActivateUser, ContractorAgreementViewSet, CooperationViewSet, SupportViewSet, reset_password
+
 
 router = routers.SimpleRouter()
 router.register(r"support", SupportViewSet)
@@ -19,4 +20,5 @@ urlpatterns = [
         reset_password,
         name="reset_password",
     ),
+    path("contractor_agreement", ContractorAgreementViewSet.as_view({"post": "create"})),
 ]
