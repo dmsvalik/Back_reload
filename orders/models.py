@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 
 from main_page.models import ContractorData, UserAccount
+from products.models import Category
 
 
 STATE_CHOICES = (
