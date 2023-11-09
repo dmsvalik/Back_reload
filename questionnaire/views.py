@@ -20,18 +20,16 @@ from questionnaire.swagger_documentation.questionnaire import \
 @permission_classes([AllowAny])
 def get_questionnaire(request, questionnaire_id):
     questionnaire = QuestionnaireType.objects.get(id=questionnaire_id)
-    serializer = QuestionnaireTypeSerializer(instance=questionnaire)
+    key = request.COOKIES.get('key')
+    serializer = QuestionnaireTypeSerializer(instance=questionnaire, context={"key": key})
     response = Response(serializer.data)
-    if serializer.data:
+    if serializer.data and not OrderModel.objects.filter(key=key, user_account__isnull=True).exists():
         order = OrderModel.objects.create(
             user_account=None,
             name=f"Заказ №{1 if not OrderModel.objects.last() else OrderModel.objects.last().id + 1}",
             card_category=questionnaire.category.category,
         )
         response.set_cookie("key", order.key)
-    # return Response(serializer.data)
-    if 'key' in request.COOKIES:
-        print(request.COOKIES.get('key'))
     return response
 
 @swagger_auto_schema(
