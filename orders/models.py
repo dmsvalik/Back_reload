@@ -3,6 +3,7 @@ import uuid
 from django.db import models
 
 from main_page.models import ContractorData, UserAccount
+from products.models import Category
 
 
 STATE_CHOICES = (
@@ -19,7 +20,7 @@ class OrderModel(models.Model):
     order_time = models.DateTimeField("Дата создания заказа", auto_now_add=True)
     name = models.CharField("Название заказа", max_length=150, null=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
-    card_category = models.ForeignKey("products.Category", on_delete=models.CASCADE, null=True)
+    card_category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
     state = models.CharField(verbose_name="Статус", choices=STATE_CHOICES, max_length=50, default="draft")
 
     contractor_selected = models.ForeignKey(ContractorData, on_delete=models.SET_NULL, null=True, blank=True)

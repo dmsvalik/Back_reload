@@ -10,7 +10,8 @@ version: '3.8'
 #docker exec -it <container_id - app> python manage.py createsuperuser
 
 #docker compose build app  -remake only app container after changes
-
+#docker-compose down --volumes or docker-compose down --rmi all --volumes
+#docker rm -f -v postgres_container_name (db)
 
 services:
 
