@@ -7,8 +7,10 @@ from main_page.models import UserQuota, UserAccount, ContractorData
 from orders.models import OrderModel, STATE_CHOICES, OrderOffer
 
 from products.models import Category
-from .models import GallerySlider, GalleryImages
+from utils.models import GallerySlider, GalleryImages
+from utils.prepare_db.questionnaire_data import QuestionnaireData
 
+questionnaire = QuestionnaireData()
 
 
 class InitialData(object):
@@ -126,6 +128,9 @@ class InitialData(object):
         """ создание начальных пользователей и заказов + оферов """
 
         self.create_initial_categories()
+        questionnaire.create_questionnaire_category()
+        questionnaire.create_questionnaire_type()
+        questionnaire.create_questionnaire_chapter()
         self.create_initial_contractors()
         self.create_initial_admin()
         self.create_prepare_gallery()
@@ -190,6 +195,7 @@ class InitialData(object):
                             offer_description=f'Добрый день, мы представляем компанию - {all_contractors[x].company_name}'
                                               f' Нам необходимо уточнить некоторые моменты, напишите мне в чате',
                         )
+
         return Response({'success': f'all data created'})
 
 
