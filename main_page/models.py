@@ -119,7 +119,7 @@ class EmailSendTime(models.Model):
 
 class ContractorData(models.Model):
     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
-    card_permissions = models.ManyToManyField("products.CardModel", blank=True)
+    card_permissions = models.ManyToManyField("products.Category", blank=True)
     is_active = models.BooleanField("Активен / Не активен", default=False)
     company_name = models.CharField("Имя компании", max_length=100, blank=True)
     created_date = models.DateTimeField("Дата создания аккаунта исполнителя", auto_now=True)
@@ -163,3 +163,18 @@ class UserQuota(models.Model):
     def reset_traffic(self):
         self.total_traffic = 0
         self.save()
+
+
+class ContractorAgreement(models.Model):
+    user_account = models.OneToOneField(UserAccount, on_delete=models.CASCADE, primary_key=True)
+    created_date = models.DateTimeField("Дата подписания соглашения", auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Соглашение с исполнителем"
+        verbose_name_plural = "Соглашения с исполнителями"
+
+    def save(self, *args, **kwargs):
+        contractor = ContractorData.objects.get(user_id=self.user_account.id)
+        contractor.is_active = True
+        contractor.save()
+        super().save(*args, **kwargs)

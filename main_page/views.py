@@ -1,21 +1,18 @@
 import requests
-
 from django.http.response import JsonResponse
 from django.shortcuts import render
-
+from django.utils.decorators import method_decorator
 from djoser.views import UserViewSet
-from rest_framework import viewsets, status
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework import status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
-
-from .models import CooperationOffer, ContactSupport
-from .serializers import CooperationOfferSerializer, ContactSupportSerializer
-
-from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+from rest_framework.throttling import AnonRateThrottle
 
 from .error_message import error_responses
+from .models import ContactSupport, ContractorAgreement, ContractorData, CooperationOffer
+from .permissions import IsContractor
+from .serializers import ContactSupportSerializer, ContractorAgreementSerializer, CooperationOfferSerializer
 
 
 @method_decorator(name='create', decorator=swagger_auto_schema(
@@ -143,3 +140,30 @@ def reset_password(request, uid, token):
     return render(
         request, "main_page/reset_password.html", {"uid": uid, "token_uid": token}
     )
+
+
+@method_decorator(name='create', decorator=swagger_auto_schema(
+    operation_description="Создание соглашения с исполнителем.",
+    responses={
+        status.HTTP_400_BAD_REQUEST: error_responses[status.HTTP_400_BAD_REQUEST],
+        status.HTTP_401_UNAUTHORIZED: error_responses[status.HTTP_401_UNAUTHORIZED],
+        status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+    }))
+class ContractorAgreementViewSet(viewsets.ModelViewSet):
+    queryset = ContractorAgreement.objects.all()
+    serializer_class = ContractorAgreementSerializer
+    permission_classes = [IsContractor]
+
+    def create(self, request, *args, **kwargs):
+        request.data["user_account"] = request.user.id
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+
+        # Update ContractorData status
+        contractor_data = ContractorData.objects.get(user=request.user)
+        contractor_data.is_active = True
+        contractor_data.save()
+
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
