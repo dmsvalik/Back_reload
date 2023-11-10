@@ -92,8 +92,6 @@ class QuestionnaireKitchenData(object):
                                         )
 
 
-
-
         except Exception as e:
             print(f'error: {e}')
             pass
