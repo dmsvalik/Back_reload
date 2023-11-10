@@ -1,4 +1,6 @@
 
+""" Общая информация и разделы """
+
 main_information_chapter = [
     {
         'Какая по форме кухня':
@@ -105,3 +107,117 @@ main_information_chapter = [
     }
 ]
 
+
+""" Корпус и фасады """
+
+
+main_facade_chapter = [
+    {
+        'В каких фасадах сделать расчет?':
+            {'position': 1,
+             'answer_type': 'choice_field',
+             'file_required': False,
+             'options': [{
+                 "text": "Пленка",
+                 "option_type": "answer",
+                 "file_required": False,
+                 "questions": []},
+                 {
+                     "text": "Эмаль",
+                     "option_type": "sub_questions",
+                     "file_required": False,
+                     "questions": []},
+                 {
+                     "text": "Пластик",
+                     "option_type": "sub_questions",
+                     "file_required": False,
+                     "questions": []},
+                 {
+                     "text": "ЛДСП",
+                     "option_type": "answer",
+                     "file_required": False,
+                     "questions": []
+                 }]
+             },
+
+        "Цвет фасадов?":
+            {
+                'position': 2,
+                "answer_type": "text_field",
+                "file_required": True,
+                "options": [],
+            },
+
+        "Фасад с фрезеровкой/витраж/филенка. Приведите описание или приложите пример":
+            {
+                'position': 3,
+                "answer_type": "text_field",
+                "file_required": True,
+                "options": []
+            },
+
+        "Цвет корпуса":
+            {
+                'position': 4,
+                "answer_type": "text_field",
+                "file_required": False,
+                "options": []
+            },
+
+        'Столешница':
+            {'position': 5,
+             'answer_type': 'choice_field',
+             'file_required': False,
+             'options': [{
+                 "text": "Пластик",
+                 "option_type": "answer",
+                 "file_required": False,
+                 "questions": []},
+                 {
+                     "text": "Камень (мрамор/кварцит/гранит/оникс)",
+                     "option_type": "sub_questions",
+                     "file_required": False,
+                     "questions": []},
+                 {
+                     "text": "Искуственный камень (акрил)",
+                     "option_type": "sub_questions",
+                     "file_required": False,
+                     "questions": []},
+                 {
+                     "text": "Кварцевый агломерат",
+                     "option_type": "answer",
+                     "file_required": False,
+                     "questions": []},
+                 {
+                     "text": "Компакт плита",
+                     "option_type": "sub_questions",
+                     "file_required": False,
+                     "questions": []},
+                 {
+                     "text": "Керамогранит",
+                     "option_type": "sub_questions",
+                     "file_required": False,
+                     "questions": []},
+                 {
+                     "text": "ЛДСП",
+                     "option_type": "sub_questions",
+                     "file_required": False,
+                     "questions": []},
+
+                 ]
+             },
+
+        'Необходим ли фартук?':
+            {'position': 6,
+             'answer_type': 'choice_field',
+             'file_required': False,
+             'options': [{
+                 "text": "Нет",
+                 "option_type": "answer",
+                 "file_required": False,
+                 "questions": []},
+                 ]
+             }
+
+    }
+]

@@ -1,12 +1,12 @@
 from products.models import Category
 from questionnaire.models import QuestionnaireCategory, QuestionnaireType, QuestionnaireChapter, Question,\
     ANSWER_TYPES, Option
-from .questionnaire_kitchen_full import main_information_chapter
+from .questionnaire_kitchen_full import main_information_chapter, main_facade_chapter
 
 
 class QuestionnaireKitchenData(object):
     chapter_kitchen_full = ['Общая информация и разделы', 'Корпус и фасады', 'Фурнитура', 'Техника', 'Наполнение']
-    all_chapters = [main_information_chapter, ]
+    all_chapters = [main_information_chapter, main_facade_chapter, ]
 
     def create_questionnaire_category(self):
         """ категорий анкет """
@@ -90,7 +90,6 @@ class QuestionnaireKitchenData(object):
                                             position=dict_questions['position'],
                                             option=Option.objects.get(id=option[0].id),
                                         )
-
 
         except Exception as e:
             print(f'error: {e}')
