@@ -8,9 +8,9 @@ from orders.models import OrderModel, STATE_CHOICES, OrderOffer
 
 from products.models import Category
 from utils.models import GallerySlider, GalleryImages
-from utils.prepare_db.questionnaire_data import QuestionnaireData
+from utils.prepare_db.questionnaire_data import QuestionnaireKitchenData
 
-questionnaire = QuestionnaireData()
+questionnaire = QuestionnaireKitchenData()
 
 
 class InitialData(object):
@@ -131,6 +131,7 @@ class InitialData(object):
         questionnaire.create_questionnaire_category()
         questionnaire.create_questionnaire_type()
         questionnaire.create_questionnaire_chapter()
+        questionnaire.create_questions_full_kitchen()
         self.create_initial_contractors()
         self.create_initial_admin()
         self.create_prepare_gallery()
