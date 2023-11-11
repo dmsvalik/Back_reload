@@ -1,7 +1,9 @@
 import os
 from datetime import timedelta
 from pathlib import Path
+
 import environ
+from celery.schedules import crontab
 
 
 env = environ.Env()
@@ -58,6 +60,7 @@ INSTALLED_APPS = [
     "tests",
     'drf_api_logger',
     "channels",
+    "questionnaire",
 ]
 
 DOMAIN = ("185.244.173.82")
@@ -152,7 +155,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
-            "hosts": [("127.0.0.1", 6379)],
+            "hosts": [("redis", 6379)],
         },
     },
 }
@@ -311,6 +314,12 @@ MAX_ORDERS = 50
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://localhost:6379/0")
+CELERY_BEAT_SCHEDULE = {
+    "check_expired_auction_orders": {
+        "task": "utils.views.check_expired_auction_orders",
+        "schedule": crontab(minute="0", hour="*/12"),
+    },
+}
 
 # записывать логи
 # документация https://pypi.org/project/drf-api-logger/

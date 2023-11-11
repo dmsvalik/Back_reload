@@ -1,22 +1,8 @@
 from django.urls import path
 
-from .views import (AnswerListAPIView, CardModelAPIView, ImageResponseAPIView,
-                    CategoryModelListAPIView, QuestionsModelListAPIView, CreateOrderAnswers)
-from . import views
+from .views import CategoryAPIView
 
 
 urlpatterns = [
-    path("products/step_1/card/", CardModelAPIView.as_view()),
-
-    path("products/step_2/<int:card_id>", views.questionnaire_options, name='questionnaire_options'),
-
-    path("products/step_2_1/<int:card_id>", CategoryModelListAPIView.as_view()),
-    path(
-        "products/step_3_1/<int:category_id>/questions",
-        QuestionsModelListAPIView.as_view(),
-    ),
-    path("products/step_3_2/questions_response", AnswerListAPIView.as_view()),
-    path("products/step_4/create_order", CreateOrderAnswers),
-    path("products/responses/image", ImageResponseAPIView.as_view()),
-
+    path("products/category/", CategoryAPIView.as_view()),
 ]
