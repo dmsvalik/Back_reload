@@ -34,8 +34,13 @@ ALLOWED_HOSTS = [
 
 CSRF_TRUSTED_ORIGINS = [
     "http://app",
-    "http://185.244.173.82"
+    "http://185.244.173.82",
+    "https://api.whywe.ru",
+    "https://www.api.whywe.ru",
 ]
+
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     "daphne",

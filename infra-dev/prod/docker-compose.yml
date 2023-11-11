@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 # if port 5432 is in use check it:
 # sudo lsof -i tcp:5432
@@ -184,6 +184,7 @@ services:
     restart: always
     ports:
       - "80:80"
+      - "443:443"
     depends_on:
       - app
     volumes:
@@ -192,6 +193,14 @@ services:
       - $FILE_PATH/media/:/var/html/media/
       - $FILE_PATH/files/:/var/html/files/
       - $FILE_PATH/media_type/:/var/html/media_type/
+    command: "/bin/sh -c 'while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
 
+  certbot:
+    image: certbot/certbot
+    restart: always
+    volumes:
+      - $FILE_PATH/certbot/conf:/etc/letsencrypt
+      - $FILE_PATH/certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 volumes:
   redis-data:
