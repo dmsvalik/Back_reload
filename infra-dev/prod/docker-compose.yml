@@ -189,8 +189,8 @@ services:
       - app
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf
-      - $FILE_PATH/certbot/conf:/etc/letsencrypt
-      - $FILE_PATH/certbot/www:/var/www/certbot
+      - /certbot/conf:/etc/letsencrypt
+      - /certbot/www:/var/www/certbot
       - $FILE_PATH/static/:/var/html/static/
       - $FILE_PATH/media/:/var/html/media/
       - $FILE_PATH/files/:/var/html/files/
@@ -201,8 +201,8 @@ services:
     image: certbot/certbot
     restart: always
     volumes:
-      - $FILE_PATH/certbot/conf:/etc/letsencrypt
-      - $FILE_PATH/certbot/www:/var/www/certbot
+      - /certbot/conf:/etc/letsencrypt
+      - /certbot/www:/var/www/certbot
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 volumes:
   redis-data:
