@@ -104,7 +104,7 @@ class QuestionnaireTypeSerializer(serializers.ModelSerializer):
         fields = ["id", "type", "description", "answers_exists", "chapters"]
 
     def get_chapters(self, obj):
-        queryset = QuestionnaireChapter.objects.filter(type=obj)
+        queryset = QuestionnaireChapter.objects.filter(type=obj).order_by('position')
         serializer = QuestionnaireChapterSerializer(queryset, read_only=True, many=True,
                                                     context={"key":self.context.get("key")})
         return serializer.data

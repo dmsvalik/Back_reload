@@ -46,6 +46,7 @@ class QuestionnaireChapter(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     name = models.CharField("Раздел опросника", max_length=200)
     type = models.ForeignKey(QuestionnaireType, on_delete=models.CASCADE, null=False)
+    position = models.IntegerField("Позиция в анкете", blank=True, null=True)
 
     class Meta:
         verbose_name = "Раздел анкеты"
@@ -58,7 +59,7 @@ class QuestionnaireChapter(models.Model):
 class Question(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     text = models.CharField("Вопрос", max_length=200)
-    position = models.IntegerField("Позиция в анкете")
+    position = models.IntegerField("Позиция в анкете", blank=True, null=True)
     chapter = models.ForeignKey(QuestionnaireChapter, on_delete=models.CASCADE, null=False)
     answer_type = models.CharField("Тип ответа", max_length=200, choices=ANSWER_TYPES)
     file_required = models.BooleanField(default=False)
