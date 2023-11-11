@@ -68,7 +68,7 @@ INSTALLED_APPS = [
     "questionnaire",
 ]
 
-DOMAIN = ("185.244.173.82")
+DOMAIN = ("api.whywe.ru")
 
 SITE_NAME = ("whywe.ru")
 
