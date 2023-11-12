@@ -7,8 +7,15 @@ from main_page.models import UserQuota, UserAccount, ContractorData
 from orders.models import OrderModel, STATE_CHOICES, OrderOffer
 
 from products.models import Category
+<<<<<<< HEAD:utils/initial_data_work.py
 from .models import GallerySlider, GalleryImages
 
+=======
+from utils.models import GallerySlider, GalleryImages
+from utils.prepare_db.questionnaire_data import QuestionnaireKitchenData
+
+questionnaire = QuestionnaireKitchenData()
+>>>>>>> 236b3830cd8e1414fa5a97bf465922fd14b60104:utils/prepare_db/initial_data_work.py
 
 
 class InitialData(object):
@@ -79,6 +86,7 @@ class InitialData(object):
 
     def create_prepare_gallery(self):
         """ подготовка галереи на главной странице """
+<<<<<<< HEAD:utils/initial_data_work.py
         furniture = [
             ['Кухня Сканди', 'Стол ЖК Орлов', 'Кровать Neo', 'Стеллаж Дельта'],
             ['Кухня Ikea', 'Комод Стиль', 'Зеркала Строганов', 'Шкаф Нуллэн'],
@@ -104,6 +112,30 @@ class InitialData(object):
             ['/media/main_page_images/gallery_images/prima.jpg', '/media/main_page_images/gallery_images/tab.jpg',
              '/media/main_page_images/gallery_images/table_viva.jpg', '/media/main_page_images/gallery_images/mosc.jpg'],
         ]
+=======
+
+        furniture = [
+            ['Прикроватная тумбочка', 'Шкаф кухонный', 'Шкаф', 'Кухня'],
+            ['Кухня', 'Рабочий стол', 'Кухонный стол', 'Кухня белая'],
+            ['Полка навесная', 'Прикроватная тумбочка', 'Шкаф', 'Стол'],
+        ]
+
+        price = [
+            ['6000', '15000', '60000', '160000'],
+            ['300000', '15000', '10000', '325000'],
+            ['1500', '3000', '40000', '5000'],
+        ]
+
+        images = [
+            ['/media/main_page_images/gallery_images/1_1a.png', '/media/main_page_images/gallery_images/1_2.png',
+             '/media/main_page_images/gallery_images/1_4.png', '/media/main_page_images/gallery_images/1_3.png'],
+
+            ['/media/main_page_images/gallery_images/2_5.png', '/media/main_page_images/gallery_images/2_7.png',
+             '/media/main_page_images/gallery_images/2_8.png', '/media/main_page_images/gallery_images/2_6.png'],
+
+            ['/media/main_page_images/gallery_images/3_9.png', '/media/main_page_images/gallery_images/3_10.png',
+             '/media/main_page_images/gallery_images/3_12.png', '/media/main_page_images/gallery_images/3_11.png']]
+>>>>>>> 236b3830cd8e1414fa5a97bf465922fd14b60104:utils/prepare_db/initial_data_work.py
 
         # create 3 sliders and data images
         try:
@@ -126,6 +158,10 @@ class InitialData(object):
         """ создание начальных пользователей и заказов + оферов """
 
         self.create_initial_categories()
+        questionnaire.create_questionnaire_category()
+        questionnaire.create_questionnaire_type()
+        questionnaire.create_questionnaire_chapter()
+        questionnaire.create_questions_full_kitchen()
         self.create_initial_contractors()
         self.create_initial_admin()
         self.create_prepare_gallery()
@@ -190,6 +226,10 @@ class InitialData(object):
                             offer_description=f'Добрый день, мы представляем компанию - {all_contractors[x].company_name}'
                                               f' Нам необходимо уточнить некоторые моменты, напишите мне в чате',
                         )
+<<<<<<< HEAD:utils/initial_data_work.py
+=======
+
+>>>>>>> 236b3830cd8e1414fa5a97bf465922fd14b60104:utils/prepare_db/initial_data_work.py
         return Response({'success': f'all data created'})
 
 

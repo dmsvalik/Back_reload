@@ -1,6 +1,9 @@
+import uuid
+
 from django.db import models
 
 from main_page.models import ContractorData, UserAccount
+from products.models import Category
 
 
 STATE_CHOICES = (
@@ -14,13 +17,14 @@ STATE_CHOICES = (
 class OrderModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
-    order_time = models.DateTimeField("Дата создания заказа")
+    order_time = models.DateTimeField("Дата создания заказа", auto_now_add=True)
     name = models.CharField("Название заказа", max_length=150, null=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)
-    card_category = models.ForeignKey("products.Category", on_delete=models.CASCADE, null=True)
-    state = models.CharField(verbose_name="Статус", choices=STATE_CHOICES, max_length=50)
+    card_category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
+    state = models.CharField(verbose_name="Статус", choices=STATE_CHOICES, max_length=50, default="draft")
 
     contractor_selected = models.ForeignKey(ContractorData, on_delete=models.SET_NULL, null=True, blank=True)
+    key = models.UUIDField("Куки-ключ", null=True, default=uuid.uuid4, editable=False)
 
     class Meta:
         verbose_name = "Заказ клиента"
