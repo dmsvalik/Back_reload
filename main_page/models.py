@@ -46,6 +46,7 @@ class UserAccountManager(BaseUserManager):
         user.set_password(password)
         user.save()
         UserQuota.objects.create(user=user)
+        UserAgreement.objects.create(user=user)
 
         return user
 
@@ -178,3 +179,10 @@ class ContractorAgreement(models.Model):
         contractor.is_active = True
         contractor.save()
         super().save(*args, **kwargs)
+
+
+class UserAgreement(models.Model):
+    """Модель принятия оферты пользователем при регистрации"""
+    id = models.AutoField(primary_key=True, unique=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True)
+    date = models.DateField("Дата принятия офферты")

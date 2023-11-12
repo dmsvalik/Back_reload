@@ -8,9 +8,9 @@ from orders.models import OrderModel, STATE_CHOICES, OrderOffer
 
 from products.models import Category
 from utils.models import GallerySlider, GalleryImages
-from utils.prepare_db.questionnaire_data import QuestionnaireData
+from utils.prepare_db.questionnaire_data import QuestionnaireKitchenData
 
-questionnaire = QuestionnaireData()
+questionnaire = QuestionnaireKitchenData()
 
 
 class InitialData(object):
@@ -81,31 +81,28 @@ class InitialData(object):
 
     def create_prepare_gallery(self):
         """ подготовка галереи на главной странице """
+
         furniture = [
-            ['Кухня Сканди', 'Стол ЖК Орлов', 'Кровать Neo', 'Стеллаж Дельта'],
-            ['Кухня Ikea', 'Комод Стиль', 'Зеркала Строганов', 'Шкаф Нуллэн'],
-            ['Гардероб Прима', 'Табуретка ЖК БауХаус', 'Стол ЖК Вива', 'Сервант Москва'],
+            ['Прикроватная тумбочка', 'Шкаф кухонный', 'Шкаф', 'Кухня'],
+            ['Кухня', 'Рабочий стол', 'Кухонный стол', 'Кухня белая'],
+            ['Полка навесная', 'Прикроватная тумбочка', 'Шкаф', 'Стол'],
         ]
 
         price = [
-            ['240000', '24000', '15000', '32400'],
-            ['355000', '45000', '4500', '56000'],
-            ['75000', '2500', '28900', '53600'],
+            ['6000', '15000', '60000', '160000'],
+            ['300000', '15000', '10000', '325000'],
+            ['1500', '3000', '40000', '5000'],
         ]
 
         images = [
-            ['/media/main_page_images/gallery_images/kitchen_skandi.jpg', '/media/main_page_images/gallery_images/table_orlov.jpg',
-             '/media/main_page_images/gallery_images/bed_neo.jpg', '/media/main_page_images/gallery_images/delta.jpg'],
+            ['/media/main_page_images/gallery_images/1_1a.png', '/media/main_page_images/gallery_images/1_2.png',
+             '/media/main_page_images/gallery_images/1_4.png', '/media/main_page_images/gallery_images/1_3.png'],
 
-            ['/media/main_page_images/gallery_images/kitchen_ikea.jpg', '/media/main_page_images/gallery_images/komod_style.jpg',
-             '/media/main_page_images/gallery_images/mirror_str.jpg', '/media/main_page_images/gallery_images/arm_null.jpg'],
+            ['/media/main_page_images/gallery_images/2_5.png', '/media/main_page_images/gallery_images/2_7.png',
+             '/media/main_page_images/gallery_images/2_8.png', '/media/main_page_images/gallery_images/2_6.png'],
 
-            ['/media/main_page_images/gallery_images/kitchen_skandi.jpg', '/media/main_page_images/gallery_images/table_orlov.jpg',
-             '/media/main_page_images/gallery_images/bed_neo.jpg', '/media/main_page_images/gallery_images/delta.jpg'],
-
-            ['/media/main_page_images/gallery_images/prima.jpg', '/media/main_page_images/gallery_images/tab.jpg',
-             '/media/main_page_images/gallery_images/table_viva.jpg', '/media/main_page_images/gallery_images/mosc.jpg'],
-        ]
+            ['/media/main_page_images/gallery_images/3_9.png', '/media/main_page_images/gallery_images/3_10.png',
+             '/media/main_page_images/gallery_images/3_12.png', '/media/main_page_images/gallery_images/3_11.png']]
 
         # create 3 sliders and data images
         try:
@@ -131,6 +128,7 @@ class InitialData(object):
         questionnaire.create_questionnaire_category()
         questionnaire.create_questionnaire_type()
         questionnaire.create_questionnaire_chapter()
+        questionnaire.create_questions_full_kitchen()
         self.create_initial_contractors()
         self.create_initial_admin()
         self.create_prepare_gallery()
