@@ -1,0 +1,302 @@
+{
+    "id": 2,
+    "questionnaire_type": "Обычная",
+    "description": "Полная анкета",
+    "chapters": [
+        {
+            "id": 2,
+            "name": "Обща информация и размеры",
+            "questions": [
+                {
+                    "id": 5,
+                    "text": "Какая по форме кухня?",
+                    "answer_type": "choice_field",
+                    "file_required": false,
+                    "options": [
+                        {
+                            "id": 5,
+                            "text": "Прямая",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 6,
+                            "text": "Угловая",
+                            "option_type": "sub_questions",
+                            "file_required": false,
+                            "questions": [
+                                {
+                                    "id": 6,
+                                    "text": "Размер по стенам",
+                                    "answer_type": "text_field",
+                                    "file_required": false,
+                                    "options": []
+                                }
+                            ]
+                        },
+                        {
+                            "id": 7,
+                            "text": "\"П\"-образная",
+                            "option_type": "sub_questions",
+                            "file_required": false,
+                            "questions": [
+                                {
+                                    "id": 7,
+                                    "text": "Размер по стенам",
+                                    "answer_type": "text_field",
+                                    "file_required": false,
+                                    "options": []
+                                }
+                            ]
+                        },
+                        {
+                            "id": 8,
+                            "text": "Островная",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 9,
+                            "text": "Параллельная",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        }
+                    ]
+                },
+                {
+                    "id": 8,
+                    "text": "Кухня до потолка",
+                    "answer_type": "choice_field",
+                    "file_required": false,
+                    "options": [
+                        {
+                            "id": 10,
+                            "text": "Нет",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 11,
+                            "text": "Да",
+                            "option_type": "sub_questions",
+                            "file_required": false,
+                            "questions": [
+                                {
+                                    "id": 9,
+                                    "text": "Высота потолка",
+                                    "answer_type": "text_field",
+                                    "file_required": false,
+                                    "options": []
+                                },
+                                {
+                                    "id": 10,
+                                    "text": "Нужна ли фальш планка?",
+                                    "answer_type": "text_field",
+                                    "file_required": false,
+                                    "options": []
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "id": 11,
+                    "text": "Глубина (ширина) столешницы?",
+                    "answer_type": "text_field",
+                    "file_required": false,
+                    "options": []
+                },
+                {
+                    "id": 12,
+                    "text": "Нужен ли шкаф над холодильником для хранения?",
+                    "answer_type": "text_field",
+                    "file_required": false,
+                    "options": []
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "name": "Корпус и фасады",
+            "questions": [
+                {
+                    "id": 13,
+                    "text": "В каких фасадах сделать расчет?",
+                    "answer_type": "choice_field",
+                    "file_required": false,
+                    "options": [
+                        {
+                            "id": 12,
+                            "text": "Пленка",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 13,
+                            "text": "Эмаль",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 14,
+                            "text": "Пластик",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 15,
+                            "text": "ЛДСП",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        }
+                    ]
+                },
+                {
+                    "id": 14,
+                    "text": "Цвет фасадов?",
+                    "answer_type": "text_field",
+                    "file_required": true,
+                    "options": []
+                },
+                {
+                    "id": 15,
+                    "text": "Фасад с фрезеровкой/витраж/филенка. Приведите описание или приложите пример",
+                    "answer_type": "text_field",
+                    "file_required": true,
+                    "options": []
+                },
+                {
+                    "id": 16,
+                    "text": "Цвет корпуса",
+                    "answer_type": "text_field",
+                    "file_required": false,
+                    "options": []
+                },
+                {
+                    "id": 17,
+                    "text": "Столешница",
+                    "answer_type": "choice_field",
+                    "file_required": false,
+                    "options": [
+                        {
+                            "id": 16,
+                            "text": "Пластик",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 17,
+                            "text": "Камень (мрамор/кварцит/гранит/оникс)",
+                            "option_type": "text_field",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 18,
+                            "text": "Искуственный камень (акрил)",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 19,
+                            "text": "Кварцевый агломерат",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 20,
+                            "text": "Компакт плита",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 21,
+                            "text": "Керамогранит",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 22,
+                            "text": "ЛДСП",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        }
+                    ]
+                },
+                {
+                    "id": 18,
+                    "text": "Необходим ли фартук?",
+                    "answer_type": "choice_field",
+                    "file_required": false,
+                    "options": [
+                        {
+                            "id": 23,
+                            "text": "Нет",
+                            "option_type": "answer",
+                            "file_required": false,
+                            "questions": []
+                        },
+                        {
+                            "id": 24,
+                            "text": "Да",
+                            "option_type": "sub_questions",
+                            "file_required": false,
+                            "questions": [
+                                {
+                                    "id": 19,
+                                    "text": "Тип фартука",
+                                    "answer_type": "choice_field",
+                                    "file_required": false,
+                                    "options": [
+                                        {
+                                            "id": 25,
+                                            "text": "Стеновая панель",
+                                            "option_type": "answer",
+                                            "file_required": false,
+                                            "questions": []
+                                        },
+                                        {
+                                            "id": 26,
+                                            "text": "Покраска",
+                                            "option_type": "answer",
+                                            "file_required": false,
+                                            "questions": []
+                                        },
+                                        {
+                                            "id": 27,
+                                            "text": "Стекло",
+                                            "option_type": "answer",
+                                            "file_required": false,
+                                            "questions": []
+                                        }
+                                    ]
+                                },
+                                {
+                                    "id": 20,
+                                    "text": "Необходим ли плинтус",
+                                    "answer_type": "text_field",
+                                    "file_required": false,
+                                    "options": []
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
