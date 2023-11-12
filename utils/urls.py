@@ -1,11 +1,8 @@
 from django.urls import path
 
 from utils.views import get_task_status, document_view, check_expired_auction_orders, GalleryImagesViewSet
-<<<<<<< HEAD
-from utils.initial_data_work import create_admin, create_all_data
-=======
 from utils.prepare_db.initial_data_work import create_admin, create_all_data
->>>>>>> 236b3830cd8e1414fa5a97bf465922fd14b60104
+
 
 urlpatterns = [
 

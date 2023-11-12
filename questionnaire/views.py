@@ -1,17 +1,9 @@
-<<<<<<< HEAD
-=======
 from drf_yasg.utils import swagger_auto_schema
->>>>>>> 236b3830cd8e1414fa5a97bf465922fd14b60104
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
-<<<<<<< HEAD
-from questionnaire.models import QuestionnaireType
-from questionnaire.serializers import QuestionnaireTypeSerializer
 
-
-=======
 from orders.models import OrderModel
 from questionnaire.models import QuestionnaireType
 from questionnaire.serializers import QuestionnaireTypeSerializer, QuestionnaireShortTypeSerializer
@@ -25,20 +17,11 @@ from questionnaire.swagger_documentation.questionnaire import \
         responses=QuestionnaireGetList.responses,
         method="GET"
     )
->>>>>>> 236b3830cd8e1414fa5a97bf465922fd14b60104
+
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_questionnaire(request, questionnaire_id):
     questionnaire = QuestionnaireType.objects.get(id=questionnaire_id)
-<<<<<<< HEAD
-    serializer = QuestionnaireTypeSerializer(instance=questionnaire)
-    return Response(serializer.data)
-    # response = Response(serializer.data)
-    # response.set_cookie("key", "qwertyuio")
-    # if 'key' in request.COOKIES:
-    #     print(request.COOKIES.get('key'))
-    # return response
-=======
     key = request.COOKIES.get('key')
     serializer = QuestionnaireTypeSerializer(instance=questionnaire, context={"key": key})
     response = Response(serializer.data)
@@ -63,4 +46,3 @@ def get_questionnaire_types(request, category_id):
     questionnaires = QuestionnaireType.objects.filter(category=category_id)
     serializer = QuestionnaireShortTypeSerializer(questionnaires, many=True)
     return Response(serializer.data)
->>>>>>> 236b3830cd8e1414fa5a97bf465922fd14b60104
