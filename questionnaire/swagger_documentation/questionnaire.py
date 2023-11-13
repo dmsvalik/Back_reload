@@ -4,7 +4,7 @@ from drf_yasg import openapi
 
 from orders.serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from questionnaire.serializers import QuestionnaireTypeSerializer, \
-    QuestionnaireShortTypeSerializer
+    QuestionnaireShortTypeSerializer, QuestionnaireResponseSerializer
 
 
 def generate_400_response(fields: List[str]):
@@ -96,5 +96,15 @@ class QuestionnaireTypeGetList(BaseSwaggerSchema):
     request_body = None
     responses = {
         200: openapi.Response("Success response", QuestionnaireShortTypeSerializer()),
+        404: DEFAULT_RESPONSES[404]
+    }
+
+
+class QuestionnaireResponsePost(BaseSwaggerSchema):
+    operation_description = "Отправка ответов на анкету."
+    request_body = QuestionnaireResponseSerializer(many=True)
+    responses = {
+        201: openapi.Response("Success response", QuestionnaireResponseSerializer(many=True)),
+        400: generate_400_response(["question"]),
         404: DEFAULT_RESPONSES[404]
     }

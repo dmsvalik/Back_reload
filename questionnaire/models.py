@@ -63,6 +63,7 @@ class Question(models.Model):
     chapter = models.ForeignKey(QuestionnaireChapter, on_delete=models.CASCADE, null=False)
     answer_type = models.CharField("Тип ответа", max_length=200, choices=ANSWER_TYPES)
     file_required = models.BooleanField(default=False)
+    answer_required = models.BooleanField(default=False)
     # Если будет вопрос относительно опции
     option = models.ForeignKey('Option', blank=True, null=True,
                                 on_delete=models.CASCADE, related_name="option_parent")
