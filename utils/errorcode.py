@@ -118,3 +118,15 @@ class CategoryIdNotFound(HttpValidationException):
     status_code = 404
     detail = {"errors": "CategoryIdNotFound",
               "message": "Категория не найдена."}
+
+
+class QuestionnaireIdNotFound(HttpValidationException):
+    status_code = 404
+    detail = {"errors": "QuestionnaireIdNotFound",
+              "message": "Анкета не найдена."}
+
+
+class QuestionIdNotFound(HttpValidationException):
+    status_code = 404
+    detail = {"errors": "QuestionIdNotFound",
+              "message": "Вопрос не найден."}

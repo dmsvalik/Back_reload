@@ -1,8 +1,11 @@
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
+
 
 from orders.models import OrderModel, OrderFileData
 from questionnaire.models import QuestionnaireCategory, QuestionnaireType, \
     Question, Option, QuestionnaireChapter, QuestionResponse
+from utils import errorcode
 
 
 class QuestionnaireShortTypeSerializer(serializers.ModelSerializer):
@@ -115,3 +118,40 @@ class QuestionnaireTypeSerializer(serializers.ModelSerializer):
             order = OrderModel.objects.get(key=key, user_account__isnull=True)
             return QuestionResponse.objects.filter(order=order).exists()
         return False
+
+
+class QuestionnaireResponseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionResponse
+        fields = ["id", "order", "question", "response"]
+        read_only_fields = ["id", "order"]
+
+    def validate(self, data):
+        question = data.get("question")
+        questionnaire_questions = Question.objects.filter(chapter__type=self.context.get("questionnaire"))
+        if question not in questionnaire_questions:
+            raise ValidationError({
+                "question": "Вопрос не соответствует анкете.",
+            })
+        response = data.get("response")
+        if question.answer_type == "choice_field":
+            if response not in [option.text for option in question.question_parent.all()]:
+                raise ValidationError({
+                    "question": question.id,
+                    "response": "Ответ должен быть выбран из вариантов ответов."
+                })
+        return data
+
+    def create(self, validated_data):
+        if QuestionResponse.objects.filter(order=self.context.get("order"),
+                                           question=validated_data.get(
+                                               "question")).exists():
+            instance = QuestionResponse.objects.get(
+                order=self.context.get("order"),
+                question=validated_data.get("question"))
+
+            instance.response = validated_data.get("response")
+            instance.save()
+        else:
+            instance = QuestionResponse.objects.create(**validated_data)
+        return instance
