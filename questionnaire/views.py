@@ -76,20 +76,26 @@ def collect_answers(request, questionnaire_id):
     serializer.is_valid(raise_exception=True)
     questionnaire_questions = Question.objects.filter(
         chapter__type=questionnaire)
-    questions_with_answers = [answer["question"] for answer in request.data]
+    questions_id_with_answers = [answer["question"] for answer in request.data]
+    questions_with_answers = Question.objects.filter(id__in=questions_id_with_answers).all()
     for question in questionnaire_questions:
-        if question.answer_required and not question.option and question.id not in questions_with_answers:
+        if question.answer_required and not question.option and question not in questions_with_answers:
             raise ValidationError({
                 "question": f"Вопрос '{question.id}' требует ответа."
             })
         if (question.answer_required
                 and question.option
-                and question.id not in questions_with_answers
+                and question not in questions_with_answers
                 and {"question": question.option.question.id,
                      "response": question.option.text} in request.data
         ):
             raise ValidationError({
                 "question": f"Вопрос '{question.id}' требует ответа."
+            })
+    for question in questions_with_answers:
+        if question.option and question.option.question not in questions_with_answers:
+            raise ValidationError({
+                "question": f"Вопрос '{question.option.question.id}' требует ответа."
             })
     serializer.save(order=order)
     return Response(serializer.data)

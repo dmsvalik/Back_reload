@@ -152,6 +152,22 @@ class QuestionnaireResponseSerializer(serializers.ModelSerializer):
 
             instance.response = validated_data.get("response")
             instance.save()
+            if instance.question.answer_type == "choice_field":
+                questions = Question.objects.filter(option__question=instance.question).exclude(option__text=instance.response).all()
+                inner_questions = get_nested_questions(questions)
+                all_inner_questions = inner_questions + [question for question in questions]
+                QuestionResponse.objects.filter(question__in=all_inner_questions).delete()
         else:
             instance = QuestionResponse.objects.create(**validated_data)
         return instance
+
+
+def get_nested_questions(question_list):
+    questions = []
+
+    nested_questions = Question.objects.filter(
+        option__question__in=question_list).all()
+    questions += [question for question in nested_questions]
+    if nested_questions:
+        questions += get_nested_questions(nested_questions)
+    return questions
