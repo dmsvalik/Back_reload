@@ -34,6 +34,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     "daphne",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     "app.orders",
     "app.utils",
     "app.chat",
+    "app.users",
     "rest_framework",
     "djoser",
     "drf_yasg",
@@ -274,17 +276,17 @@ DJOSER = {
     "ACTIVATION_URL": "activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL": True,
     "EMAIL": {
-        "activation": "main_page.email.Activation",
-        "confirmation": "main_page.email.Confirmation",
+        "activation": "users.email.Activation",
+        "confirmation": "users.email.Confirmation",
         # 'password_reset': 'main_page.email.PasswordReset',
         # 'password_changed_confirmation': 'main_page.email.PasswordChangedConfirmation',
-        "username_reset": "main_page.email.UsernameReset",
+        "username_reset": "users.email.UsernameReset",
         # 'username_reset_confirmation': 'main_page.email.UsernameResetConfirmation',
     },
     "SERIALIZERS": {
-        "user_create": "app.main_page.serializers.UserCreateSerializer",
-        "user": "app.main_page.serializers.UserAccountSerializer",
-        "current_user": "app.main_page.serializers.UserAccountSerializer",
+        "user_create": "app.users.serializers.UserCreateSerializer",
+        "user": "app.users.serializers.UserAccountSerializer",
+        "current_user": "app.users.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
 }
@@ -292,7 +294,7 @@ DJOSER = {
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
-AUTH_USER_MODEL = "main_page.UserAccount"
+AUTH_USER_MODEL = "users.UserAccount"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

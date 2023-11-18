@@ -5,7 +5,7 @@ from rest_framework.fields import SerializerMethodField
 
 from .models import FileData, OrderModel, OrderOffer
 from app.main_page.models import ContractorData
-from app.main_page.serializers import UserAccountSerializer
+from app.users.serializers import UserAccountSerializer
 
 
 class FilePreviewSerializer(serializers.ModelSerializer):

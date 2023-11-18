@@ -2,7 +2,8 @@ import uuid
 
 from django.db import models
 
-from app.main_page.models import UserAccount, ContractorData
+from app.main_page.models import ContractorData
+from app.users.models import UserAccount
 from app.products.models import Category
 
 

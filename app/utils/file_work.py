@@ -1,7 +1,7 @@
 import os
 
 from config.settings import BASE_DIR
-from app.main_page.models import UserAccount
+from app.users.models import UserAccount
 
 
 class FileWork(object):

@@ -5,24 +5,9 @@ from rest_framework.serializers import ModelSerializer
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import ContactSupport, ContractorAgreement, CooperationOffer, UserAccount
-from .validators import UserValidationFields
-
+from .models import ContactSupport, ContractorAgreement, CooperationOffer
 
 User = get_user_model()
-
-
-class UserCreateSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("id", "email", "name", "password", "person_telephone", "surname")
-
-
-class UserAccountSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = UserAccount
-        fields = ("id", "email", "name", "person_telephone", "surname", "role")
-        validators = [UserValidationFields()]
 
 
 class CooperationOfferSerializer(ModelSerializer):

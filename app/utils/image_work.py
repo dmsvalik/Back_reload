@@ -7,7 +7,7 @@ import os
 from PIL import Image, ImageSequence
 
 from config.settings import BASE_DIR
-from app.main_page.models import UserAccount
+from app.users.models import UserAccount
 
 
 class ImageWork(object):

@@ -1,6 +1,6 @@
 from functools import wraps
 from django.http import HttpResponse
-from app.main_page.models import UserQuota
+from app.users.models import UserQuota
 from app.orders.models import OrderModel
 from config.settings import MAX_SERVER_QUOTA, MAX_STORAGE_QUOTA, MAX_ORDERS
 import magic

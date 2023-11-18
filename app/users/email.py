@@ -6,7 +6,7 @@ from djoser import utils
 from djoser.conf import settings
 from datetime import datetime
 
-from .exceptions import EmailTimestampError
+from app.users.exceptions import EmailTimestampError
 
 
 class Activation(email.ActivationEmail):

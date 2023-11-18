@@ -14,6 +14,7 @@ urlpatterns = [
     path("", include("app.orders.urls")),
     path("", include("app.utils.urls")),
     path("", include("app.chat.urls")),
+    path("", include("app.users.urls")),
     path("", include("app.questionnaire.urls")),
     path('auth/jwt/create/', CutomObtainPairView.as_view(), name='customtoken'),
     path("api-auth/", include("rest_framework.urls")),

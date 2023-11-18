@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 
-from app.main_page.models import UserQuota
+from app.users.models import UserQuota
 from app.orders.models import OrderModel, OrderOffer
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
 

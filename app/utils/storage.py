@@ -12,7 +12,7 @@ import string
 from app.utils import errorcode
 from config.settings import TOKEN
 from config.settings import BASE_DIR
-from app.main_page.models import UserAccount
+from app.users.models import UserAccount
 from pathlib import Path
 
 
