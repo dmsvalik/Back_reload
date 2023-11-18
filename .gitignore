@@ -8,7 +8,7 @@ dev-env/.postgres_data
 config/.env
 
 # Byte-compiled / optimized / DLL files
-main_page/__pycache__/*
+app/main_page/__pycache__/*
 __pycache__/
 *.py[cod]
 
