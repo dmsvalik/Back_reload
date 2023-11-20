@@ -44,6 +44,14 @@ class FileData(models.Model):
     server_size = models.CharField("Размер файла на сервере", max_length=150, blank=True)
     # Дописать удаление файлов с сервера и яндекса
 
+    def delete_files(self, file_id):
+        try:
+            file_to_delete = self.objects.get(id=file_id)
+            file_to_delete.delete
+            return True
+        except self.DoesNotExist:
+            return False
+
 
 class OrderFileData(models.Model):
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE)

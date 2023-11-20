@@ -8,7 +8,7 @@ from utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -221,3 +221,43 @@ def get_file_order(request, file_id):
             },
         )
     return Response(image_data)
+
+
+@api_view(["DELETE"])
+def delete_file(request, file_id):
+    """
+    Удаление файла из Yandex и передача ссылки на его получение для фронта
+    """
+    try:
+        file_to_delete = get_object_or_404(FileData, id=file_id)
+
+        if request.user.id != file_to_delete.user_account.id:
+            raise NotAllowedUser
+        # Удаление файла
+        if file_to_delete.server_path:
+            try:
+                # Дописать код удаления файла с сервера
+                pass
+            except Exception as e:
+                print(f"Ошибка при удалении файла с сервера: {e}")
+
+        yandex_path = file_to_delete.yandex_path
+        yandex = CloudStorage()
+        if yandex_path:
+            try:
+                file_to_delete = yandex.cloud_delete_image(yandex_path)
+            except Exception as e:
+                return Response(
+                    {
+                        "status": "failed",
+                        "message": f"Failed to delete file from Yandex.Disk: {str(e)}",
+                    },
+                )
+        file_to_delete.delete()
+
+        return Response({"detail": "Файл успешно удален."}, status=status.HTTP_204_NO_CONTENT)
+
+    except NotAllowedUser as e:
+        return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
+    except FileData.DoesNotExist:
+        return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
