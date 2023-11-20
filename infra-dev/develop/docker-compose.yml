@@ -20,12 +20,12 @@ services:
     container_name: app-backend
     build:
       context: ../../
-      dockerfile: Dockerfile_1
+      dockerfile: infra-dev/Dockerfile
     restart: always
     ports:
       - "8000:8000"
     entrypoint:
-      [ "/app/docker-entrypoint.sh" ]
+      [ "/app/infra-dev/docker-entrypoint.sh" ]
     env_file:
       - ./.env
     volumes:
@@ -41,7 +41,7 @@ services:
     container_name: app-daphne-backend
     build:
       context: ../../
-      dockerfile: Dockerfile_1
+      dockerfile: infra-dev/Dockerfile
     restart: always
     ports:
       - "8001:8001"
@@ -74,7 +74,7 @@ services:
   worker:
     build:
       context: ../../
-      dockerfile: Dockerfile_1
+      dockerfile: infra-dev/Dockerfile
     restart: always
     command:
          sh -c "poetry run celery -A config.celery worker -l info --concurrency=1 --queues a,b"
@@ -94,7 +94,7 @@ services:
   worker-beat:
     build:
       context: ../../
-      dockerfile: Dockerfile_1
+      dockerfile: infra-dev/Dockerfile
     restart: always
     command:
       sh -c "poetry run celery -A config beat -l info"
