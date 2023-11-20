@@ -223,7 +223,7 @@ def get_file_order(request, file_id):
 
 
 @api_view(["DELETE"])
-def delete_file(request, file_id):
+def delete_file_order(request, file_id):
     """
     Удаление файла из Yandex и передача ссылки на его получение для фронта
     """
