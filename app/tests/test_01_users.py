@@ -2,7 +2,7 @@ import pytest
 from django.contrib.auth import get_user_model
 from rest_framework import status as st
 
-from tests.fixtures.fixture_user import url_profile, url_users, test_user_data, test_user_new_data
+from app.tests.fixtures.fixture_user import url_profile, url_users, test_user_data, test_user_new_data
 
 
 User = get_user_model()

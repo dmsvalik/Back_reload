@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
-    "tests",
+    "app.tests",
     'drf_api_logger',
     "channels",
     "app.questionnaire",
