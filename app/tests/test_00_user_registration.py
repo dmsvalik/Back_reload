@@ -5,10 +5,10 @@ from django.contrib.auth import get_user_model
 from django.core import mail
 from rest_framework import status as st
 
-from tests.fixtures.fixture_user import (url_users, test_user_data_1, test_user_data_2, test_user_data_3, url_activation)
+from app.tests.fixtures.fixture_user import (url_users, test_user_data_1, test_user_data_2, test_user_data_3, url_activation)
 
-from tests.fixtures.fixture_user import (user_invalid_data_email_1, user_invalid_password_2, user_invalid_name_3,
-                                         user_invalid_telephone_4)
+from app.tests.fixtures.fixture_user import (user_invalid_data_email_1, user_invalid_password_2, user_invalid_name_3,
+                                             user_invalid_telephone_4)
 
 
 """
