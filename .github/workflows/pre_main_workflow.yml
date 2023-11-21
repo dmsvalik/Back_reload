@@ -23,8 +23,8 @@ jobs:
       - name: Push Backend to Docker Hub
         uses: docker/build-push-action@v5
         with:
-          context: ./infra-dev/
-          file: Dockerfile
+          context: .
+          file: infra-dev/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/whywe-backend:latest
