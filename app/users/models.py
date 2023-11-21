@@ -42,7 +42,7 @@ class UserAccountManager(BaseUserManager):
         user.set_password(password)
         user.save()
         UserQuota.objects.create(user=user)
-        UserAgreement.objects.create(user=user)
+        # UserAgreement.objects.create(user_account=user) Не работает сейчас
 
         return user
 

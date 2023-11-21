@@ -321,3 +321,4 @@ pip-selfcheck.json
 files/
 static/
 tmp/
+sent_emails/
