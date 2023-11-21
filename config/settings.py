@@ -17,18 +17,9 @@ SECRET_KEY = env("SECRET_KEY", default="SOME_SECRET_KEY")
 DEBUG = env("DEBUG_STATUS", default=False)
 
 ALLOWED_HOSTS = [
-    "app",
-    "185.244.173.82",
-    "http://185.244.173.82",
-    "http://app",
     "localhost",
     "127.0.0.1",
-    "http://127.0.0.1:3000",
-    "http://127.0.0.1",
-    "http://localhost:3000",
-    "http://localhost",
-    "https://www.whywe.ru/",
-    "www.whywe.ru",
+    "whywe.ru",
     "*"
 ]
 
@@ -36,7 +27,6 @@ CSRF_TRUSTED_ORIGINS = [
     "http://app",
     "http://185.244.173.82",
     "https://api.whywe.ru",
-    "https://www.api.whywe.ru",
 ]
 
 USE_X_FORWARDED_HOST = True
@@ -44,6 +34,7 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     "daphne",
+
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -52,20 +43,21 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework.authtoken",
 
-    "main_page",
-    "products",
-    "orders",
-    "utils",
-    "chat",
+    "app.main_page",
+    "app.products",
+    "app.orders",
+    "app.utils",
+    "app.chat",
+    "app.users",
     "rest_framework",
     "djoser",
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
-    "tests",
+    "app.tests",
     'drf_api_logger',
     "channels",
-    "questionnaire",
+    "app.questionnaire",
 ]
 
 DOMAIN = ("api.whywe.ru")
@@ -224,7 +216,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.0/howto/static-files/
 
 STATIC_URL = "static/"
-STATICFILES_DIRS = [os.path.join(BASE_DIR, "main_page/static")]
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, "app/main_page/static")]
 
 STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
@@ -284,17 +276,17 @@ DJOSER = {
     "ACTIVATION_URL": "activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL": True,
     "EMAIL": {
-        "activation": "main_page.email.Activation",
-        "confirmation": "main_page.email.Confirmation",
+        "activation": "users.email.Activation",
+        "confirmation": "users.email.Confirmation",
         # 'password_reset': 'main_page.email.PasswordReset',
         # 'password_changed_confirmation': 'main_page.email.PasswordChangedConfirmation',
-        "username_reset": "main_page.email.UsernameReset",
+        "username_reset": "users.email.UsernameReset",
         # 'username_reset_confirmation': 'main_page.email.UsernameResetConfirmation',
     },
     "SERIALIZERS": {
-        "user_create": "main_page.serializers.UserCreateSerializer",
-        "user": "main_page.serializers.UserAccountSerializer",
-        "current_user": "main_page.serializers.UserAccountSerializer",
+        "user_create": "app.users.serializers.UserCreateSerializer",
+        "user": "app.users.serializers.UserAccountSerializer",
+        "current_user": "app.users.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
 }
@@ -302,7 +294,7 @@ DJOSER = {
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
-AUTH_USER_MODEL = "main_page.UserAccount"
+AUTH_USER_MODEL = "users.UserAccount"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 

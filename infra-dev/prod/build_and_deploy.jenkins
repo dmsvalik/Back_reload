@@ -41,7 +41,7 @@ pipeline {
         stage('Build docker image') {
             steps{
                 sh 'ls'
-                sh 'docker build -t whywe/prod_image:latest -f Dockerfile_1 .'
+                sh 'docker build -t whywe/prod_image:latest -f infra-dev/Dockerfile .'
             }
         }
         stage('Push docker image to DockerHub') {
