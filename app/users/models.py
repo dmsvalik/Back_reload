@@ -1,3 +1,4 @@
+import datetime
 import re
 
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
@@ -42,7 +43,7 @@ class UserAccountManager(BaseUserManager):
         user.set_password(password)
         user.save()
         UserQuota.objects.create(user=user)
-        # UserAgreement.objects.create(user_account=user) Не работает сейчас
+        UserAgreement.objects.create(user_account=user, date=datetime.date.today())
 
         return user
 
