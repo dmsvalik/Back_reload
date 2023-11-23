@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app.users.models import UserAccount, EmailSendTime, UserQuota
+from app.users.models import UserAccount, EmailSendTime, UserQuota, UserAgreement
 
 
 @admin.register(UserAccount)
@@ -16,3 +16,7 @@ class EmailSendTimeAdmin(admin.ModelAdmin):
 @admin.register(UserQuota)
 class UserQuotaAdmin(admin.ModelAdmin):
     list_display = ["user", "total_cloud_size", "total_server_size", "total_traffic"]
+
+@admin.register(UserAgreement)
+class UserAgreementAdmin(admin.ModelAdmin):
+    list_display = ["user_account", "date"]
