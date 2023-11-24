@@ -94,3 +94,49 @@ class QuestionnaireKitchenData(object):
         except Exception as e:
             print(f'error: {e}')
             pass
+
+
+def create_chapter(chapter_data, type):
+    chapter, _ = QuestionnaireChapter.objects.get_or_create(
+        name=chapter_data["name"],
+        type=type
+    )
+    for question_data in chapter_data["questions"]:
+        create_question(question_data, chapter)
+
+
+def create_question(question_data, chapter, option=None):
+    question, _ = Question.objects.get_or_create(
+        text=question_data["question"],
+        position=question_data["position"] if "position" in question_data else None,
+        chapter=chapter,
+        answer_type=question_data["answer_type"],
+        file_required=question_data["file_required"],
+        option=option
+    )
+    if question_data["options"]:
+        for option_data in question_data["options"]:
+            create_option(option_data, question, chapter)
+
+
+def create_option(option_data, question, chapter):
+    option, _ = Option.objects.get_or_create(
+        text=option_data["text"],
+        question=question,
+        option_type=option_data["option_type"]
+    )
+    if option_data["questions"]:
+        for question_data in option_data["questions"]:
+            create_question(question_data, chapter, option)
+
+
+def create_data(questionnaire):
+    category, _ = Category.objects.get_or_create(name=questionnaire["Category"])
+    questionnaire_category, _ = QuestionnaireCategory.objects.get_or_create(category=category)
+    questionnaire_type, _ = QuestionnaireType.objects.get_or_create(
+        category=questionnaire_category,
+        type=questionnaire["Type"],
+        description=None
+    )
+    for chapter_data in questionnaire["Chapters"]:
+        create_chapter(chapter_data, questionnaire_type)
