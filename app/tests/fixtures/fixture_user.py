@@ -1,7 +1,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-from tests.common import auth_client
+from app.tests.common import auth_client
 
 
 @pytest.fixture

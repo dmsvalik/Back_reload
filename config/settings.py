@@ -54,7 +54,7 @@ INSTALLED_APPS = [
     "drf_yasg",
     "debug_toolbar",
     "corsheaders",
-    "tests",
+    "app.tests",
     'drf_api_logger',
     "channels",
     "app.questionnaire",
@@ -168,6 +168,9 @@ DATABASES = {
     }
 }
 
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 EMAIL_HOST = env("EMAIL_HOST", default="email_host")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="email_host_user")
@@ -276,11 +279,11 @@ DJOSER = {
     "ACTIVATION_URL": "activate/{uid}/{token}",
     "SEND_ACTIVATION_EMAIL": True,
     "EMAIL": {
-        "activation": "users.email.Activation",
-        "confirmation": "users.email.Confirmation",
+        "activation": "app.users.email.Activation",
+        "confirmation": "app.users.email.Confirmation",
         # 'password_reset': 'main_page.email.PasswordReset',
         # 'password_changed_confirmation': 'main_page.email.PasswordChangedConfirmation',
-        "username_reset": "users.email.UsernameReset",
+        "username_reset": "app.users.email.UsernameReset",
         # 'username_reset_confirmation': 'main_page.email.UsernameResetConfirmation',
     },
     "SERIALIZERS": {
