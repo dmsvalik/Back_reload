@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
+from app.orders.permissions import IsOrderFileDataOwnerWithoutUser
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
@@ -9,11 +10,11 @@ from app.utils.storage import CloudStorage, ServerFileSystem
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
-from .models import STATE_CHOICES, FileData, OrderModel, OrderOffer
+from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from .swagger_documentation.orders import (
     AllOrdersClientGetList,
@@ -23,7 +24,7 @@ from .swagger_documentation.orders import (
     OfferGetList,
     UploadImageOrderPost,
 )
-from .tasks import celery_upload_file_task, celery_upload_image_task
+from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
 from app.products.models import Category
 from app.main_page.permissions import IsContractor
 
@@ -223,40 +224,19 @@ def get_file_order(request, file_id):
 
 
 @api_view(["DELETE"])
+@permission_classes([IsOrderFileDataOwnerWithoutUser])
 def delete_file_order(request, file_id):
     """
     Удаление файла из Yandex и передача ссылки на его получение для фронта
     """
     try:
-        file_to_delete = get_object_or_404(FileData, id=file_id)
-
-        if request.user.id != file_to_delete.user_account.id:
-            raise NotAllowedUser
-        # Удаление файла
-        if file_to_delete.server_path:
-            try:
-                # Дописать код удаления файла с сервера
-                pass
-            except Exception as e:
-                print(f"Ошибка при удалении файла с сервера: {e}")
-
-        yandex_path = file_to_delete.yandex_path
-        yandex = CloudStorage()
-        if yandex_path:
-            try:
-                file_to_delete = yandex.cloud_delete_image(yandex_path)
-            except Exception as e:
-                return Response(
-                    {
-                        "status": "failed",
-                        "message": f"Failed to delete file from Yandex.Disk: {str(e)}",
-                    },
-                )
-        file_to_delete.delete()
-
-        return Response({"detail": "Файл успешно удален."}, status=status.HTTP_204_NO_CONTENT)
-
-    except NotAllowedUser as e:
-        return Response({"detail": str(e)}, status=status.HTTP_403_FORBIDDEN)
-    except FileData.DoesNotExist:
+        file_to_delete = OrderFileData.objects.get(id=file_id)
+        if file_to_delete.split('.')[-1] in IMAGE_FILE_FORMATS:
+            task = celery_delete_image_task.delay(file_id)
+        else:
+            task = celery_delete_file_task.delay(file_id)
+        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+    except OrderFileData.DoesNotExist:
         return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

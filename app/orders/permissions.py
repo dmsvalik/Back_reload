@@ -3,6 +3,8 @@ from datetime import datetime, timedelta
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 
+from app.orders.models import OrderFileData
+
 
 class ChangePriceInOrder(permissions.BasePermission):
     def has_permission(self, request, view):
@@ -22,3 +24,12 @@ class ChangePriceInOrder(permissions.BasePermission):
                         "Цену можно указать только через день после размещения заказа"
                     )
         return True
+
+
+class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
+    def has_permission(self, request, view):
+        key = request.COOKIES.get('key')
+        file_id = view.kwargs.get('file_id') # уточнить имя которое мы получаем для проверки
+        if OrderFileData.objects.filter(id=file_id, order_id__key=key, order_id__user_account__isnull=True).exists():
+            return True
+        return False

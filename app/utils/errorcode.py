@@ -72,6 +72,12 @@ class IncorrectImageDeleting(HttpValidationException):
               "message": "Возникла ошибка при удалении изображения."}
 
 
+class IncorrectFileDeleting(HttpValidationException):
+    status_code = 400
+    detail = {"errors": "IncorrectFileDeleting",
+              "message": "Возникла ошибка при удалении файла."}
+
+
 class OrderIdNotFound(HttpValidationException):
     status_code = 404
     detail = {"errors": "OrderIdNotFound",

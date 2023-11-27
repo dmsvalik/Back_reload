@@ -2,15 +2,16 @@ import os
 
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
+from celery.utils.log import get_task_logger
 from app.utils.storage import CloudStorage
 from app.utils.views import recalculate_quota
 
 from celery import shared_task
 from rest_framework import status
 
-from app.orders.models import FileData, OrderModel
+from app.orders.models import FileData, OrderFileData, OrderModel
 
-
+logger = get_task_logger(__name__)
 # celery -A config.celery worker
 
 
@@ -80,3 +81,40 @@ def celery_upload_file_task(temp_file, user_id, order_id):
     os.remove(file.temp_file)
     return {"status": "failed",
             "message": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
+
+@shared_task
+def celery_delete_file_task(file_id):
+    """Task to delete a file."""
+    try:
+        file_to_delete = OrderFileData.objects.get(id=file_id)
+        yandex = CloudStorage()
+        if file_to_delete.yandex_path:
+            yandex.cloud_delete_file(file_to_delete.yandex_path)
+
+        file_to_delete.delete()
+
+        logger.info(f"Файл с id {file_id} успешно удален.")
+    except OrderFileData.DoesNotExist:
+        logger.error(f"Файл с id {file_id} не найден.")
+    except Exception as e:
+        logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
+
+@shared_task
+def celery_delete_image_task(file_id):
+    """Task to delete a file."""
+    try:
+        file_to_delete = OrderFileData.objects.get(id=file_id)
+        yandex = CloudStorage()
+        #дописать удаление с папки превью
+        if file_to_delete.server_path:
+            pass
+        if file_to_delete.yandex_path:
+            yandex.cloud_delete_image(file_to_delete.yandex_path)
+
+        file_to_delete.delete()
+
+        logger.info(f"Файл с id {file_id} успешно удален.")
+    except OrderFileData.DoesNotExist:
+        logger.error(f"Файл с id {file_id} не найден.")
+    except Exception as e:
+        logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
