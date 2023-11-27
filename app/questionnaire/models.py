@@ -29,7 +29,7 @@ class QuestionnaireCategory(models.Model):
 
 class QuestionnaireType(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    category = models.ForeignKey(QuestionnaireCategory, on_delete=models.CASCADE, null=False)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=False)
     # Тип анкеты пока оставил вводом текста
     type = models.CharField("Тип анкеты - короткая, длинная", max_length=100, null=True)
     description = models.CharField("Описание анкеты", max_length=500, null=True)
