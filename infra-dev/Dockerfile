@@ -12,7 +12,7 @@ RUN pip install poetry==1.5.1
 
 WORKDIR /app
 
-COPY ./pyproject.toml ./poetry.lock ./
+COPY ../pyproject.toml poetry.lock ./
 
 RUN poetry install
 
@@ -36,7 +36,7 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
-COPY . .
+COPY ../. .
 
-RUN chmod +x docker-entrypoint.sh
+RUN chmod +x infra-dev/docker-entrypoint.sh
 # ENTRYPOINT [ "/app/docker-entrypoint.sh" ]

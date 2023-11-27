@@ -3,4 +3,7 @@
 files/
 static/
 #media/
-infra-dev/
+infra-dev/back-dev/
+infra-dev/develop/
+infra-dev/prod/
+sent_emails/
