@@ -1,23 +1,33 @@
 from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle, UserRateThrottle
-from rest_framework.views import APIView
+from rest_framework import mixins
+from rest_framework.decorators import action
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
 
 from .models import Category
-from .serializers import CategorySerializer
+from .serializers import CategorySerializer, QuestionnaireShortTypeSerializer
+from .swagger_documentation.products import QuestionnaireTypeGetList
+from app.questionnaire.models import QuestionnaireType
 
 
-class CategoryAPIView(APIView):
-    """
-    ORDER. STEP 1. Получить список товаров для заказа и создания ответов по анкете.
-
-    """
-
+class CategoryViewSet(mixins.ListModelMixin,
+                      GenericViewSet):
     permission_classes = [AllowAny]
-    model = Category
+    queryset = Category.objects.all()
     serializer_class = CategorySerializer
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
-    def get(self, request):
-        result = Category.objects.all()
-        return Response({"category_rooms": CategorySerializer(result, many=True).data})
+    @swagger_auto_schema(
+        operation_description=QuestionnaireTypeGetList.operation_description,
+        request_body=QuestionnaireTypeGetList.request_body,
+        responses=QuestionnaireTypeGetList.responses,
+        method="GET"
+    )
+    @action(detail=True,
+            methods=['get', ])
+    def questionnaires(self, request, pk):
+        queryset = QuestionnaireType.objects.filter(category=pk)
+        serializer = QuestionnaireShortTypeSerializer(queryset, many=True)
+        return Response(serializer.data)

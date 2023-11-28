@@ -169,7 +169,7 @@ class InitialData(object):
                         order_time=datetime.now(tz=timezone.utc),
                         name=f'order_N_{last_id+x}_{client.email}',
                         order_description=self.description,
-                        card_category=Category.objects.get(name='kitchen'),
+                        # card_category=Category.objects.get(name='kitchen'),
                         state=STATE_CHOICES[x][0]
                     )
 
