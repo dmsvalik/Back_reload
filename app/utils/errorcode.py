@@ -120,6 +120,12 @@ class CategoryIdNotFound(HttpValidationException):
               "message": "Категория не найдена."}
 
 
+class QuestionnaireTypeIdNotFound(HttpValidationException):
+    status_code = 404
+    detail = {"errors": "QuestionnaireTypeIdNotFound",
+              "message": "Тип анкеты не найден."}
+
+
 class QuestionnaireIdNotFound(HttpValidationException):
     status_code = 404
     detail = {"errors": "QuestionnaireIdNotFound",

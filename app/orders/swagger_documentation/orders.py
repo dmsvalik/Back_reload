@@ -3,6 +3,7 @@ from typing import List, Optional
 from drf_yasg import openapi
 
 from app.orders.serializers import AllOrdersClientSerializer, OrderOfferSerializer
+from app.questionnaire.serializers import QuestionnaireResponseSerializer
 
 
 def generate_400_response(fields: List[str]):
@@ -85,6 +86,38 @@ class OfferGetList(BaseSwaggerSchema):
     request_body = None
     responses = {
         200: openapi.Response("Success response", OrderOfferSerializer(many=True)),
+        404: DEFAULT_RESPONSES[404]
+    }
+
+
+class OrderCreate(BaseSwaggerSchema):
+    operation_description = "Создание заказа"
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['questionnaire_type_id', ],
+        properties={
+            'order_name': openapi.Schema(
+                title='Название заказа',
+                maxLength=150,
+                type=openapi.TYPE_STRING,
+            ),
+            'order_description': openapi.Schema(
+                title='Описание заказа',
+                maxLength=300,
+                type=openapi.TYPE_STRING
+            ),
+            'questionnaire_type_id': openapi.Schema(
+                title='Связанная анкета',
+                type=openapi.TYPE_INTEGER
+            )
+        })
+    responses = {
+        201: openapi.Response("Success response", openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'success': openapi.Schema(default='the order was created', type=openapi.TYPE_STRING),
+                'order_id': openapi.Schema(type=openapi.TYPE_INTEGER),
+            })),
         404: DEFAULT_RESPONSES[404]
     }
 
@@ -185,4 +218,24 @@ class UploadImageOrderPost(BaseSwaggerSchema):
         400: generate_400_response(["order_id", "upload_file"]),
         403: DEFAULT_RESPONSES[403],
         413: DEFAULT_RESPONSES[413],
+    }
+
+
+class QuestionnaireResponsePost(BaseSwaggerSchema):
+    operation_description = "Отправка ответов на анкету."
+    request_body = QuestionnaireResponseSerializer(many=True)
+    responses = {
+        201: openapi.Response("Success response", QuestionnaireResponseSerializer(many=True)),
+        400: generate_400_response(["question"]),
+        404: DEFAULT_RESPONSES[404]
+    }
+
+
+class QuestionnaireResponseGet(BaseSwaggerSchema):
+    operation_description = "Получение ответов на анкету к заказу."
+    request_body = None
+    responses = {
+        200: openapi.Response("Success response", QuestionnaireResponseSerializer(many=True)),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404]
     }

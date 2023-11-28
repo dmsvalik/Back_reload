@@ -9,6 +9,7 @@ from app.orders.models import OrderModel, STATE_CHOICES, OrderOffer
 from app.products.models import Category
 from app.utils.models import GallerySlider, GalleryImages
 from app.utils.prepare_db.questionnaire_data import QuestionnaireKitchenData
+from app.utils.prepare_db.kitchen_long_questionnaire import questionnaire as kitchen_full_data
 
 questionnaire = QuestionnaireKitchenData()
 
@@ -125,10 +126,11 @@ class InitialData(object):
         """ создание начальных пользователей и заказов + оферов """
 
         self.create_initial_categories()
-        questionnaire.create_questionnaire_category()
-        questionnaire.create_questionnaire_type()
-        questionnaire.create_questionnaire_chapter()
-        questionnaire.create_questions_full_kitchen()
+        # questionnaire.create_questionnaire_category()
+        # questionnaire.create_questionnaire_type()
+        # questionnaire.create_questionnaire_chapter()
+        # questionnaire.create_questions_full_kitchen()
+        questionnaire.create_data(kitchen_full_data)
         self.create_initial_contractors()
         self.create_initial_admin()
         self.create_prepare_gallery()
@@ -167,7 +169,7 @@ class InitialData(object):
                         order_time=datetime.now(tz=timezone.utc),
                         name=f'order_N_{last_id+x}_{client.email}',
                         order_description=self.description,
-                        card_category=Category.objects.get(name='kitchen'),
+                        # card_category=Category.objects.get(name='kitchen'),
                         state=STATE_CHOICES[x][0]
                     )
 
