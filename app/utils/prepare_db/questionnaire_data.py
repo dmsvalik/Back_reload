@@ -129,9 +129,8 @@ class QuestionnaireKitchenData(object):
     def create_data(self, questionnaire):
         try:
             category, _ = Category.objects.get_or_create(name=questionnaire["Category"])
-            questionnaire_category, _ = QuestionnaireCategory.objects.get_or_create(category=category)
             questionnaire_type, _ = QuestionnaireType.objects.get_or_create(
-                category=questionnaire_category,
+                category=category,
                 type=questionnaire["Type"],
                 description=None
             )
