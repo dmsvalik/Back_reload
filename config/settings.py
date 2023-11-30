@@ -34,7 +34,6 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 INSTALLED_APPS = [
     "daphne",
-
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -42,7 +41,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework.authtoken",
-
     "app.main_page",
     "app.products",
     "app.orders",
@@ -58,6 +56,7 @@ INSTALLED_APPS = [
     'drf_api_logger',
     "channels",
     "app.questionnaire",
+    "app.sending",
 ]
 
 DOMAIN = ("api.whywe.ru")
@@ -168,9 +167,9 @@ DATABASES = {
     }
 }
 
-if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
-    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+# if DEBUG:
+#     EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+#     EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 
 EMAIL_HOST = env("EMAIL_HOST", default="email_host")
 EMAIL_HOST_USER = env("EMAIL_HOST_USER", default="email_host_user")

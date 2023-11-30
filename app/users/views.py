@@ -16,6 +16,7 @@ from rest_framework_simplejwt.settings import api_settings
 
 from app.main_page.error_message import error_responses
 from app.orders.models import OrderModel
+from app.sending.email_sending import OrderEmail
 
 
 class ActivateUser(UserViewSet):
@@ -81,6 +82,7 @@ class CustomUserViewSet(UserViewSet):
             if order:
                 order.user_account = user
                 order.save()
+                # Вот здесь вызов отправки письма по оформленному заказу
             response.delete_cookie('key')
         return response
 
@@ -100,10 +102,12 @@ class CustomUserViewSet(UserViewSet):
             context = {"user": user}
             to = [get_user_email(user)]
             settings.EMAIL.confirmation(self.request, context).send(to)
-        orders = user.ordermodel_set.all()
+        orders = user.ordermodel_set.filter(state="draft")
         for order in orders:
             order.state = "offer"
             order.save()
+            OrderEmail(self.request, context={"order_name": order.name, "username": user.name}).send([get_user_email(user)])
+            # Вот здесь вызов отправки письма по оформленному заказу
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
