@@ -50,7 +50,7 @@ class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         list_serializer_class = OrderedByPositionSerializer
-        fields = ["id", "text", "answer_type", "file_required", "options"]
+        fields = ["id", "text", "answer_type", "file_required", "answer_required", "options"]
 
 
     # def get_files(self, obj):
