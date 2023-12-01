@@ -70,7 +70,7 @@ def create_order(request):
                          "order_id": order.id,
                          }, status=201)
     if not user:
-        response.set_cookie("key", order.key)
+        response.set_cookie("key", order.key, samesite="None", secure=True)
     return response
 
 
