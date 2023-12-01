@@ -16,52 +16,53 @@ from rest_framework_simplejwt.settings import api_settings
 
 from app.main_page.error_message import error_responses
 from app.orders.models import OrderModel
+from app.orders.tasks import send_notification
 from app.sending.email_sending import OrderEmail
 
 
-class ActivateUser(UserViewSet):
-    def get_serializer(self, *args, **kwargs):
-        serializer_class = self.get_serializer_class()
-        kwargs.setdefault("context", self.get_serializer_context())
-
-        # this line is the only change from the base implementation.
-        kwargs["data"] = {"uid": self.kwargs["uid"], "token": self.kwargs["token"]}
-        return serializer_class(*args, **kwargs)
-
-    @method_decorator(name='list', decorator=swagger_auto_schema(
-        operation_description="Получить список запросов на сотрудничество",
-        responses={
-            status.HTTP_400_BAD_REQUEST: error_responses[status.HTTP_400_BAD_REQUEST],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
-        }
-    ))
-    def activation(self, request, uid, token, *args, **kwargs):
-        super().activation(request, *args, **kwargs)
-        return Response({"активация": "активация аккаунта прошла успешно"})
-
-
-def reset_password(request, uid, token):
-    """ Тестовый сброс пароля - заменить на сторону фронта """
-
-    if request.method == "POST":
-        # проверки на стороне фронта на корректность пароля - не пустое поле и тд
-        new_pass = request.POST["new_pass"]
-        uid_new = request.POST["uid_data"]
-        token_new = request.POST["token_data"]
-
-        # надо поменять url когда на сервере будет
-        url = "http://127.0.0.1:8000/auth/users/reset_password_confirm/"
-        data = {"uid": uid_new, "token": token_new, "new_password": new_pass}
-        headers = {"Accept": "application/json"}
-
-        # отправляем POST запрос и меняем пароль
-        requests.post(url, headers=headers, data=data)
-
-        return JsonResponse({"обновление пароля": "22 прошло успешно"})
-
-    return render(
-        request, "main_page/reset_password.html", {"uid": uid, "token_uid": token}
-    )
+# class ActivateUser(UserViewSet):
+#     def get_serializer(self, *args, **kwargs):
+#         serializer_class = self.get_serializer_class()
+#         kwargs.setdefault("context", self.get_serializer_context())
+#
+#         # this line is the only change from the base implementation.
+#         kwargs["data"] = {"uid": self.kwargs["uid"], "token": self.kwargs["token"]}
+#         return serializer_class(*args, **kwargs)
+#
+#     @method_decorator(name='list', decorator=swagger_auto_schema(
+#         operation_description="Получить список запросов на сотрудничество",
+#         responses={
+#             status.HTTP_400_BAD_REQUEST: error_responses[status.HTTP_400_BAD_REQUEST],
+#             status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
+#         }
+#     ))
+#     def activation(self, request, uid, token, *args, **kwargs):
+#         super().activation(request, *args, **kwargs)
+#         return Response({"активация": "активация аккаунта прошла успешно"})
+#
+#
+# def reset_password(request, uid, token):
+#     """ Тестовый сброс пароля - заменить на сторону фронта """
+#
+#     if request.method == "POST":
+#         # проверки на стороне фронта на корректность пароля - не пустое поле и тд
+#         new_pass = request.POST["new_pass"]
+#         uid_new = request.POST["uid_data"]
+#         token_new = request.POST["token_data"]
+#
+#         # надо поменять url когда на сервере будет
+#         url = "http://127.0.0.1:8000/auth/users/reset_password_confirm/"
+#         data = {"uid": uid_new, "token": token_new, "new_password": new_pass}
+#         headers = {"Accept": "application/json"}
+#
+#         # отправляем POST запрос и меняем пароль
+#         requests.post(url, headers=headers, data=data)
+#
+#         return JsonResponse({"обновление пароля": "22 прошло успешно"})
+#
+#     return render(
+#         request, "main_page/reset_password.html", {"uid": uid, "token_uid": token}
+#     )
 
 
 class CustomUserViewSet(UserViewSet):
@@ -82,7 +83,6 @@ class CustomUserViewSet(UserViewSet):
             if order:
                 order.user_account = user
                 order.save()
-                # Вот здесь вызов отправки письма по оформленному заказу
             response.delete_cookie('key')
         return response
 
@@ -102,12 +102,16 @@ class CustomUserViewSet(UserViewSet):
             context = {"user": user}
             to = [get_user_email(user)]
             settings.EMAIL.confirmation(self.request, context).send(to)
-        orders = user.ordermodel_set.filter(state="draft")
-        for order in orders:
+        try:
+            order = user.ordermodel_set.get(state="draft")
             order.state = "offer"
             order.save()
-            OrderEmail(self.request, context={"order_name": order.name, "username": user.name}).send([get_user_email(user)])
-            # Вот здесь вызов отправки письма по оформленному заказу
+            context = {"order_name": order.name,
+                       "username": user.name}
+            send_notification.delay(self.request, OrderEmail, context, [get_user_email(user)])
+
+        except Exception:
+            pass
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -133,6 +137,9 @@ class CustomTokenViewBase(TokenViewBase):
                 order.user_account = user
                 order.state = "offer"
                 order.save()
+                context = {"order_name": order.name,
+                           "username": user.name}
+                send_notification.delay(self.request, OrderEmail, context, [get_user_email(user)])
             response.delete_cookie('key')
         return response
 

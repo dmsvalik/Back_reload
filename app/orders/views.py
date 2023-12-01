@@ -14,7 +14,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from .models import STATE_CHOICES, FileData, OrderModel, OrderOffer
+from .models import FileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from .swagger_documentation.orders import (
@@ -26,7 +26,6 @@ from .swagger_documentation.orders import (
     UploadImageOrderPost, OrderCreate, QuestionnaireResponsePost, QuestionnaireResponseGet,
 )
 from .tasks import celery_upload_file_task, celery_upload_image_task
-from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer
@@ -35,15 +34,14 @@ IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
 
 @swagger_auto_schema(
-        operation_description=OrderCreate.operation_description,
-        request_body=OrderCreate.request_body,
-        responses=OrderCreate.responses,
-        method = "POST"
-    )
+    operation_description=OrderCreate.operation_description,
+    request_body=OrderCreate.request_body,
+    responses=OrderCreate.responses,
+    method="POST"
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_order(request):
-
     """ Создание заказа клиента """
     if "order_name" in request.data:
         order_name = request.data.get("order_name")
@@ -264,8 +262,7 @@ def create_answers_to_oder(request, pk):
                 and question.option
                 and question not in questions_with_answers
                 and {"question_id": question.option.question.id,
-                     "response": question.option.text} in request.data
-        ):
+                     "response": question.option.text} in request.data):
             raise ValidationError({
                 "question_id": f"Вопрос '{question.id}' требует ответа."
             })

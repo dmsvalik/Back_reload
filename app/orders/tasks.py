@@ -80,3 +80,9 @@ def celery_upload_file_task(temp_file, user_id, order_id):
     os.remove(file.temp_file)
     return {"status": "failed",
             "message": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
+
+
+@shared_task()
+def send_notification(sending, context, recipients):
+    notification_class = sending(context=context)
+    notification_class.send(recipients)
