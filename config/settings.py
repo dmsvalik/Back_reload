@@ -101,7 +101,7 @@ CORS_ALLOW_HEADERS = [
     "x-requested-with",
 ]
 
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1",
@@ -110,6 +110,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://app",
     "http://185.244.173.82",
+    "https://front-git-feat-order-whywe.vercel.app",
+    "https://api.whywe.ru",
 ]
 
 CORS_ORIGIN_WHITELIST = [
