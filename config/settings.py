@@ -77,6 +77,7 @@ MIDDLEWARE = [
     'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware',
 ]
 
+SESSION_COOKIE_SAMESITE = 'None'
 SECURE_CROSS_ORIGIN_OPENER_POLICY = None
 CORS_ORIGIN_ALLOW_ALL = True
 
