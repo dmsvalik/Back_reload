@@ -111,6 +111,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://app",
     "http://185.244.173.82",
     "https://front-git-feat-order-whywe.vercel.app",
+    "https://api.whywe.ru",
 ]
 
 CORS_ORIGIN_WHITELIST = [
