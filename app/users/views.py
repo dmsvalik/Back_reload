@@ -108,8 +108,9 @@ class CustomUserViewSet(UserViewSet):
             order.save()
             context = {"order_name": order.name,
                        "username": user.name}
-            send_notification.delay(self.request, OrderEmail, context, [get_user_email(user)])
-
+            if user.usernotifications.notification_type != "None":
+                if user.usernotifications.notification_type == "email":
+                    send_notification.delay("OrderEmail", context, [get_user_email(user)])
         except Exception:
             pass
 
@@ -139,7 +140,9 @@ class CustomTokenViewBase(TokenViewBase):
                 order.save()
                 context = {"order_name": order.name,
                            "username": user.name}
-                send_notification.delay(self.request, OrderEmail, context, [get_user_email(user)])
+                if user.usernotifications.notification_type != "None":
+                    if user.usernotifications.notification_type == "email":
+                        send_notification.delay("OrderEmail", context, [get_user_email(user)])
             response.delete_cookie('key')
         return response
 

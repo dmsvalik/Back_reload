@@ -1,5 +1,6 @@
 import os
 
+from app.sending.email_sending import OrderEmail
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
 from app.utils.storage import CloudStorage
@@ -10,6 +11,10 @@ from rest_framework import status
 
 from app.orders.models import FileData, OrderModel
 
+
+NOTIFICATION_CLASSES = {
+    "OrderEmail": OrderEmail
+}
 
 # celery -A config.celery worker
 
@@ -84,5 +89,6 @@ def celery_upload_file_task(temp_file, user_id, order_id):
 
 @shared_task()
 def send_notification(sending, context, recipients):
-    notification_class = sending(context=context)
-    notification_class.send(recipients)
+    if sending in NOTIFICATION_CLASSES:
+        notification_class = NOTIFICATION_CLASSES.get(sending)(context=context)
+        notification_class.send(recipients)
