@@ -227,20 +227,19 @@ def get_file_order(request, file_id):
 @swagger_auto_schema(
     operation_description=FileOrderDelete.operation_description,
     responses=FileOrderDelete.responses,
-    manual_parameters=FileOrderDelete.manual_parameters,
+    request_body=FileOrderDelete.request_body,
     method="delete",
 )
 @api_view(["DELETE"])
 @permission_classes([IsOrderFileDataOwnerWithoutUser])
-def delete_file_order(request, file_id):
+def delete_file_order(request):
     """
     Удаление файла из Yandex и передача ссылки на его получение для фронта
     """
     file_id = request.data.get('file_id')
-    origin_name = request.data.get('origin_name')
     try:
-        file_to_delete = OrderFileData.objects.get(id=file_id, origin_name=origin_name)
-        if file_to_delete.split('.')[-1] in IMAGE_FILE_FORMATS:
+        file_to_delete = OrderFileData.objects.get(id=file_id)
+        if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
             task = celery_delete_image_task.delay(file_id)
         else:
             task = celery_delete_file_task.delay(file_id)

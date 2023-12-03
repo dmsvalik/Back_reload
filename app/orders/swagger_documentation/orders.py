@@ -190,14 +190,15 @@ class UploadImageOrderPost(BaseSwaggerSchema):
 
 class FileOrderDelete(BaseSwaggerSchema):
     operation_description = "Удаление файла"
-    manual_parameters = [
-        openapi.Parameter(
-            "file_id",
-            openapi.IN_PATH,
-            description="ID записи файла в БД",
-            type=openapi.TYPE_INTEGER,
-        ),
-    ]
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['file_id', ],
+        properties={
+            'file_id': openapi.Schema(
+                title='Id файла',
+                type=openapi.TYPE_INTEGER,
+            )
+        })
     responses = {
         202: openapi.Response("Success response"),
         404: DEFAULT_RESPONSES[404],

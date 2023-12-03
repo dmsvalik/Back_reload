@@ -105,17 +105,15 @@ def celery_delete_image_task(file_id):
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
         yandex = CloudStorage()
-        #дописать удаление с папки превью
-        if file_to_delete.server_path:
-            os.remove(file_to_delete.server_path)
         # Удаление файла из папки превью (если она есть)
-        preview_path = file_to_delete.preview_path()
+        preview_path = file_to_delete.server_path
         if preview_path and os.path.exists(preview_path):
             os.remove(preview_path)
         if file_to_delete.yandex_path:
             yandex.cloud_delete_file(file_to_delete.yandex_path)
 
         file_to_delete.delete()
+        return 'Все ОК!'
 
         logger.info(f"Файл с id {file_id} успешно удален.")
     except OrderFileData.DoesNotExist:
