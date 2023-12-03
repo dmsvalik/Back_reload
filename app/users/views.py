@@ -18,6 +18,7 @@ from app.main_page.error_message import error_responses
 from app.orders.models import OrderModel
 from app.orders.tasks import send_notification
 from app.sending.email_sending import OrderEmail
+from app.sending.signals import new_notification
 
 
 # class ActivateUser(UserViewSet):
@@ -67,6 +68,13 @@ from app.sending.email_sending import OrderEmail
 
 class CustomUserViewSet(UserViewSet):
 
+    def perform_create(self, serializer, *args, **kwargs):
+        super().perform_create(serializer, *args, **kwargs)
+        if settings.SEND_ACTIVATION_EMAIL:
+            user = serializer.instance
+            new_notification.send(sender=self.__class__, user=user, theme="Письмо активации аккаунта",
+                                  type="email")
+
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -102,6 +110,8 @@ class CustomUserViewSet(UserViewSet):
             context = {"user": user}
             to = [get_user_email(user)]
             settings.EMAIL.confirmation(self.request, context).send(to)
+            new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
+                                  type="email")
         try:
             order = user.ordermodel_set.get(state="draft")
             order.state = "offer"
