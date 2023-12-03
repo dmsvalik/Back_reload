@@ -29,7 +29,7 @@ class ChangePriceInOrder(permissions.BasePermission):
 class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
     def has_permission(self, request, view):
         key = request.COOKIES.get('key')
-        file_id = view.kwargs.get('file_id') # уточнить имя которое мы получаем для проверки
+        file_id = request.data.get('file_id')
         if OrderFileData.objects.filter(id=file_id, order_id__key=key, order_id__user_account__isnull=True).exists():
             return True
         return False

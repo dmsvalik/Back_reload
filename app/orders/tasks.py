@@ -101,15 +101,19 @@ def celery_delete_file_task(file_id):
 
 @shared_task
 def celery_delete_image_task(file_id):
-    """Task to delete a file."""
+    """Task to delete a image."""
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
         yandex = CloudStorage()
         #дописать удаление с папки превью
         if file_to_delete.server_path:
-            pass
+            os.remove(file_to_delete.server_path)
+        # Удаление файла из папки превью (если она есть)
+        preview_path = file_to_delete.preview_path()
+        if preview_path and os.path.exists(preview_path):
+            os.remove(preview_path)
         if file_to_delete.yandex_path:
-            yandex.cloud_delete_image(file_to_delete.yandex_path)
+            yandex.cloud_delete_file(file_to_delete.yandex_path)
 
         file_to_delete.delete()
 

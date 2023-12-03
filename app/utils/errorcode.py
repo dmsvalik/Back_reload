@@ -66,10 +66,10 @@ class IncorrectPasswordCreateUser(HttpValidationException):
                          "Разрешены следующие символы: ~ ! ? @ # $ % ^ & * _ - + ( ) [ ] { } > < / \ | ' . , :"}
 
 
-class IncorrectImageDeleting(HttpValidationException):
-    status_code = 400
-    detail = {"errors": "IncorrectImageDeleting",
-              "message": "Возникла ошибка при удалении изображения."}
+# class IncorrectImageDeleting(HttpValidationException):
+#     status_code = 400
+#     detail = {"errors": "IncorrectImageDeleting",
+#               "message": "Возникла ошибка при удалении изображения."}
 
 
 class IncorrectFileDeleting(HttpValidationException):

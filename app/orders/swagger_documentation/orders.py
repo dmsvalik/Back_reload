@@ -186,3 +186,20 @@ class UploadImageOrderPost(BaseSwaggerSchema):
         403: DEFAULT_RESPONSES[403],
         413: DEFAULT_RESPONSES[413],
     }
+
+
+class FileOrderDelete(BaseSwaggerSchema):
+    operation_description = "Удаление файла"
+    manual_parameters = [
+        openapi.Parameter(
+            "file_id",
+            openapi.IN_PATH,
+            description="ID записи файла в БД",
+            type=openapi.TYPE_INTEGER,
+        ),
+    ]
+    responses = {
+        202: openapi.Response("Success response"),
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
+    }

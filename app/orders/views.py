@@ -23,6 +23,7 @@ from .swagger_documentation.orders import (
     OfferCreate,
     OfferGetList,
     UploadImageOrderPost,
+    FileOrderDelete,
 )
 from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
 from app.products.models import Category
@@ -223,14 +224,22 @@ def get_file_order(request, file_id):
     return Response(image_data)
 
 
+@swagger_auto_schema(
+    operation_description=FileOrderDelete.operation_description,
+    responses=FileOrderDelete.responses,
+    manual_parameters=FileOrderDelete.manual_parameters,
+    method="delete",
+)
 @api_view(["DELETE"])
 @permission_classes([IsOrderFileDataOwnerWithoutUser])
 def delete_file_order(request, file_id):
     """
     Удаление файла из Yandex и передача ссылки на его получение для фронта
     """
+    file_id = request.data.get('file_id')
+    origin_name = request.data.get('origin_name')
     try:
-        file_to_delete = OrderFileData.objects.get(id=file_id)
+        file_to_delete = OrderFileData.objects.get(id=file_id, origin_name=origin_name)
         if file_to_delete.split('.')[-1] in IMAGE_FILE_FORMATS:
             task = celery_delete_image_task.delay(file_id)
         else:
