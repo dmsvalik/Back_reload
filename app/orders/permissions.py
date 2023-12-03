@@ -32,6 +32,6 @@ class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
         file_id = request.data.get('file_id')
         if OrderFileData.objects.filter(id=file_id, order_id__key=key, order_id__user_account__isnull=True).exists():
             return True
-        if request.user.is_authenticated.OrderFileData.objects.filter(id=file_id, order_id__user_account=request.user).exists():
+        if request.user.is_authenticated and OrderFileData.objects.filter(id=file_id, order_id__user_account=request.user).exists():
             return True
         return False
