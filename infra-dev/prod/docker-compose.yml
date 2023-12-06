@@ -105,7 +105,7 @@ services:
     image: whywe/prod_image:latest
     restart: always
     command:
-         sh -c "poetry run celery -A config.celery worker -l info --concurrency=1 --queues a,b"
+         sh -c "poetry run celery -A config worker -l info"
     volumes:
       - $FILE_PATH/static/:/app/static/
       - $FILE_PATH/media/:/app/media/

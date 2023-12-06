@@ -61,8 +61,11 @@ def get_task_status(request, task_id):
     result = {
         "task_id": task_id,
         "task_status": task_result.status,
-        "task_result": task_result.result
     }
+    if result.get("task_status") == "SUCCESS" and task_result.result:
+        result["task_status"] = task_result.result.get("status")
+        result["response"] = task_result.result.get("response")
+
     return Response(result, status=200)
 
 

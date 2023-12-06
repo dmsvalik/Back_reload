@@ -47,8 +47,8 @@ def celery_upload_image_task(temp_file, user_id, order_id):
         # If an error occurs, we delete temp files and preview
     os.remove(image.temp_file)
     os.remove(image.preview_path)
-    return {"status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
+    return {"status": "FAILURE",
+            "response": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
 
 
 @shared_task()
@@ -79,8 +79,9 @@ def celery_upload_file_task(temp_file, user_id, order_id):
         return {"status": "success"}
         # If an error occurs, we delete temp files
     os.remove(file.temp_file)
-    return {"status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
+    return {"status": "FAILURE",
+            "response": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
+
 
 @shared_task
 def celery_delete_file_task(file_id):
@@ -94,10 +95,18 @@ def celery_delete_file_task(file_id):
         file_to_delete.delete()
 
         logger.info(f"Файл с id {file_id} успешно удален.")
+        return {"status": "SUCCESS",
+                "response": "Файл удален"}
     except OrderFileData.DoesNotExist:
         logger.error(f"Файл с id {file_id} не найден.")
+        return {"status": "FAILURE",
+                "response": f"Файл с id {file_id} не найден."}
+
     except Exception as e:
         logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
+        return {"status": "FAILURE",
+                "response": f"Ошибка при удалении файла с id {file_id}"}
+
 
 @shared_task
 def celery_delete_image_task(file_id):
@@ -107,16 +116,20 @@ def celery_delete_image_task(file_id):
         yandex = CloudStorage()
         # Удаление файла из папки превью (если она есть)
         preview_path = file_to_delete.server_path
-        if preview_path and os.path.exists(preview_path):
+        if preview_path and os.path.exists(preview_path) and "media/" in preview_path:
             os.remove(preview_path)
         if file_to_delete.yandex_path:
             yandex.cloud_delete_file(file_to_delete.yandex_path)
-
         file_to_delete.delete()
-        return 'Все ОК!'
-
         logger.info(f"Файл с id {file_id} успешно удален.")
+        return {"status": "SUCCESS",
+                "response": "Файл удален"}
     except OrderFileData.DoesNotExist:
         logger.error(f"Файл с id {file_id} не найден.")
+        return {"status": "FAILURE",
+                "response": f"Файл с id {file_id} не найден."}
+
     except Exception as e:
         logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
+        return {"status": "FAILURE",
+                "response": f"Ошибка при удалении файла с id {file_id}"}

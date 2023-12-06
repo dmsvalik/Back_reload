@@ -4,6 +4,7 @@ from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 
 from app.orders.models import OrderFileData
+from app.utils.errorcode import FileNotFound
 
 
 class ChangePriceInOrder(permissions.BasePermission):
@@ -30,8 +31,13 @@ class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
     def has_permission(self, request, view):
         key = request.COOKIES.get('key')
         file_id = request.data.get('file_id')
+        if not OrderFileData.objects.filter(id=file_id).exists():
+            raise FileNotFound()
         if OrderFileData.objects.filter(id=file_id, order_id__key=key, order_id__user_account__isnull=True).exists():
             return True
-        if request.user.is_authenticated and OrderFileData.objects.filter(id=file_id, order_id__user_account=request.user).exists():
+        if request.user.is_authenticated and OrderFileData.objects.filter(
+                id=file_id,
+                order_id__user_account=request.user
+        ).exists():
             return True
         return False
