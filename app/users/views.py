@@ -19,6 +19,7 @@ from app.orders.models import OrderModel
 from app.orders.tasks import send_notification
 from app.sending.email_sending import OrderEmail
 from app.sending.signals import new_notification
+from app.users.tasks import send_django_users_emails
 
 
 # class ActivateUser(UserViewSet):
@@ -110,6 +111,14 @@ class CustomUserViewSet(UserViewSet):
             context = {"user": user}
             to = [get_user_email(user)]
             settings.EMAIL.confirmation(self.request, context).send(to)
+            context = {
+
+            }
+            send_django_users_emails.delay(
+                self.request,
+                settings.EMAIL.confirmation,
+                user.id,
+                to)
             new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
                                   type="email")
         try:

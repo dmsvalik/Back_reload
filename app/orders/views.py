@@ -17,7 +17,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 
-from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer>>>>>>> pre-main
+from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
 
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
@@ -36,7 +36,7 @@ from .swagger_documentation.orders import (
 )
 
 from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
-from app.products.models import Category>>>>>>> pre-main
+from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
