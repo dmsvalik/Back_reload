@@ -3,18 +3,22 @@ import os
 from app.sending.email_sending import OrderEmail
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
+from celery.utils.log import get_task_logger
 from app.utils.storage import CloudStorage
 from app.utils.views import recalculate_quota
 
 from celery import shared_task
 from rest_framework import status
 
-from app.orders.models import FileData, OrderModel
+from app.orders.models import FileData, OrderFileData, OrderModel
 
 
 NOTIFICATION_CLASSES = {
     "OrderEmail": OrderEmail
 }
+
+
+logger = get_task_logger(__name__)
 
 # celery -A config.celery worker
 
@@ -51,8 +55,8 @@ def celery_upload_image_task(temp_file, user_id, order_id):
         # If an error occurs, we delete temp files and preview
     os.remove(image.temp_file)
     os.remove(image.preview_path)
-    return {"status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
+    return {"status": "FAILURE",
+            "response": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
 
 
 @shared_task()
@@ -83,8 +87,9 @@ def celery_upload_file_task(temp_file, user_id, order_id):
         return {"status": "success"}
         # If an error occurs, we delete temp files
     os.remove(file.temp_file)
-    return {"status": "failed",
-            "message": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
+
+    return {"status": "FAILURE",
+            "response": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
 
 
 @shared_task()
@@ -92,3 +97,56 @@ def send_notification(sending, context, recipients):
     if sending in NOTIFICATION_CLASSES:
         notification_class = NOTIFICATION_CLASSES.get(sending)(context=context)
         notification_class.send(recipients)
+
+
+
+@shared_task
+def celery_delete_file_task(file_id):
+    """Task to delete a file."""
+    try:
+        file_to_delete = OrderFileData.objects.get(id=file_id)
+        yandex = CloudStorage()
+        if file_to_delete.yandex_path:
+            yandex.cloud_delete_file(file_to_delete.yandex_path)
+
+        file_to_delete.delete()
+
+        logger.info(f"Файл с id {file_id} успешно удален.")
+        return {"status": "SUCCESS",
+                "response": "Файл удален"}
+    except OrderFileData.DoesNotExist:
+        logger.error(f"Файл с id {file_id} не найден.")
+        return {"status": "FAILURE",
+                "response": f"Файл с id {file_id} не найден."}
+
+    except Exception as e:
+        logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
+        return {"status": "FAILURE",
+                "response": f"Ошибка при удалении файла с id {file_id}"}
+
+
+@shared_task
+def celery_delete_image_task(file_id):
+    """Task to delete a image."""
+    try:
+        file_to_delete = OrderFileData.objects.get(id=file_id)
+        yandex = CloudStorage()
+        # Удаление файла из папки превью (если она есть)
+        preview_path = file_to_delete.server_path
+        if preview_path and os.path.exists(preview_path) and "media/" in preview_path:
+            os.remove(preview_path)
+        if file_to_delete.yandex_path:
+            yandex.cloud_delete_file(file_to_delete.yandex_path)
+        file_to_delete.delete()
+        logger.info(f"Файл с id {file_id} успешно удален.")
+        return {"status": "SUCCESS",
+                "response": "Файл удален"}
+    except OrderFileData.DoesNotExist:
+        logger.error(f"Файл с id {file_id} не найден.")
+        return {"status": "FAILURE",
+                "response": f"Файл с id {file_id} не найден."}
+
+    except Exception as e:
+        logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
+        return {"status": "FAILURE",
+                "response": f"Ошибка при удалении файла с id {file_id}"}

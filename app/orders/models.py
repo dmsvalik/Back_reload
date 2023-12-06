@@ -43,7 +43,6 @@ class FileData(models.Model):
     date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
     yandex_size = models.CharField("Размер файла в облаке", max_length=150, blank=True)
     server_size = models.CharField("Размер файла на сервере", max_length=150, blank=True)
-    # Дописать удаление файлов с сервера и яндекса
 
 
 class OrderFileData(models.Model):
@@ -55,7 +54,6 @@ class OrderFileData(models.Model):
     date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
     yandex_size = models.IntegerField("Размер файла в облаке, б")
     server_size = models.IntegerField("Размер файла на сервер, б")
-    # Дописать удаление файлов с сервера и яндекса
 
 
 class OrderOffer(models.Model):

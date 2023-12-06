@@ -157,12 +157,13 @@ class CloudStorage:
                   'download_url': download_url}
         return result
 
-    def cloud_delete_image(self, yandex_path):
+    def cloud_delete_file(self, yandex_path):
         """ Метод для удаления файла из YandexDisk."""
         res = requests.delete(
             f"{self.URL}?path={yandex_path}&permanently=True",
             headers=self.headers)
+        print(res.status_code)
         # если файл на сервере удален или не найден возвращаем True
-        if not res.status_code == 204 or not res.status_code == 404:
-            raise errorcode.IncorrectImageDeleting
+        if not res.status_code == 204 and not res.status_code == 404:
+            raise errorcode.IncorrectFileDeleting
         return True
