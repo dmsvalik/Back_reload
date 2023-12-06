@@ -145,3 +145,12 @@ def get_nested_questions(question_list):
     if nested_questions:
         questions += get_nested_questions(nested_questions)
     return questions
+
+
+class OrderFullSerializer(serializers.ModelSerializer):
+    questionnaire_type_id = serializers.PrimaryKeyRelatedField(source="questionnaire_type", read_only=True)
+    answers = QuestionnaireResponseSerializer(source="questionresponse_set", many=True)
+
+    class Meta:
+        model = OrderModel
+        fields = ["name", "questionnaire_type_id", "answers"]

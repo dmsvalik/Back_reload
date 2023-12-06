@@ -28,8 +28,8 @@ from .swagger_documentation.orders import (
     OfferGetList,
     UploadImageOrderPost,
     FileOrderDelete,
-    OrderCreate, 
-    QuestionnaireResponsePost, 
+    OrderCreate,
+    QuestionnaireResponsePost,
     QuestionnaireResponseGet,
 
 )
@@ -37,7 +37,7 @@ from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upl
 from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
-from app.questionnaire.serializers import QuestionnaireResponseSerializer
+from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
@@ -271,7 +271,7 @@ def delete_file_order(request):
     except Exception as e:
         return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-      
+
 @swagger_auto_schema(
     operation_description=QuestionnaireResponsePost.operation_description,
     request_body=QuestionnaireResponsePost.request_body,
@@ -324,6 +324,5 @@ def get_answers_to_oder(request, pk):
         order = OrderModel.objects.get(id=pk)
     except Exception:
         raise errorcode.OrderIdNotFound()
-    answers = QuestionResponse.objects.filter(order=order)
-    serializer = QuestionnaireResponseSerializer(answers, many=True)
+    serializer = OrderFullSerializer(order)
     return Response(serializer.data)
