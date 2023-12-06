@@ -77,7 +77,7 @@ services:
       dockerfile: infra-dev/Dockerfile
     restart: always
     command:
-         sh -c "poetry run celery -A config.celery worker -l info --concurrency=1 --queues a,b"
+         sh -c "poetry run celery -A config worker -l info"
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/
