@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from drf_yasg import openapi
 
-from app.questionnaire.serializers import QuestionnaireTypeSerializer, QuestionnaireResponseSerializer
+from app.products.serializers import QuestionnaireShortTypeSerializer
 
 
 def generate_400_response(fields: List[str]):
@@ -80,10 +80,10 @@ class BaseSwaggerSchema:
     responses: openapi.Responses
 
 
-class QuestionnaireGetList(BaseSwaggerSchema):
-    operation_description = "Получение всех вопросов анкеты."
+class QuestionnaireTypeGetList(BaseSwaggerSchema):
+    operation_description = "Получение всех анкет категории."
     request_body = None
     responses = {
-        200: openapi.Response("Success response", QuestionnaireTypeSerializer()),
+        200: openapi.Response("Success response", QuestionnaireShortTypeSerializer()),
         404: DEFAULT_RESPONSES[404]
     }

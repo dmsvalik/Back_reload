@@ -4,17 +4,21 @@ from app.orders.permissions import IsOrderFileDataOwnerWithoutUser
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
-from app.utils.errorcode import CategoryIdNotFound, IncorrectPostParameters, NotAllowedUser
+from app.utils.errorcode import NotAllowedUser, QuestionnaireTypeIdNotFound
 from app.utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
+
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
 from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
+from .permissions import IsOrderOwner
+
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from .swagger_documentation.orders import (
     AllOrdersClientGetList,
@@ -24,40 +28,58 @@ from .swagger_documentation.orders import (
     OfferGetList,
     UploadImageOrderPost,
     FileOrderDelete,
+    OrderCreate, 
+    QuestionnaireResponsePost, 
+    QuestionnaireResponseGet,
+
 )
 from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
 from app.products.models import Category
 from app.main_page.permissions import IsContractor
+from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
+from app.questionnaire.serializers import QuestionnaireResponseSerializer
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
 
+@swagger_auto_schema(
+        operation_description=OrderCreate.operation_description,
+        request_body=OrderCreate.request_body,
+        responses=OrderCreate.responses,
+        method = "POST"
+    )
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def create_order(request):
 
     """ Создание заказа клиента """
-
-    order_name = request.data.get("order_name")
+    if "order_name" in request.data:
+        order_name = request.data.get("order_name")
+    else:
+        order_name = f"Заказ №{1 if not OrderModel.objects.last() else OrderModel.objects.last().id + 1}"
     order_description = request.data.get("order_description")
-    order_category = request.data.get("order_category")
-    order_state = request.data.get("order_state", default='draft')
+    order_questionnaire_type = request.data.get("questionnaire_type_id")
 
-    if order_name is None or order_description is None or order_category is None or order_name not in STATE_CHOICES:
-        raise IncorrectPostParameters
-
-    if Category.objects.filter(id=order_category).exists() is False:
-        raise CategoryIdNotFound
-
-    OrderModel.objects.create(
-        user_account=request.user,
-        order_time=datetime.now(tz=timezone.utc),
+    if QuestionnaireType.objects.filter(id=order_questionnaire_type).exists() is False:
+        raise QuestionnaireTypeIdNotFound
+    if request.user.is_authenticated:
+        user = request.user
+    else:
+        user = None
+    order = OrderModel.objects.create(
+        user_account=user,
         name=order_name,
-        order_description=order_description,
-        card_category=Category.objects.get(id=order_category),
-        state=order_state
+        questionnaire_type=QuestionnaireType.objects.get(id=order_questionnaire_type),
     )
-
-    return Response({'success': 'the order was created'})
+    if order_description:
+        order.order_description = order_description
+        order.save()
+    response = Response({'success': 'the order was created',
+                         "order_id": order.id,
+                         }, status=201)
+    if not user:
+        response.set_cookie("key", order.key, samesite="None", secure=True)
+    return response
 
 
 class OrderOfferViewSet(viewsets.ModelViewSet):
@@ -248,3 +270,60 @@ def delete_file_order(request):
         return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+      
+@swagger_auto_schema(
+    operation_description=QuestionnaireResponsePost.operation_description,
+    request_body=QuestionnaireResponsePost.request_body,
+    responses=QuestionnaireResponsePost.responses,
+    method="POST"
+)
+@api_view(["POST"])
+@permission_classes([IsOrderOwner])
+def create_answers_to_oder(request, pk):
+    try:
+        order = OrderModel.objects.get(id=pk)
+    except Exception:
+        raise errorcode.OrderIdNotFound()
+    serializer = QuestionnaireResponseSerializer(data=request.data, many=True,
+                                                 context={"order": order,
+                                                          "questionnairetype": order.questionnaire_type})
+    serializer.is_valid(raise_exception=True)
+    questionnaire_questions = Question.objects.filter(
+        chapter__type=order.questionnaire_type)
+    questions_id_with_answers = [answer["question_id"] for answer in request.data]
+    questions_with_answers = Question.objects.filter(id__in=questions_id_with_answers).all()
+    for question in questionnaire_questions:
+        if (question.answer_required
+                and question.option
+                and question not in questions_with_answers
+                and {"question_id": question.option.question.id,
+                     "response": question.option.text} in request.data
+        ):
+            raise ValidationError({
+                "question_id": f"Вопрос '{question.id}' требует ответа."
+            })
+    for question in questions_with_answers:
+        if question.option and question.option.question not in questions_with_answers:
+            raise ValidationError({
+                "question_id": f"Вопрос '{question.option.question.id}' требует ответа."
+            })
+    serializer.save(order=order)
+    return Response(serializer.data)
+
+
+@swagger_auto_schema(
+    operation_description=QuestionnaireResponseGet.operation_description,
+    responses=QuestionnaireResponseGet.responses,
+    method="GET"
+)
+@api_view(["GET"])
+@permission_classes([IsOrderOwner])
+def get_answers_to_oder(request, pk):
+    try:
+        order = OrderModel.objects.get(id=pk)
+    except Exception:
+        raise errorcode.OrderIdNotFound()
+    answers = QuestionResponse.objects.filter(order=order)
+    serializer = QuestionnaireResponseSerializer(answers, many=True)
+    return Response(serializer.data)

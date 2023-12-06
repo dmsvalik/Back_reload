@@ -3,8 +3,10 @@ from datetime import datetime, timedelta
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 
-from app.orders.models import OrderFileData
+
+from app.orders.models import OrderFileData, OrderModel
 from app.utils.errorcode import FileNotFound
+
 
 
 class ChangePriceInOrder(permissions.BasePermission):
@@ -39,5 +41,16 @@ class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
                 id=file_id,
                 order_id__user_account=request.user
         ).exists():
+            return True
+        return False
+
+      
+class IsOrderOwner(permissions.BasePermission):
+    def has_permission(self, request, view):
+        key = request.COOKIES.get('key')
+        order_id = view.kwargs.get('pk')
+        if OrderModel.objects.filter(id=order_id, key=key, user_account__isnull=True).exists():
+            return True
+        if request.user.is_authenticated and OrderModel.objects.filter(id=order_id, user_account=request.user).exists():
             return True
         return False
