@@ -15,6 +15,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
+
 
 from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
@@ -246,30 +248,7 @@ def get_file_order(request, file_id):
     return Response(image_data)
 
 
-@swagger_auto_schema(
-    operation_description=FileOrderDelete.operation_description,
-    responses=FileOrderDelete.responses,
-    request_body=FileOrderDelete.request_body,
-    method="delete",
-)
-@api_view(["DELETE"])
-@permission_classes([IsOrderFileDataOwnerWithoutUser])
-def delete_file_order(request):
-    """
-    Удаление файла из Yandex и передача ссылки на его получение для фронта
-    """
-    file_id = request.data.get('file_id')
-    try:
-        file_to_delete = OrderFileData.objects.get(id=file_id)
-        if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
-            task = celery_delete_image_task.delay(file_id)
-        else:
-            task = celery_delete_file_task.delay(file_id)
-        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
-    except OrderFileData.DoesNotExist:
-        return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @swagger_auto_schema(
@@ -326,3 +305,29 @@ def get_answers_to_oder(request, pk):
         raise errorcode.OrderIdNotFound()
     serializer = OrderFullSerializer(order)
     return Response(serializer.data)
+
+
+class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
+
+    @swagger_auto_schema(
+        operation_description=FileOrderDelete.operation_description,
+        responses=FileOrderDelete.responses,
+        request_body=FileOrderDelete.request_body,
+    )
+    @permission_classes([IsOrderFileDataOwnerWithoutUser])
+    def delete_file_order(self, request):
+        """
+        Удаление файла из Yandex и передача ссылки на его получение для фронта
+        """
+        file_id = request.data.get('file_id')
+        try:
+            file_to_delete = OrderFileData.objects.get(id=file_id)
+            if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
+                task = celery_delete_image_task.delay(file_id)
+            else:
+                task = celery_delete_file_task.delay(file_id)
+            return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+        except OrderFileData.DoesNotExist:
+            return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
