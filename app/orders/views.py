@@ -277,8 +277,7 @@ def create_answers_to_oder(request, pk):
                 and question.option
                 and question not in questions_with_answers
                 and {"question_id": question.option.question.id,
-                     "response": question.option.text} in request.data
-        ):
+                     "response": question.option.text} in request.data):
             raise ValidationError({
                 "question_id": f"Вопрос '{question.id}' требует ответа."
             })
