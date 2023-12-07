@@ -33,6 +33,7 @@ class QuestionnaireType(models.Model):
     # Тип анкеты пока оставил вводом текста
     type = models.CharField("Тип анкеты - короткая, длинная", max_length=100, null=True)
     description = models.CharField("Описание анкеты", max_length=500, null=True)
+    active = models.BooleanField("Активная анкета", default=True)
 
     class Meta:
         verbose_name = "Тип анкеты"
