@@ -1,12 +1,8 @@
-import requests
-from django.http.response import JsonResponse
-from django.shortcuts import render
+from django.contrib.sites.shortcuts import get_current_site
 from djoser.views import UserViewSet
-from djoser import signals, utils
+from djoser import signals
 from djoser.compat import get_user_email
-from djoser.conf import settings
-from django.utils.decorators import method_decorator
-from drf_yasg.utils import swagger_auto_schema
+from djoser.conf import settings as djoser_settings
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,12 +10,11 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
 
-from app.main_page.error_message import error_responses
 from app.orders.models import OrderModel
 from app.orders.tasks import send_notification
-from app.sending.email_sending import OrderEmail
 from app.sending.signals import new_notification
 from app.users.tasks import send_django_users_emails
+from config import settings
 
 
 # class ActivateUser(UserViewSet):
@@ -70,10 +65,30 @@ from app.users.tasks import send_django_users_emails
 class CustomUserViewSet(UserViewSet):
 
     def perform_create(self, serializer, *args, **kwargs):
-        super().perform_create(serializer, *args, **kwargs)
-        if settings.SEND_ACTIVATION_EMAIL:
-            user = serializer.instance
+        user = serializer.save(*args, **kwargs)
+        signals.user_registered.send(
+            sender=self.__class__, user=user, request=self.request
+        )
+        # context = {"user": user}
+        context = site_data_from_request(self.request)
+        to = [get_user_email(user)]
+        if djoser_settings.SEND_ACTIVATION_EMAIL:
+            # djoser_settings.EMAIL.activation(self.request, context).send(to)
+            send_django_users_emails.delay(
+                "EMAIL.activation",
+                context,
+                user.id,
+                to)
             new_notification.send(sender=self.__class__, user=user, theme="Письмо активации аккаунта",
+                                  type="email")
+        elif djoser_settings.SEND_CONFIRMATION_EMAIL:
+            # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
+            send_django_users_emails.delay(
+                "EMAIL.confirmation",
+                context,
+                user.id,
+                to)
+            new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
                                   type="email")
 
     def create(self, request, *args, **kwargs):
@@ -107,16 +122,14 @@ class CustomUserViewSet(UserViewSet):
             sender=self.__class__, user=user, request=self.request
         )
 
-        if settings.SEND_CONFIRMATION_EMAIL:
-            context = {"user": user}
+        if djoser_settings.SEND_CONFIRMATION_EMAIL:
+            # context = {"user": user}
             to = [get_user_email(user)]
-            settings.EMAIL.confirmation(self.request, context).send(to)
-            context = {
-
-            }
+            # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
+            context = site_data_from_request(request)
             send_django_users_emails.delay(
-                self.request,
-                settings.EMAIL.confirmation,
+                "EMAIL.confirmation",
+                context,
                 user.id,
                 to)
             new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
@@ -169,3 +182,17 @@ class CustomTokenViewBase(TokenViewBase):
 class CustomTokenObtainPairView(CustomTokenViewBase):
 
     _serializer_class = api_settings.TOKEN_OBTAIN_SERIALIZER
+
+
+def site_data_from_request(request):
+    context = {}
+    site = get_current_site(request)
+    domain = getattr(settings, 'DOMAIN', '') or site.domain
+    protocol = 'https' if request.is_secure() else 'http'
+    site_name = getattr(settings, 'SITE_NAME', '') or site.name
+    context.update({
+        'domain': domain,
+        'protocol': protocol,
+        'site_name': site_name,
+    })
+    return context
