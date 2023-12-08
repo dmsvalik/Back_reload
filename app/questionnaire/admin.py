@@ -11,7 +11,7 @@ class QuestionnaireCategoryAdmin(admin.ModelAdmin):
 
 @admin.register(QuestionnaireType)
 class QuestionnaireTypeAdmin(admin.ModelAdmin):
-    list_display = ["id", "category", "type", "description"]
+    list_display = ["id", "category", "type", "description", "active"]
 
 
 @admin.register(QuestionnaireChapter)
