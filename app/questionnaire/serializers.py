@@ -1,3 +1,4 @@
+from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -11,6 +12,12 @@ class OrderedByPositionSerializer(serializers.ListSerializer):
     def to_representation(self, data):
         data = data.order_by('position')
         return super(OrderedByPositionSerializer, self).to_representation(data)
+
+
+class FirstLevelQuestionsSerializer(serializers.ListSerializer):
+    def to_representation(self, data):
+        data = data.filter(option__isnull=True).order_by('position')
+        return super(FirstLevelQuestionsSerializer, self).to_representation(data)
 
 
 class QuestionnaireCategorySerializer(serializers.ModelSerializer):
@@ -44,13 +51,22 @@ class OptionSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
+class OuterQuestionSerializer(serializers.ModelSerializer):
+    options = OptionSerializer(read_only=True, many=True, source="question_parent")
+
+    class Meta:
+        model = Question
+        list_serializer_class = FirstLevelQuestionsSerializer
+        fields = ["id", "text", "answer_type", "file_required", "answer_required", "options"]
+
+
 class QuestionSerializer(serializers.ModelSerializer):
     options = OptionSerializer(read_only=True, many=True, source="question_parent")
 
     class Meta:
         model = Question
         list_serializer_class = OrderedByPositionSerializer
-        fields = ["id", "text", "answer_type", "file_required", "options"]
+        fields = ["id", "text", "answer_type", "file_required", "answer_required", "options"]
 
 
     # def get_files(self, obj):
@@ -77,7 +93,7 @@ class QuestionSerializer(serializers.ModelSerializer):
 
 
 class QuestionnaireChapterSerializer(serializers.ModelSerializer):
-    questions = QuestionSerializer(read_only=True, many=True, source="question_set")
+    questions = OuterQuestionSerializer(read_only=True, many=True, source="question_set")
 
     class Meta:
         model = QuestionnaireChapter
@@ -145,3 +161,12 @@ def get_nested_questions(question_list):
     if nested_questions:
         questions += get_nested_questions(nested_questions)
     return questions
+
+
+class OrderFullSerializer(serializers.ModelSerializer):
+    questionnaire_type_id = serializers.PrimaryKeyRelatedField(source="questionnaire_type", read_only=True)
+    answers = QuestionnaireResponseSerializer(source="questionresponse_set", many=True)
+
+    class Meta:
+        model = OrderModel
+        fields = ["name", "questionnaire_type_id", "answers"]

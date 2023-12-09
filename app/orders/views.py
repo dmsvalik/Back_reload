@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
+from app.orders.permissions import IsOrderFileDataOwnerWithoutUser
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
@@ -8,14 +9,18 @@ from app.utils.storage import CloudStorage, ServerFileSystem
 
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import viewsets
+
+from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
 
-from .models import STATE_CHOICES, FileData, OrderModel, OrderOffer
+
+from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
+
 from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from .swagger_documentation.orders import (
     AllOrdersClientGetList,
@@ -23,13 +28,18 @@ from .swagger_documentation.orders import (
     FileOrderGet,
     OfferCreate,
     OfferGetList,
-    UploadImageOrderPost, OrderCreate, QuestionnaireResponsePost, QuestionnaireResponseGet,
+    UploadImageOrderPost,
+    FileOrderDelete,
+    OrderCreate,
+    QuestionnaireResponsePost,
+    QuestionnaireResponseGet,
+
 )
-from .tasks import celery_upload_file_task, celery_upload_image_task
+from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
 from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
-from app.questionnaire.serializers import QuestionnaireResponseSerializer
+from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
@@ -70,7 +80,7 @@ def create_order(request):
                          "order_id": order.id,
                          }, status=201)
     if not user:
-        response.set_cookie("key", order.key)
+        response.set_cookie("key", order.key, samesite="None", secure=True)
     return response
 
 
@@ -238,6 +248,9 @@ def get_file_order(request, file_id):
     return Response(image_data)
 
 
+
+
+
 @swagger_auto_schema(
     operation_description=QuestionnaireResponsePost.operation_description,
     request_body=QuestionnaireResponsePost.request_body,
@@ -264,8 +277,7 @@ def create_answers_to_oder(request, pk):
                 and question.option
                 and question not in questions_with_answers
                 and {"question_id": question.option.question.id,
-                     "response": question.option.text} in request.data
-        ):
+                     "response": question.option.text} in request.data):
             raise ValidationError({
                 "question_id": f"Вопрос '{question.id}' требует ответа."
             })
@@ -290,6 +302,31 @@ def get_answers_to_oder(request, pk):
         order = OrderModel.objects.get(id=pk)
     except Exception:
         raise errorcode.OrderIdNotFound()
-    answers = QuestionResponse.objects.filter(order=order)
-    serializer = QuestionnaireResponseSerializer(answers, many=True)
+    serializer = OrderFullSerializer(order)
     return Response(serializer.data)
+
+
+class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
+
+    @swagger_auto_schema(
+        operation_description=FileOrderDelete.operation_description,
+        responses=FileOrderDelete.responses,
+        request_body=FileOrderDelete.request_body,
+    )
+    @permission_classes([IsOrderFileDataOwnerWithoutUser])
+    def delete_file_order(self, request):
+        """
+        Удаление файла из Yandex и передача ссылки на его получение для фронта
+        """
+        file_id = request.data.get('file_id')
+        try:
+            file_to_delete = OrderFileData.objects.get(id=file_id)
+            if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
+                task = celery_delete_image_task.delay(file_id)
+            else:
+                task = celery_delete_file_task.delay(file_id)
+            return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+        except OrderFileData.DoesNotExist:
+            return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

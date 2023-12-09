@@ -7,6 +7,7 @@ from app.main_page.models import UserAccount, ContractorData
 from app.orders.models import OrderModel, STATE_CHOICES, OrderOffer
 
 from app.products.models import Category
+from app.questionnaire.models import QuestionnaireType
 from app.utils.models import GallerySlider, GalleryImages
 from app.utils.prepare_db.questionnaire_data import QuestionnaireKitchenData
 from app.utils.prepare_db.kitchen_long_questionnaire import questionnaire as kitchen_full_data
@@ -169,7 +170,7 @@ class InitialData(object):
                         order_time=datetime.now(tz=timezone.utc),
                         name=f'order_N_{last_id+x}_{client.email}',
                         order_description=self.description,
-                        # card_category=Category.objects.get(name='kitchen'),
+                        questionnaire_type=QuestionnaireType.objects.first(),
                         state=STATE_CHOICES[x][0]
                     )
 
@@ -179,7 +180,7 @@ class InitialData(object):
                     order_time=datetime.now(tz=timezone.utc) + timedelta(days=1),
                     name=f'order_OFFER_EXPIRED_{client.email}',
                     order_description=f'',
-                    card_category=Category.objects.get(name='kitchen'),
+                    questionnaire_type=QuestionnaireType.objects.first(),
                     state='offer'
                 )
 
