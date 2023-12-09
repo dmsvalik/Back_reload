@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 from app.orders.permissions import IsOrderFileDataOwnerWithoutUser
+from app.users.models import UserAccount
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
@@ -11,10 +12,11 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
 
 from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
@@ -26,6 +28,7 @@ from .swagger_documentation.orders import (
     FileOrderGet,
     OfferCreate,
     OfferGetList,
+    OrderDelete,
     UploadImageOrderPost,
     FileOrderDelete,
     OrderCreate,
@@ -246,31 +249,6 @@ def get_file_order(request, file_id):
     return Response(image_data)
 
 
-@swagger_auto_schema(
-    operation_description=FileOrderDelete.operation_description,
-    responses=FileOrderDelete.responses,
-    request_body=FileOrderDelete.request_body,
-    method="delete",
-)
-@api_view(["DELETE"])
-@permission_classes([IsOrderFileDataOwnerWithoutUser])
-def delete_file_order(request):
-    """
-    Удаление файла из Yandex и передача ссылки на его получение для фронта
-    """
-    file_id = request.data.get('file_id')
-    try:
-        file_to_delete = OrderFileData.objects.get(id=file_id)
-        if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
-            task = celery_delete_image_task.delay(file_id)
-        else:
-            task = celery_delete_file_task.delay(file_id)
-        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
-    except OrderFileData.DoesNotExist:
-        return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
-    except Exception as e:
-        return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 @swagger_auto_schema(
     operation_description=QuestionnaireResponsePost.operation_description,
@@ -326,3 +304,53 @@ def get_answers_to_oder(request, pk):
         raise errorcode.OrderIdNotFound()
     serializer = OrderFullSerializer(order)
     return Response(serializer.data)
+
+
+class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
+    @swagger_auto_schema(
+        operation_description=FileOrderDelete.operation_description,
+        responses=FileOrderDelete.responses,
+        request_body=FileOrderDelete.request_body,
+        method="delete",
+    )
+    @action(detail=False, methods=['delete'])
+    @permission_classes([IsOrderFileDataOwnerWithoutUser])
+    def delete_file_order(request):
+        """
+        Удаление файла из Yandex и передача ссылки на его получение для фронта
+        """
+        file_id = request.data.get('file_id')
+        try:
+            file_to_delete = OrderFileData.objects.get(id=file_id)
+            if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
+                task = celery_delete_image_task.delay(file_id)
+            else:
+                task = celery_delete_file_task.delay(file_id)
+            return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+        except OrderFileData.DoesNotExist:
+            return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
+    @swagger_auto_schema(
+        operation_description=OrderDelete.operation_description,
+        responses=OrderDelete.responses,
+        request_body=OrderDelete.request_body,
+        method="delete",
+    )
+    @action(detail=False, methods=['delete'])
+    def delete_all_view(request):
+        """
+        Удаление ВСЕГО из БД кроме записи админа!!!!!!!!!!!"
+        """
+        try:
+            OrderModel.objects.delete()
+            Category.objects.delete()
+            UserAccount.objects.filter(is_admin=False).delete()
+            return Response({'detail': 'Все записи, кроме админа, успешно удалены.'},
+                            status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'errors': f'Не удалось удалить все записи: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)

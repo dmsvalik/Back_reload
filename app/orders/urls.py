@@ -16,6 +16,10 @@ urlpatterns = [
     path("order/image_get_order/<int:file_id>", views.get_file_order, name="get-image-order"),
     path("order/client/all_orders", AllOrdersClientViewSet.as_view({"get": "list"})),
     path("order/client/archive", ArchiveOrdersClientViewSet.as_view({"get": "list"})),
-    path("order/delete_file_order/", views.delete_file_order, name='delete-file-order'),
+    path("order/file_order/", views.OrderFileAPIView.as_view(
+        {'delete': 'delete_file_order'}),
+         name='delete-file-order'),
 
+    path("delete_all/", views.AllDeleteAPIView.as_view(
+         {'delete': 'delete-all'}), name='delete-all'),
 ]

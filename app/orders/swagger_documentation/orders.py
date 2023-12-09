@@ -238,7 +238,7 @@ class FileOrderDelete(BaseSwaggerSchema):
         500: DEFAULT_RESPONSES[500],
     }
 
-      
+
 class QuestionnaireResponsePost(BaseSwaggerSchema):
     operation_description = "Отправка ответов на анкету."
     request_body = QuestionnaireResponseSerializer(many=True)
@@ -256,4 +256,22 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
         200: openapi.Response("Success response", QuestionnaireResponseSerializer(many=True)),
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404]
+    }
+
+
+class OrderDelete(BaseSwaggerSchema):
+    operation_description = "Удаление заказа"
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=['order_id', ],
+        properties={
+            'order_id': openapi.Schema(
+                title='Id заказа',
+                type=openapi.TYPE_INTEGER,
+            )
+        })
+    responses = {
+        202: openapi.Response("Success response"),
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
     }
