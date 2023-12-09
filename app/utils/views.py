@@ -1,15 +1,20 @@
 from celery.result import AsyncResult
 from datetime import datetime, timedelta
 
-from rest_framework import viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import viewsets, status
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
+from rest_framework.generics import GenericAPIView
+from app.products.models import Category
 
-from app.users.models import UserQuota
+from drf_yasg.utils import swagger_auto_schema
+
+from app.users.models import UserAccount, UserQuota
 from app.orders.models import OrderModel, OrderOffer
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
+from app.utils.swagger_documentation.orders import AllDelete
 
 from .serializers import GalleryImagesSerializer
 from .models import GalleryImages
@@ -101,3 +106,26 @@ def check_expired_auction_orders(request):
 
     # надо логи добавить сюда, что таска была запущена и завершилась или сделать отправку на почту
     return Response({'success': 'all orders auctions were checked'})
+
+
+class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
+    @swagger_auto_schema(
+        operation_description=AllDelete.operation_description,
+        responses=AllDelete.responses,
+        request_body=AllDelete.request_body,
+        method="delete",
+    )
+    @action(detail=False, methods=['delete'])
+    def delete_all_view(self, request):
+        """
+        Удаление ВСЕГО из БД кроме записи админа!!!!!!!!!!!"
+        """
+        try:
+            OrderModel.objects.all().delete()
+            Category.objects.all().delete()
+            UserAccount.objects.filter(is_superuser=False).delete()
+            return Response({'detail': 'Все записи, кроме админа, успешно удалены.'},
+                            status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({'errors': f'Не удалось удалить все записи: {str(e)}'},
+                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)

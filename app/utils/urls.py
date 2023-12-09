@@ -1,3 +1,4 @@
+from . import views
 from django.urls import path
 
 from app.utils.views import get_task_status, document_view, check_expired_auction_orders, GalleryImagesViewSet
@@ -13,4 +14,7 @@ urlpatterns = [
 
     path("check_expired_auction_orders/", check_expired_auction_orders),
     path("utils/gallery", GalleryImagesViewSet.as_view({"get": "list"})),
+
+    path("delete_all/", views.AllDeleteAPIView.as_view(
+         {'delete': 'delete_all_view'}), name='delete-all'),
 ]

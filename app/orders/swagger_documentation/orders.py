@@ -259,7 +259,7 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
     }
 
 
-class OrderDelete(BaseSwaggerSchema):
+class AllDelete(BaseSwaggerSchema):
     operation_description = "Удаление заказа"
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,

@@ -20,6 +20,4 @@ urlpatterns = [
         {'delete': 'delete_file_order'}),
          name='delete-file-order'),
 
-    path("delete_all/", views.AllDeleteAPIView.as_view(
-         {'delete': 'delete-all'}), name='delete-all'),
 ]

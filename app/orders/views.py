@@ -1,7 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
 from app.orders.permissions import IsOrderFileDataOwnerWithoutUser
-from app.users.models import UserAccount
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
@@ -28,7 +27,6 @@ from .swagger_documentation.orders import (
     FileOrderGet,
     OfferCreate,
     OfferGetList,
-    OrderDelete,
     UploadImageOrderPost,
     FileOrderDelete,
     OrderCreate,
@@ -37,7 +35,6 @@ from .swagger_documentation.orders import (
 
 )
 from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
-from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
@@ -331,26 +328,3 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
             return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
-    @swagger_auto_schema(
-        operation_description=OrderDelete.operation_description,
-        responses=OrderDelete.responses,
-        request_body=OrderDelete.request_body,
-        method="delete",
-    )
-    @action(detail=False, methods=['delete'])
-    def delete_all_view(request):
-        """
-        Удаление ВСЕГО из БД кроме записи админа!!!!!!!!!!!"
-        """
-        try:
-            OrderModel.objects.delete()
-            Category.objects.delete()
-            UserAccount.objects.filter(is_admin=False).delete()
-            return Response({'detail': 'Все записи, кроме админа, успешно удалены.'},
-                            status=status.HTTP_204_NO_CONTENT)
-        except Exception as e:
-            return Response({'errors': f'Не удалось удалить все записи: {str(e)}'},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
