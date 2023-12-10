@@ -33,13 +33,14 @@ from .swagger_documentation.orders import (
     OrderCreate,
     QuestionnaireResponsePost,
     QuestionnaireResponseGet,
-
+    AttachFileAnswerPost,
 )
-from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
+from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task, celery_upload_file_task_to_answer, celery_upload_image_task_to_answer
 from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
+from app.questionnaire.permissions import IsOrderOwnerWithoutUser
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
@@ -330,3 +331,41 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
             return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@swagger_auto_schema(
+    operation_description=AttachFileAnswerPost.operation_description,
+    request_body=AttachFileAnswerPost.request_body,
+    responses=AttachFileAnswerPost.responses,
+    method="POST"
+)
+@api_view(["POST"])
+@permission_classes([IsOrderOwnerWithoutUser])
+@check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
+@check_user_quota
+def attach_file(request, question_id):
+    try:
+        order = OrderModel.objects.get(user_account=request.user) if request.user.is_authenticated \
+            else OrderModel.objects.get(key=request.COOKIES.get('key'), user_account__isnull=True)
+    except Exception:
+        raise errorcode.OrderIdNotFound
+
+    try:
+        Question.objects.get(id=question_id)
+    except Exception:
+        raise errorcode.QuestionIdNotFound()
+
+    upload_file = request.FILES["upload_file"]
+    name = upload_file.name
+    if not os.path.exists("tmp"):
+        os.mkdir("tmp")
+    with open(f"tmp/{name}", "wb+") as file:
+        for chunk in upload_file.chunks():
+            file.write(chunk)
+    temp_file = f"tmp/{name}"
+    if temp_file.split('.')[-1] in IMAGE_FILE_FORMATS:
+        task = celery_upload_image_task_to_answer.delay(temp_file, order.id, request.user.id, question_id)
+    else:
+        task = celery_upload_file_task_to_answer.delay(temp_file, order.id, request.user.id, question_id)
+
+    return Response({"task_id": task.id}, status=202)
