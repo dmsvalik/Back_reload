@@ -35,7 +35,14 @@ from .swagger_documentation.orders import (
     QuestionnaireResponseGet,
     AttachFileAnswerPost,
 )
-from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task, celery_upload_file_task_to_answer, celery_upload_image_task_to_answer
+from .tasks import (
+    celery_delete_file_task,
+    celery_delete_image_task,
+    celery_upload_file_task,
+    celery_upload_image_task,
+    celery_upload_file_task_to_answer,
+    celery_upload_image_task_to_answer,
+)
 from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
