@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 
 
+
 from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
 
@@ -35,6 +36,7 @@ from .swagger_documentation.orders import (
     QuestionnaireResponseGet,
 
 )
+
 from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
 from app.products.models import Category
 from app.main_page.permissions import IsContractor
@@ -45,15 +47,14 @@ IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
 
 @swagger_auto_schema(
-        operation_description=OrderCreate.operation_description,
-        request_body=OrderCreate.request_body,
-        responses=OrderCreate.responses,
-        method = "POST"
-    )
+    operation_description=OrderCreate.operation_description,
+    request_body=OrderCreate.request_body,
+    responses=OrderCreate.responses,
+    method="POST"
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_order(request):
-
     """ Создание заказа клиента """
     if "order_name" in request.data:
         order_name = request.data.get("order_name")
