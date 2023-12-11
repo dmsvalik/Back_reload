@@ -27,21 +27,21 @@ def create_notification_record(sender, user: UserAccount, theme: str, type: str,
 new_notification.connect(create_notification_record)
 
 
-def check_user_no_notifications(sender, instance, **kwargs):
+def update_if_user_no_notifications(sender, instance, **kwargs):
     user = UserAccount.objects.get(id=instance.user.id)
     if not user.usernotifications_set.all():
         user.notifications = False
         user.save()
 
 
-post_delete.connect(check_user_no_notifications, sender=UserNotifications)
+post_delete.connect(update_if_user_no_notifications, sender=UserNotifications)
 
 
-def check_user_has_notifications(sender, instance, created, **kwargs):
+def update_if_user_has_notifications(sender, instance, created, **kwargs):
     user = UserAccount.objects.get(id=instance.user.id)
     if not user.notifications:
         user.notifications = True
         user.save()
 
 
-post_save.connect(check_user_has_notifications, sender=UserNotifications)
+post_save.connect(update_if_user_has_notifications, sender=UserNotifications)

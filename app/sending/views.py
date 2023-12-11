@@ -7,7 +7,7 @@ from app.users.models import UserAccount
 NOTIFICATION_CLASSES = {
     "email": {
         "ORDER_CREATE_CONFIRMATION": {
-            "type": "email_sending.OrderEmail",
+            "type": "app.sending.email_sending.OrderEmail",
             "theme": "Подтверждение отправки заказа исполнителям."
         }
     },
