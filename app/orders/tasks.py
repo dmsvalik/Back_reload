@@ -92,13 +92,6 @@ def celery_upload_file_task(temp_file, user_id, order_id):
             "response": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
 
 
-@shared_task()
-def send_notification(sending, context, recipients):
-    if sending in NOTIFICATION_CLASSES:
-        notification_class = NOTIFICATION_CLASSES.get(sending)(context=context)
-        notification_class.send(recipients)
-
-
 
 @shared_task
 def celery_delete_file_task(file_id):

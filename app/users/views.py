@@ -11,8 +11,8 @@ from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
 
 from app.orders.models import OrderModel
-from app.orders.tasks import send_notification
 from app.sending.signals import new_notification
+from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
 from config import settings
 
@@ -140,9 +140,8 @@ class CustomUserViewSet(UserViewSet):
             order.save()
             context = {"order_name": order.name,
                        "username": user.name}
-            if user.usernotifications.notification_type != "None":
-                if user.usernotifications.notification_type == "email":
-                    send_notification.delay("OrderEmail", context, [get_user_email(user)])
+            if user.notifications:
+                send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
         except Exception:
             pass
 
@@ -172,9 +171,8 @@ class CustomTokenViewBase(TokenViewBase):
                 order.save()
                 context = {"order_name": order.name,
                            "username": user.name}
-                if user.usernotifications.notification_type != "None":
-                    if user.usernotifications.notification_type == "email":
-                        send_notification.delay("OrderEmail", context, [get_user_email(user)])
+                if user.notifications:
+                    send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
             response.delete_cookie('key')
         return response
 
