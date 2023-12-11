@@ -13,11 +13,6 @@ from rest_framework import status
 from app.orders.models import FileData, OrderFileData, OrderModel
 
 
-NOTIFICATION_CLASSES = {
-    "OrderEmail": OrderEmail
-}
-
-
 logger = get_task_logger(__name__)
 
 # celery -A config.celery worker
