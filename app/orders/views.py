@@ -100,7 +100,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        order_id = self.kwargs['pk']
+        order_id = self.kwargs.get("pk", None)
         if OrderModel.objects.filter(id=order_id).exists():
             date = OrderModel.objects.get(id=order_id).order_time
             if (datetime.now(timezone.utc) - date) > timedelta(hours=24):
