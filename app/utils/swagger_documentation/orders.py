@@ -80,15 +80,7 @@ class BaseSwaggerSchema:
 
 class AllDelete(BaseSwaggerSchema):
     operation_description = "Удаление заказа"
-    request_body = openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        required=['order_id', ],
-        properties={
-            'order_id': openapi.Schema(
-                title='Id заказа',
-                type=openapi.TYPE_INTEGER,
-            )
-        })
+    request_body = None
     responses = {
         202: openapi.Response("Success response"),
         404: DEFAULT_RESPONSES[404],

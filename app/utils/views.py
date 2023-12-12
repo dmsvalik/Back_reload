@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
+from rest_framework.views import APIView
 from app.products.models import Category
 
 from drf_yasg.utils import swagger_auto_schema
@@ -109,6 +110,8 @@ def check_expired_auction_orders(request):
 
 
 class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
+# class AllDeleteAPIView(APIView):
+    @permission_classes([IsAdminUser])
     @swagger_auto_schema(
         operation_description=AllDelete.operation_description,
         responses=AllDelete.responses,
@@ -126,6 +129,12 @@ class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
             UserAccount.objects.filter(is_superuser=False).delete()
             return Response({'detail': 'Все записи, кроме админа, успешно удалены.'},
                             status=status.HTTP_204_NO_CONTENT)
+        except OrderModel.DoesNotExist:
+            return Response({'errors': 'Заказы не найдены.'}, status=status.HTTP_404_NOT_FOUND)
+        except Category.DoesNotExist:
+            return Response({'errors': 'Категории не найдены.'}, status=status.HTTP_404_NOT_FOUND)
+        except UserAccount.DoesNotExist:
+            return Response({'errors': 'Пользователь не найден.'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'errors': f'Не удалось удалить все записи: {str(e)}'},
                             status=status.HTTP_500_INTERNAL_SERVER_ERROR)

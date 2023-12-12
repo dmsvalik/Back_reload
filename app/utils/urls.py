@@ -1,7 +1,7 @@
 from . import views
 from django.urls import path
 
-from app.utils.views import get_task_status, document_view, check_expired_auction_orders, GalleryImagesViewSet
+from app.utils.views import get_task_status, document_view, check_expired_auction_orders, GalleryImagesViewSet, AllDeleteAPIView
 from app.utils.prepare_db.initial_data_work import create_admin, create_all_data
 
 urlpatterns = [
@@ -15,6 +15,6 @@ urlpatterns = [
     path("check_expired_auction_orders/", check_expired_auction_orders),
     path("utils/gallery", GalleryImagesViewSet.as_view({"get": "list"})),
 
-    path("delete_all/", views.AllDeleteAPIView.as_view(
-         {'delete': 'delete_all_view'}), name='delete-all'),
+    path("delete_all/", AllDeleteAPIView.as_view({'delete': 'delete_all_view'})),
+
 ]
