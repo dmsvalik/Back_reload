@@ -67,8 +67,6 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
         files = question_response.question.orderfiledata_set.all()
         return FileSerializer(instance=files, many=True).data
 
-    def to_representation(self, instance):
-        return super().to_representation(instance)
 
 class OptionSerializer(serializers.ModelSerializer):
     questions = serializers.SerializerMethodField()
