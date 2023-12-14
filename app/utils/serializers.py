@@ -13,5 +13,6 @@ class GalleryImagesSerializer(ModelSerializer):
 
     # change url without domain
     def get_image_url(self, galleryimages):
-        image_url = galleryimages.image.url
-        return image_url
+        request = self.context.get('request')
+        icon_url = galleryimages.image.url
+        return request.build_absolute_uri(icon_url)
