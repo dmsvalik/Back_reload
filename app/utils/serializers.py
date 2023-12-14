@@ -1,6 +1,10 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
+
+from config.settings import DOMAIN
+
 from .models import GalleryImages
+
 
 
 class GalleryImagesSerializer(ModelSerializer):
@@ -13,6 +17,5 @@ class GalleryImagesSerializer(ModelSerializer):
 
     # change url without domain
     def get_image_url(self, galleryimages):
-        request = self.context.get('request')
         icon_url = galleryimages.image.url
-        return request.build_absolute_uri(icon_url)
+        return f"https://{DOMAIN}{icon_url}"
