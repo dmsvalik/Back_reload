@@ -13,11 +13,6 @@ from rest_framework import status
 from app.orders.models import FileData, OrderFileData, OrderModel
 
 
-NOTIFICATION_CLASSES = {
-    "OrderEmail": OrderEmail
-}
-
-
 logger = get_task_logger(__name__)
 
 # celery -A config.celery worker
@@ -90,13 +85,6 @@ def celery_upload_file_task(temp_file, user_id, order_id):
 
     return {"status": "FAILURE",
             "response": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
-
-
-@shared_task()
-def send_notification(sending, context, recipients):
-    if sending in NOTIFICATION_CLASSES:
-        notification_class = NOTIFICATION_CLASSES.get(sending)(context=context)
-        notification_class.send(recipients)
 
 
 
