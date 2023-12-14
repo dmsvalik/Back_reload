@@ -11,13 +11,11 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-
-
 
 from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
@@ -38,7 +36,6 @@ from .swagger_documentation.orders import (
 )
 
 from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
-from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
@@ -247,9 +244,6 @@ def get_file_order(request, file_id):
             },
         )
     return Response(image_data)
-
-
-
 
 
 @swagger_auto_schema(
