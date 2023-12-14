@@ -1,19 +1,19 @@
 from rest_framework import serializers
 
-from .models import ChatModel, MessageModel
+# from .models import ChatModel, MessageModel
+from .models import ChatMessage, Conversation
 
 
 class MessageSerializer(serializers.ModelSerializer):
     class Meta:
-        model = MessageModel
-        fields = ('id', 'from_user', 'text_content', 'timestamp')
-        read_only_fields = ('id', 'timestamp')
+        model = ChatMessage
+        fields = ('id', 'sender', 'text', 'sent_at')
+        read_only_fields = ('id', 'sender', 'sent_at')
 
 
 class ChatSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
 
     class Meta:
-        model = ChatModel
-        fields = ('id', 'messages', 'participants')
-        read_only_fields = ('id', 'messages')
+        model = Conversation
+        fields = ('id', 'client', 'contractor', 'messages')

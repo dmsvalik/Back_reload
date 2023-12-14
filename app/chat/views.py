@@ -1,3 +1,5 @@
+from django.shortcuts import render
+
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
@@ -21,5 +23,9 @@ class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
         """
         user = self.request.user
         if user.is_authenticated:
-            return user.chats.all()
+            return user.conversations.all()
         return None
+
+
+def room(request, room_name):
+    return render(request, "chat/room.html", {"room_name": room_name})
