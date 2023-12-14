@@ -1,0 +1,23 @@
+{% load i18n %}
+
+{% block subject %}
+{% blocktrans %}Ваш заказ создан{% endblocktrans %}
+{% endblock subject %}
+
+{% block text_body %}
+{% blocktrans %}Поздравляем!!!{% endblocktrans %}
+
+{% trans "Спасибо за использование нашего сайта!" %}
+
+{% blocktrans %}Команда {{ site_name }}{% endblocktrans %}
+{% endblock text_body %}
+
+{% block html_body %}
+<h1>{% blocktrans %}Поздравляем!!!{% endblocktrans %}</h1>
+<p>{% blocktrans %}{{ username }}, ваш заказ "{{ order_name }}" отправлен исполнителям.{% endblocktrans %}</p>
+<br>
+<h2>{% trans "Спасибо за использование нашего сайта!" %}</h2>
+
+<p>{% blocktrans %}Команда {{ site_name }}{% endblocktrans %}</p>
+
+{% endblock html_body %}
