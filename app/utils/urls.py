@@ -12,7 +12,7 @@ urlpatterns = [
     path("documents/<path:path>", document_view),
 
     path("check_expired_auction_orders/", check_expired_auction_orders),
-    path("utils/gallery", GalleryImagesViewSet.as_view({"get": "list"})),
+    path("utils/gallery/", GalleryImagesViewSet.as_view({"get": "list"})),
 
     path("delete_all/", AllDeleteAPIView.as_view({'delete': 'delete_all_view'})),
 
