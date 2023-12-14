@@ -34,6 +34,7 @@ from .swagger_documentation.orders import (
     QuestionnaireResponseGet,
 
 )
+
 from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
@@ -43,15 +44,14 @@ IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
 
 @swagger_auto_schema(
-        operation_description=OrderCreate.operation_description,
-        request_body=OrderCreate.request_body,
-        responses=OrderCreate.responses,
-        method = "POST"
-    )
+    operation_description=OrderCreate.operation_description,
+    request_body=OrderCreate.request_body,
+    responses=OrderCreate.responses,
+    method="POST"
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_order(request):
-
     """ Создание заказа клиента """
     if "order_name" in request.data:
         order_name = request.data.get("order_name")
@@ -97,7 +97,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        order_id = self.kwargs['pk']
+        order_id = self.kwargs.get("pk", None)
         if OrderModel.objects.filter(id=order_id).exists():
             date = OrderModel.objects.get(id=order_id).order_time
             if (datetime.now(timezone.utc) - date) > timedelta(hours=24):
@@ -246,7 +246,6 @@ def get_file_order(request, file_id):
     return Response(image_data)
 
 
-
 @swagger_auto_schema(
     operation_description=QuestionnaireResponsePost.operation_description,
     request_body=QuestionnaireResponsePost.request_body,
@@ -273,8 +272,7 @@ def create_answers_to_oder(request, pk):
                 and question.option
                 and question not in questions_with_answers
                 and {"question_id": question.option.question.id,
-                     "response": question.option.text} in request.data
-        ):
+                     "response": question.option.text} in request.data):
             raise ValidationError({
                 "question_id": f"Вопрос '{question.id}' требует ответа."
             })
@@ -304,6 +302,7 @@ def get_answers_to_oder(request, pk):
 
 
 class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
+
     @swagger_auto_schema(
         operation_description=FileOrderDelete.operation_description,
         responses=FileOrderDelete.responses,
@@ -313,6 +312,9 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
     @action(detail=False, methods=['delete'])
     @permission_classes([IsOrderFileDataOwnerWithoutUser])
     def delete_file_order(request):
+    )
+    @permission_classes([IsOrderFileDataOwnerWithoutUser])
+    def delete_file_order(self, request):
         """
         Удаление файла из Yandex и передача ссылки на его получение для фронта
         """

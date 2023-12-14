@@ -1,17 +1,12 @@
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.exceptions import ValidationError
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 
 
-from app.orders.models import OrderModel
-from app.questionnaire.models import QuestionnaireType, Question
-from app.questionnaire.permissions import IsOrderOwnerWithoutUser
-from app.questionnaire.serializers import QuestionnaireTypeSerializer, \
-    QuestionnaireResponseSerializer
-from app.questionnaire.swagger_documentation.questionnaire import \
-    QuestionnaireGetList
+from app.questionnaire.models import QuestionnaireType
+from app.questionnaire.serializers import QuestionnaireTypeSerializer
+from app.questionnaire.swagger_documentation.questionnaire import QuestionnaireGetList
 from app.utils import errorcode
 
 

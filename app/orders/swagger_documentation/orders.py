@@ -3,7 +3,7 @@ from typing import List, Optional
 from drf_yasg import openapi
 
 from app.orders.serializers import AllOrdersClientSerializer, OrderOfferSerializer
-from app.questionnaire.serializers import QuestionnaireResponseSerializer
+from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
 
 
 def generate_400_response(fields: List[str]):
@@ -253,7 +253,7 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
     operation_description = "Получение ответов на анкету к заказу."
     request_body = None
     responses = {
-        200: openapi.Response("Success response", QuestionnaireResponseSerializer(many=True)),
+        200: openapi.Response("Success response", OrderFullSerializer()),
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404]
     }
