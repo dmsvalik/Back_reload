@@ -7,7 +7,6 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from rest_framework.views import APIView
 from app.products.models import Category
 
 from drf_yasg.utils import swagger_auto_schema
@@ -15,7 +14,7 @@ from drf_yasg.utils import swagger_auto_schema
 from app.users.models import UserAccount, UserQuota
 from app.orders.models import OrderModel, OrderOffer
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
-from app.utils.swagger_documentation.orders import AllDelete
+from app.utils.swagger_documentation.utils import AllDelete
 
 from .serializers import GalleryImagesSerializer
 from .models import GalleryImages

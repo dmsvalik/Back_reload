@@ -257,21 +257,3 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404]
     }
-
-
-class AllDelete(BaseSwaggerSchema):
-    operation_description = "Удаление заказа"
-    request_body = openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        required=['order_id', ],
-        properties={
-            'order_id': openapi.Schema(
-                title='Id заказа',
-                type=openapi.TYPE_INTEGER,
-            )
-        })
-    responses = {
-        202: openapi.Response("Success response"),
-        404: DEFAULT_RESPONSES[404],
-        500: DEFAULT_RESPONSES[500],
-    }

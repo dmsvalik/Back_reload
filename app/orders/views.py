@@ -307,11 +307,6 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
         operation_description=FileOrderDelete.operation_description,
         responses=FileOrderDelete.responses,
         request_body=FileOrderDelete.request_body,
-        method="delete",
-    )
-    @action(detail=False, methods=['delete'])
-    @permission_classes([IsOrderFileDataOwnerWithoutUser])
-    def delete_file_order(request):
     )
     @permission_classes([IsOrderFileDataOwnerWithoutUser])
     def delete_file_order(self, request):

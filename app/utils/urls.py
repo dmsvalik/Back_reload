@@ -1,4 +1,3 @@
-from . import views
 from django.urls import path
 
 from app.utils.views import get_task_status, document_view, check_expired_auction_orders, GalleryImagesViewSet, AllDeleteAPIView
