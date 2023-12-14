@@ -1,5 +1,4 @@
 from django.shortcuts import render
-
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
@@ -23,7 +22,7 @@ class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
         """
         user = self.request.user
         if user.is_authenticated:
-            return user.conversations.all()
+            return user.client_chats.all()
         return None
 
 

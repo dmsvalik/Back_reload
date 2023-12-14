@@ -5,6 +5,8 @@ from .models import ChatMessage, Conversation
 
 
 class MessageSerializer(serializers.ModelSerializer):
+    sender = serializers.CharField(source='sender.email')
+
     class Meta:
         model = ChatMessage
         fields = ('id', 'sender', 'text', 'sent_at')
@@ -13,6 +15,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
 class ChatSerializer(serializers.ModelSerializer):
     messages = MessageSerializer(many=True, read_only=True)
+    client = serializers.CharField(source='client.email')
+    contractor = serializers.CharField(source='contractor.email')
 
     class Meta:
         model = Conversation
