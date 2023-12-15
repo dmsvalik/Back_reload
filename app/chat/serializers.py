@@ -1,3 +1,4 @@
+from django.conf import settings
 from rest_framework import serializers
 
 # from .models import ChatModel, MessageModel
@@ -14,10 +15,17 @@ class MessageSerializer(serializers.ModelSerializer):
 
 
 class ChatSerializer(serializers.ModelSerializer):
-    messages = MessageSerializer(many=True, read_only=True)
+    messages = serializers.SerializerMethodField('get_messages')
     client = serializers.CharField(source='client.email')
     contractor = serializers.CharField(source='contractor.email')
 
     class Meta:
         model = Conversation
         fields = ('id', 'client', 'contractor', 'messages')
+
+    def get_messages(self, instance):
+        serializer = MessageSerializer(
+            instance.messages.all()[:settings.CHATTING['LIST_MESSAGE_LIMIT']],
+            many=True,
+        )
+        return serializer.data

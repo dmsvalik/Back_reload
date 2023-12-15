@@ -158,6 +158,12 @@ CHANNEL_LAYERS = {
     },
 }
 
+# Chats
+CHATTING = {
+    'LIST_MESSAGE_LIMIT': 1,
+    'DAYS_TO_UNLOCK': 1,
+}
+
 DATABASES = {
     "default": {
         "ENGINE": env("DB_ENGINE", default="django.db.backends.postgresql"),

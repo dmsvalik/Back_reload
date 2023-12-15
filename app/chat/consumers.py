@@ -31,7 +31,8 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         """
         Открытие соединения.
         Забираем из скоупа нужные данные, делаем проверки.
-        По итогу прохождения проверок
+        По итогу прохождения проверок соглашаемся либо закрываем
+        хендшейк.
         """
 
         if self.scope['user'] and self.scope['user'].is_authenticated:
@@ -43,7 +44,12 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
 
         if await Conversation.objects.filter(pk=self.chat_id).aexists():
             self.conversation = await Conversation.objects.aget(pk=self.chat_id)
+            if self.conversation.is_blocked:
+                await self.close()
         else:
+            await self.close()
+
+        if self.user.role == 'contractor' and self.conversation.is_match is False:
             await self.close()
 
         self.chat_group_name = f'chat_{self.chat_id}'
