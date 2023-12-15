@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+
 from django.conf import settings
 from django.shortcuts import render
 from rest_framework import viewsets, mixins
@@ -35,12 +36,11 @@ class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
                 client_ids = OrderModel.objects.filter(
                     pk__in=order_ids,
                 ).values_list('user_account', flat=True)
-                queryset = Conversation.objects.filter(
+                return Conversation.objects.filter(
                     contractor=user,
                     is_blocked=False,
                     client__in=client_ids,
                 )
-                return queryset
             available_date = (datetime.now() - timedelta(
                 days=settings.CHATTING['DAYS_TO_UNLOCK'],
             ))
@@ -53,12 +53,11 @@ class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
             contractor_ids = OrderOffer.objects.filter(
                 pk__in=orders_ids,
             ).values_list('user_account', flat=True)
-            queryset = Conversation.objects.filter(
+            return Conversation.objects.filter(
                 client=user,
                 is_blocked=False,
                 contractor__in=contractor_ids,
             )
-            return queryset
         return None
 
 

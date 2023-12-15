@@ -1,5 +1,6 @@
 from datetime import datetime
 
+
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -31,7 +32,7 @@ def manage_chats_for_offer(sender, instance, **kwargs):
                 sent_at=datetime.now(),
             )
         except Exception as e:
-            #FIXME! Залоггировать
+            # FIXME! Залоггировать
             print('Shit happens', e)
     else:
         try:
@@ -61,7 +62,6 @@ def manage_chats_for_offer(sender, instance, **kwargs):
                     current_order_chat.is_match = True
                     current_order_chat.save()
 
-
         except Exception as e:
-            #FIXME! Залоггировать
+            # FIXME! Залоггировать
             print('Shit happens', e)
