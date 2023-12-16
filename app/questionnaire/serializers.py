@@ -28,24 +28,13 @@ class QuestionnaireCategorySerializer(serializers.ModelSerializer):
 
 class FileSerializer(serializers.ModelSerializer):
     file_size = serializers.IntegerField(source="yandex_size")
-    download_url = serializers.SerializerMethodField()
     preview_url = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderFileData
-        fields = ["id", "original_name", "file_size", "download_url", "preview_url"]
+        fields = ["id", "original_name", "file_size", "preview_url"]
 
-    def get_download_url(self, order_file_data_obj): # maybe this should be moved in the model
-        """
-        Generates download_url field as url path to download file
-        """
-        url = "https://{domain}/download/{yandex_path}"
-        return url.format(
-            domain=settings.DOMAIN,
-            yandex_path=order_file_data_obj.yandex_path
-        )
-
-    def get_preview_url(self, order_file_data_obj): # maybe this should be moved in the model
+    def get_preview_url(self, order_file_data_obj):
         """
         Generate preview_url field for url path to preview
         """
