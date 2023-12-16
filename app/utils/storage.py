@@ -10,6 +10,7 @@ import random
 import string
 
 from app.utils import errorcode
+from app.utils.errorcode import FileNotFound
 from config.settings import TOKEN
 from config.settings import BASE_DIR
 from app.users.models import UserAccount
@@ -151,7 +152,7 @@ class CloudStorage:
         download_url = res.json().get("href")
 
         if not download_url:
-            raise Exception("Failed to get download link for the file.")
+            raise FileNotFound
 
         result = {'status': res.status_code,
                   'download_url': download_url}

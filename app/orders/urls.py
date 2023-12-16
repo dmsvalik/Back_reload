@@ -20,5 +20,7 @@ urlpatterns = [
     path("order/file_order/", views.OrderFileAPIView.as_view(
         {'delete': 'delete_file_order'}),
          name='delete-file-order'),
+    path("download/", views.get_download_file_link,
+         name='get-download-link')
 
 ]

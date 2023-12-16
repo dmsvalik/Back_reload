@@ -1,7 +1,11 @@
 import os
 
+from app.orders.models import OrderFileData
+from app.utils.storage import CloudStorage
 from config.settings import BASE_DIR
 from app.users.models import UserAccount
+
+from django.shortcuts import get_object_or_404
 
 
 class FileWork(object):
@@ -30,3 +34,21 @@ class FileWork(object):
     def _preview_file_size(self):
         """Calculating the preview file size"""
         return os.path.getsize(self.preview_path())
+
+
+    @staticmethod
+    def get_download_file_link(file_id: int, file_model=OrderFileData) -> str:
+        """
+        Получение прямой ссылки на скачивание файла на основе id файла
+        из БД
+        :param file_id: id файла в БД
+        :param file_model: Модель в БД
+        :return: Ссылка на скачивание файла
+        """
+
+        file_data = get_object_or_404(file_model, id=file_id)
+        yandex = CloudStorage()
+        yandex_path = file_data.yandex_path
+        download_link = yandex.cloud_get_image(yandex_path)['download_url']
+
+        return download_link

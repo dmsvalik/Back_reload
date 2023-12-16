@@ -54,3 +54,21 @@ class IsOrderOwner(permissions.BasePermission):
         if request.user.is_authenticated and OrderModel.objects.filter(id=order_id, user_account=request.user).exists():
             return True
         return False
+
+
+class IsFileOwner(permissions.BasePermission):
+    """Проверка на принадлежность файла пользователю"""
+
+    message = {'detail': 'You are not the owner of the file'}
+
+    def has_permission(self, request, view):
+        file_id = view.kwargs.get('file_id') if view.kwargs.get('file_id') \
+            else request.data.get('file_id')
+        file = OrderFileData.objects.filter(
+            id=file_id).first()
+        if file is None:
+            raise FileNotFound()
+        if file.order_id.user_account == request.user:
+            return True
+        return False
+
