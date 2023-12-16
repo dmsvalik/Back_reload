@@ -47,10 +47,11 @@ class FileSerializer(serializers.ModelSerializer):
 
 class QuestionResponseSerializer(serializers.ModelSerializer):
     files = serializers.SerializerMethodField(required=False)
+    question_id = serializers.IntegerField(source="question.id", read_only=True)
 
     class Meta:
         model = QuestionResponse
-        fields = ["id", "question", "response", "files"]
+        fields = ["id", "question_id", "response", "files"]
 
     def get_files(self, question_response: QuestionResponse):
         files = question_response.question.orderfiledata_set.all()
