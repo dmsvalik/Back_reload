@@ -46,7 +46,6 @@ class IsFileOwner(permissions.BasePermission):
             )
             .first()
             )
-
-        if not file.order_id.user_account == current_user:
+        if not file:
             return False
         return True
