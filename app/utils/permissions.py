@@ -31,19 +31,35 @@ class IsFileExist(permissions.BasePermission):
 class IsFileOwner(permissions.BasePermission):
     def has_permission(self, request, view):
         """
-        Returns True if the file "server path" field
+        Returns True if:
+        user is authenticated and the file "server path" field
         contains path from the URL
-        and the file is created by the current user
+        and the file is created by the user
+        OR
+        Return True if: user is not authenticated and
+        the file "server path" field
+        contains path from the URL and
+        key "key" from cookies is exists in the order
         """
         path = view.kwargs['path']
         current_user = request.user
+
+        if current_user.is_authenticated:
+            # search order owner
+            filter_query = Q(order_id__user_account=current_user)
+        else:
+            # search order cookie key
+            cookie_key = request.COOKIES.get("key")
+            filter_query = Q(order_id__key=cookie_key)
+
         file = (
             OrderFileData.objects
             .filter(
-                Q(server_path__contains=path) & Q(order_id__user_account=current_user)
+                Q(server_path__contains=path) & filter_query
             )
             .first()
             )
+
         if not file:
             return False
         return True
