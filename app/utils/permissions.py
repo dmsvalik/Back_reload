@@ -8,13 +8,11 @@ from app.utils import errorcode
 class IsContactor(permissions.BasePermission):
     def has_permission(self, request, view):
         """
-        Return True if current user is "contractor"
+        Return True if current user is "contractor" and is authenticated
         """
-        current_user = request.user
-
-        if not current_user.role == 'contractor':
-            return False
-        return True
+        if request.user.is_authenticated and request.user.role == 'contractor':
+            return True
+        return False
 
 
 class IsFileExist(permissions.BasePermission):
