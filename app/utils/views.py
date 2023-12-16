@@ -76,7 +76,6 @@ def get_task_status(request, task_id):
 
 @api_view(('GET',))
 @permission_classes([
-    IsAuthenticated,
     IsFileExist,
     IsAdminUser | IsContactor | IsFileOwner,
 ])
