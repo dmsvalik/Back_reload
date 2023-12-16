@@ -258,7 +258,7 @@ def get_file_order(request, file_id):
 )
 @api_view(["POST"])
 @permission_classes([IsOrderOwner])
-def create_answers_to_oder(request, pk):
+def create_answers_to_order(request, pk):
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -296,7 +296,7 @@ def create_answers_to_oder(request, pk):
 )
 @api_view(["GET"])
 @permission_classes([IsOrderOwner])
-def get_answers_to_oder(request, pk):
+def get_answers_to_order(request, pk):
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -329,6 +329,7 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
             return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 @swagger_auto_schema(
     tags=FileOrderDownload.tags,
