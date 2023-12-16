@@ -185,7 +185,7 @@ def get_nested_questions(question_list):
 
 class OrderFullSerializer(serializers.ModelSerializer):
     questionnaire_type_id = serializers.PrimaryKeyRelatedField(source="questionnaire_type", read_only=True)
-    answers = QuestionnaireResponseSerializer(source="questionresponse_set", many=True)
+    answers = QuestionResponseSerializer(source="questionresponse_set", many=True)
 
     class Meta:
         model = OrderModel
