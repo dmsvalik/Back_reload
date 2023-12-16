@@ -37,6 +37,8 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
 
         if self.scope['user'] and self.scope['user'].is_authenticated:
             self.user = self.scope['user']
+            if self.user is None:
+                await self.close()
         else:
             await self.close()
 
@@ -86,7 +88,8 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                 {
                     'message': message,
                     'sender': sender,
-                }
+                },
+                ensure_ascii=False,
             ),
         )
 
