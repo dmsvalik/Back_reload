@@ -143,7 +143,7 @@ class CloudStorage:
 
         return result
 
-    def cloud_get_image(self, yandex_path):
+    def cloud_get_file(self, yandex_path):
         """
         Метод для получения файла из YandexDisk.
         """

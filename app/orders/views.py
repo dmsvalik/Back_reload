@@ -239,7 +239,7 @@ def get_file_order(request, file_id):
     # get download_url from Yandex
     yandex = CloudStorage()
     try:
-        image_data = yandex.cloud_get_image(yandex_path)
+        image_data = yandex.cloud_get_file(yandex_path)
     except Exception as e:
         return Response(
             {

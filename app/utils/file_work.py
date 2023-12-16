@@ -49,6 +49,6 @@ class FileWork(object):
         file_data = get_object_or_404(file_model, id=file_id)
         yandex = CloudStorage()
         yandex_path = file_data.yandex_path
-        download_link = yandex.cloud_get_image(yandex_path)['download_url']
+        download_link = yandex.cloud_get_file(yandex_path)['download_url']
 
         return download_link
