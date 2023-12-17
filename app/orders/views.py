@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from app.orders.permissions import (IsOrderFileDataOwnerWithoutUser,
-                                    IsFileOwner, IsFileExistById)
+                                    IsFileExistById)
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
@@ -43,7 +43,7 @@ from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
 from ..utils.file_work import FileWork
-from ..utils.permissions import IsContactor
+from ..utils.permissions import IsContactor, IsFileOwner
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
@@ -340,7 +340,9 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
     method="POST",
 )
 @api_view(['POST'])
-@permission_classes([IsFileExistById, IsAdminUser | IsContactor | IsFileOwner
+@permission_classes([
+    IsFileExistById,
+    IsAdminUser | IsContactor | IsFileOwner
 ])
 def get_download_file_link(request) -> Any:
     """

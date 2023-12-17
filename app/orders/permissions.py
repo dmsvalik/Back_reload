@@ -57,39 +57,6 @@ class IsOrderOwner(permissions.BasePermission):
         return False
 
 
-class IsFileOwner(permissions.BasePermission):
-    """
-    Проверка на принадлежность файла пользователю или наличие у него куки-key
-    """
-
-    message = {'detail': 'You are not the owner of the file'}
-
-    def has_permission(self, request, view):
-        file_id = view.kwargs.get('file_id') if view.kwargs.get('file_id') \
-            else request.data.get('file_id')
-
-        if request.user.is_authenticated:
-            # search order owner
-            filter_query = Q(order_id__user_account=request.user)
-        else:
-            # search order cookie key
-            cookie_key = request.COOKIES.get("key")
-            filter_query = Q(order_id__key=cookie_key) & Q(
-                order_id__user_account__isnull=True)
-
-        file = (
-            OrderFileData.objects
-            .filter(
-                Q(pk=file_id) & filter_query
-            )
-            .first()
-        )
-
-        if not file:
-            return False
-        return True
-
-
 class IsFileExistById(permissions.BasePermission):
     """Проверка на наличие информации о запрошенном файле в БД"""
 
