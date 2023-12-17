@@ -50,7 +50,7 @@ class IsFileOwner(permissions.BasePermission):
         else:
             # search order cookie key
             cookie_key = request.COOKIES.get("key")
-            filter_query = Q(order_id__key=cookie_key)
+            filter_query = Q(order_id__key=cookie_key) & Q(order_id__user_account__isnull=True)
 
         file = (
             OrderFileData.objects
