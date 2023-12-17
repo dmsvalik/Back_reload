@@ -1,6 +1,9 @@
 import os
 from datetime import datetime, timedelta, timezone
-from app.orders.permissions import IsOrderFileDataOwnerWithoutUser
+from typing import Any
+
+from app.orders.permissions import (IsOrderFileDataOwnerWithoutUser,
+                                    IsFileExistById)
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
@@ -13,7 +16,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
 
@@ -31,7 +34,7 @@ from .swagger_documentation.orders import (
     FileOrderDelete,
     OrderCreate,
     QuestionnaireResponsePost,
-    QuestionnaireResponseGet,
+    QuestionnaireResponseGet, FileOrderDownload,
 
 )
 
@@ -39,6 +42,8 @@ from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upl
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
+from ..utils.file_work import FileWork
+from ..utils.permissions import IsContactor, IsFileOwner
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
@@ -235,7 +240,7 @@ def get_file_order(request, file_id):
     # get download_url from Yandex
     yandex = CloudStorage()
     try:
-        image_data = yandex.cloud_get_image(yandex_path)
+        image_data = yandex.cloud_get_file(yandex_path)
     except Exception as e:
         return Response(
             {
@@ -254,7 +259,7 @@ def get_file_order(request, file_id):
 )
 @api_view(["POST"])
 @permission_classes([IsOrderOwner])
-def create_answers_to_oder(request, pk):
+def create_answers_to_order(request, pk):
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -292,7 +297,7 @@ def create_answers_to_oder(request, pk):
 )
 @api_view(["GET"])
 @permission_classes([IsOrderOwner])
-def get_answers_to_oder(request, pk):
+def get_answers_to_order(request, pk):
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -325,3 +330,30 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
             return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@swagger_auto_schema(
+    tags=FileOrderDownload.tags,
+    operation_description=FileOrderDownload.operation_description,
+    responses=FileOrderDownload.responses,
+    request_body=FileOrderDownload.request_body,
+    method="POST",
+)
+@api_view(['POST'])
+@permission_classes([
+    IsFileExistById,
+    IsAdminUser | IsContactor | IsFileOwner
+])
+def get_download_file_link(request) -> Any:
+    """
+    Получение и передача на фронт ссылки на скачивание файла
+    """
+    try:
+        file_link = FileWork.get_download_file_link(
+            file_id=request.data.get('file_id'))
+    except Exception as e:
+        return Response(
+            str(e),
+            status=status.HTTP_404_NOT_FOUND)
+
+    return Response(file_link, status=status.HTTP_200_OK)

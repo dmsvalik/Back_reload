@@ -7,8 +7,8 @@ from .views import AllOrdersClientViewSet, ArchiveOrdersClientViewSet, OrderOffe
 urlpatterns = [
     path("order/<int:pk>/offers/", OrderOfferViewSet.as_view({"get": "list"})),
     path("order/<int:pk>/offer/", OrderOfferViewSet.as_view({"post": "create"})),
-    path("order/<int:pk>/answers/", views.create_answers_to_oder, name="post-order-answers",),
-    path("order/<int:pk>/", views.get_answers_to_oder, name="get-order-answers"),
+    path("order/<int:pk>/answers/", views.create_answers_to_order, name="post-order-answers",),
+    path("order/<int:pk>/", views.get_answers_to_order, name="get-order-answers"),
     path("offer/<int:pk>/", OrderOfferViewSet.as_view({"get": "retrieve", "delete": "destroy", "put": "update"}),),
 
     path("order/create/", views.create_order, name='order-create'),
@@ -20,5 +20,7 @@ urlpatterns = [
     path("order/file_order/", views.OrderFileAPIView.as_view(
         {'delete': 'delete_file_order'}),
          name='delete-file-order'),
+    path("download/", views.get_download_file_link,
+         name='get-download-link')
 
 ]

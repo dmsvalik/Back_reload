@@ -10,6 +10,7 @@ import random
 import string
 
 from app.utils import errorcode
+from app.utils.errorcode import FileNotFound
 from config.settings import TOKEN
 from config.settings import BASE_DIR
 from app.users.models import UserAccount
@@ -142,16 +143,17 @@ class CloudStorage:
 
         return result
 
-    def cloud_get_image(self, yandex_path):
+    def cloud_get_file(self, yandex_path):
         """
         Метод для получения файла из YandexDisk.
         """
 
-        res = requests.get(f"{self.URL}/download/?path={yandex_path}", headers=self.headers)
+        res = requests.get(f"{self.URL}/download/?path={yandex_path}",
+                           headers=self.headers)
         download_url = res.json().get("href")
 
         if not download_url:
-            raise Exception("Failed to get download link for the file.")
+            raise FileNotFound()
 
         result = {'status': res.status_code,
                   'download_url': download_url}
