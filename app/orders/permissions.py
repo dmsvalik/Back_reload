@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 
+from django.db.models import Q
 
 from app.orders.models import OrderFileData, OrderModel
 from app.utils.errorcode import FileNotFound
@@ -57,18 +58,45 @@ class IsOrderOwner(permissions.BasePermission):
 
 
 class IsFileOwner(permissions.BasePermission):
-    """Проверка на принадлежность файла пользователю"""
+    """
+    Проверка на принадлежность файла пользователю или наличие у него куки-key
+    """
 
     message = {'detail': 'You are not the owner of the file'}
 
     def has_permission(self, request, view):
         file_id = view.kwargs.get('file_id') if view.kwargs.get('file_id') \
             else request.data.get('file_id')
-        file = OrderFileData.objects.filter(
-            id=file_id).first()
-        if file is None:
-            raise FileNotFound()
-        if file.order_id.user_account == request.user:
-            return True
-        return False
 
+        if request.user.is_authenticated:
+            # search order owner
+            filter_query = Q(order_id__user_account=request.user)
+        else:
+            # search order cookie key
+            cookie_key = request.COOKIES.get("key")
+            filter_query = Q(order_id__key=cookie_key) & Q(
+                order_id__user_account__isnull=True)
+
+        file = (
+            OrderFileData.objects
+            .filter(
+                Q(pk=file_id) & filter_query
+            )
+            .first()
+        )
+
+        if not file:
+            return False
+        return True
+
+
+class IsFileExistById(permissions.BasePermission):
+    """Проверка на наличие информации о запрошенном файле в БД"""
+
+    message = {'detail': 'No file information found for the specified id'}
+
+    def has_permission(self, request, view):
+        file_id = view.kwargs.get('file_id') if view.kwargs.get('file_id') \
+            else request.data.get('file_id')
+
+        return OrderModel.objects.filter(id=file_id).exists()

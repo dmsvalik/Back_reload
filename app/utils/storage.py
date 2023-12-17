@@ -148,11 +148,12 @@ class CloudStorage:
         Метод для получения файла из YandexDisk.
         """
 
-        res = requests.get(f"{self.URL}/download/?path={yandex_path}", headers=self.headers)
+        res = requests.get(f"{self.URL}/download/?path={yandex_path}",
+                           headers=self.headers)
         download_url = res.json().get("href")
 
         if not download_url:
-            raise FileNotFound
+            raise FileNotFound()
 
         result = {'status': res.status_code,
                   'download_url': download_url}
