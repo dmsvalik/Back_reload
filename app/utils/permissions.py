@@ -41,7 +41,9 @@ class IsFileOwner(permissions.BasePermission):
         contains path from the URL and
         key "key" from cookies is exists in the order
         """
-        path = view.kwargs['path']
+        path = view.kwargs.get('path')
+        file_id = request.data.get('file_id')
+        filter_file = Q(server_path__contains=path) if path else Q(pk=file_id)
         current_user = request.user
 
         if current_user.is_authenticated:
@@ -50,12 +52,14 @@ class IsFileOwner(permissions.BasePermission):
         else:
             # search order cookie key
             cookie_key = request.COOKIES.get("key")
-            filter_query = Q(order_id__key=cookie_key) & Q(order_id__user_account__isnull=True)
+            filter_query = Q(
+                order_id__key=cookie_key) & Q(
+                order_id__user_account__isnull=True)
 
         file = (
             OrderFileData.objects
             .filter(
-                Q(server_path__contains=path) & filter_query
+                filter_file & filter_query
             )
             .first()
             )
