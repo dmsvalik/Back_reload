@@ -48,10 +48,10 @@ class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
                 user_account=user,
                 order_time__lte=available_date,
             ).values_list(
-                'user_account', flat=True
+                'pk', flat=True
             )
             contractor_ids = OrderOffer.objects.filter(
-                pk__in=orders_ids,
+                order_id__in=orders_ids,
             ).values_list('user_account', flat=True)
             return Conversation.objects.filter(
                 client=user,
