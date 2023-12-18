@@ -8,8 +8,10 @@ from .models import GalleryImages
 
 
 class GalleryImagesSerializer(ModelSerializer):
-    slider_number = serializers.CharField(source='slider.name')
+    # Поменяны местами вывод slider_number и position. Ошибка на стороне фронта
+    position = serializers.CharField(source='slider.name')
     image_url = serializers.SerializerMethodField()
+    slider_number = serializers.CharField(source='position')
 
     class Meta:
         model = GalleryImages
