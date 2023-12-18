@@ -1,6 +1,13 @@
+from datetime import datetime, timedelta
+
+
+from django.conf import settings
+from django.shortcuts import render
 from rest_framework import viewsets, mixins
 from rest_framework.permissions import IsAuthenticated
 
+from app.orders.models import OrderModel, OrderOffer
+from .models import Conversation
 from .serializers import ChatSerializer
 
 
@@ -17,9 +24,42 @@ class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
 
     def get_queryset(self):
         """
-        Получить все чаты авторизованного пользователя.
+        Получить все чаты авторизованного пользователя
+        с учетом его роли
         """
         user = self.request.user
         if user.is_authenticated:
-            return user.chats.all()
+            if user.role == 'contractor':
+                order_ids = OrderOffer.objects.filter(
+                    user_account=user,
+                ).values_list('order_id', flat=True)
+                client_ids = OrderModel.objects.filter(
+                    pk__in=order_ids,
+                ).values_list('user_account', flat=True)
+                return Conversation.objects.filter(
+                    contractor=user,
+                    is_blocked=False,
+                    client__in=client_ids,
+                )
+            available_date = (datetime.now() - timedelta(
+                days=settings.CHATTING['DAYS_TO_UNLOCK'],
+            ))
+            orders_ids = OrderModel.objects.filter(
+                user_account=user,
+                order_time__lte=available_date,
+            ).values_list(
+                'pk', flat=True
+            )
+            contractor_ids = OrderOffer.objects.filter(
+                order_id__in=orders_ids,
+            ).values_list('user_account', flat=True)
+            return Conversation.objects.filter(
+                client=user,
+                is_blocked=False,
+                contractor__in=contractor_ids,
+            )
         return None
+
+
+def room(request, room_name):
+    return render(request, "chat/room.html", {"room_name": room_name})
