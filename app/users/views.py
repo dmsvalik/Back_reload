@@ -10,12 +10,11 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
 
-from app.orders.models import OrderModel, OrderFileData
 from app.sending.signals import new_notification
 from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
 from app.utils.views import recalculate_quota
-from app.users.utils import calculate_order_file_sizes_with_cookie_key
+from app.users.utils import calculate_order_files_size_by_cookie_key
 from config import settings
 
 
@@ -110,7 +109,7 @@ class CustomUserViewSet(UserViewSet):
         user = self.user_instance
 
         if key:
-            sizes: tuple[int] | None = calculate_order_file_sizes_with_cookie_key(user, key)
+            sizes: tuple[int] | None = calculate_order_files_size_by_cookie_key(user, key)
             if sizes: recalculate_quota(user, *sizes)
             response.delete_cookie('key')
 
@@ -174,7 +173,7 @@ class CustomTokenViewBase(TokenViewBase):
         response = Response(serializer.validated_data, status=status.HTTP_200_OK)
 
         if key:
-            sizes: tuple[int] | None = calculate_order_file_sizes_with_cookie_key(user, key)
+            sizes: tuple[int] | None = calculate_order_files_size_by_cookie_key(user, key)
             if sizes: recalculate_quota(user, *sizes)
             response.delete_cookie('key')
 

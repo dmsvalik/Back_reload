@@ -3,7 +3,7 @@ from django.db.models import Sum
 from app.orders.models import OrderFileData, OrderModel
 from app.users.models import UserAccount
 
-def calculate_order_file_sizes_with_cookie_key(
+def calculate_order_files_size_by_cookie_key(
         user_obj: UserAccount,
         cookie_key: str) -> tuple[int] | None:
     """
