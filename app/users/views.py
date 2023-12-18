@@ -10,10 +10,12 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
 
-from app.orders.models import OrderModel
+from app.orders.models import OrderModel, OrderFileData
 from app.sending.signals import new_notification
 from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
+from app.utils.views import recalculate_quota
+from app.users.utils import calculate_order_file_sizes_with_cookie_key
 from config import settings
 
 
@@ -65,7 +67,12 @@ from config import settings
 class CustomUserViewSet(UserViewSet):
 
     def perform_create(self, serializer, *args, **kwargs):
+        """
+        Сохранение пользователя после регистрации и отправка сообщения на почту
+        """
         user = serializer.save(*args, **kwargs)
+        self.user_instance = user
+
         signals.user_registered.send(
             sender=self.__class__, user=user, request=self.request
         )
@@ -92,22 +99,21 @@ class CustomUserViewSet(UserViewSet):
                                   type="email")
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        user = serializer.instance
-        headers = self.get_success_headers(serializer.data)
+        """
+        Формирование ответа
+        Проверка на наличие ключа заказа в куки
+        Пересчет, выделеного для файлов, размера диска пользователя
+        при наличии ключа в куки
+        """
+        response = super().create(request, *args, **kwargs)
         key = request.COOKIES.get('key')
-        response = Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        user = self.user_instance
+
         if key:
-            try:
-                order = OrderModel.objects.get(key=key, user_account__isnull=True)
-            except OrderModel.DoesNotExist:
-                order = None
-            if order:
-                order.user_account = user
-                order.save()
+            sizes: tuple[int] | None = calculate_order_file_sizes_with_cookie_key(user, key)
+            if sizes: recalculate_quota(user, *sizes)
             response.delete_cookie('key')
+
         return response
 
     @action(["post"], detail=False)
@@ -150,6 +156,12 @@ class CustomUserViewSet(UserViewSet):
 
 class CustomTokenViewBase(TokenViewBase):
     def post(self, request, *args, **kwargs):
+        """
+        Создание токена
+        Проверка на наличие ключа заказа в куки
+        Пересчет, выделеного для файлов, размера диска пользователя
+        при наличии ключа в куки
+        """
         serializer = self.get_serializer(data=request.data)
 
         try:
@@ -160,20 +172,12 @@ class CustomTokenViewBase(TokenViewBase):
         user = serializer.user
         key = request.COOKIES.get('key')
         response = Response(serializer.validated_data, status=status.HTTP_200_OK)
+
         if key:
-            try:
-                order = OrderModel.objects.get(key=key, user_account__isnull=True)
-            except OrderModel.DoesNotExist:
-                order = None
-            if order:
-                order.user_account = user
-                order.state = "offer"
-                order.save()
-                context = {"order_name": order.name,
-                           "username": user.name}
-                if user.notifications:
-                    send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
+            sizes: tuple[int] | None = calculate_order_file_sizes_with_cookie_key(user, key)
+            if sizes: recalculate_quota(user, *sizes)
             response.delete_cookie('key')
+
         return response
 
 
