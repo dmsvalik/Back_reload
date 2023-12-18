@@ -1,6 +1,7 @@
 from django.contrib import admin
 
-from .models import MessageModel, ChatModel
+from .models import ChatMessage, Conversation
 
-admin.site.register(MessageModel)
-admin.site.register(ChatModel)
+
+admin.site.register(ChatMessage)
+admin.site.register(Conversation)

@@ -1,7 +1,7 @@
 from drf_yasg.utils import swagger_serializer_method
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-
+from django.conf import settings
 
 from app.orders.models import OrderModel, OrderFileData
 from app.questionnaire.models import QuestionnaireCategory, QuestionnaireType, \
@@ -27,15 +27,35 @@ class QuestionnaireCategorySerializer(serializers.ModelSerializer):
 
 
 class FileSerializer(serializers.ModelSerializer):
+    file_size = serializers.IntegerField(source="yandex_size")
+    preview_url = serializers.SerializerMethodField()
+
     class Meta:
         model = OrderFileData
-        fields = ["id", "original_name", "server_path", "yandex_path"]
+        fields = ["id", "original_name", "file_size", "preview_url"]
+
+    def get_preview_url(self, order_file_data_obj):
+        """
+        Generate preview_url field for url path to preview
+        """
+        preview = "https://{domain}/documents/{server_path}"
+        return preview.format(
+            domain=settings.DOMAIN,
+            server_path=order_file_data_obj.server_path
+        )
 
 
 class QuestionResponseSerializer(serializers.ModelSerializer):
+    files = serializers.SerializerMethodField(required=False)
+    question_id = serializers.IntegerField(source="question.id", read_only=True)
+
     class Meta:
         model = QuestionResponse
-        fields = ["id", "question", "response"]
+        fields = ["id", "question_id", "response", "files"]
+
+    def get_files(self, question_response: QuestionResponse):
+        files = question_response.question.orderfiledata_set.all()
+        return FileSerializer(instance=files, many=True).data
 
 
 class OptionSerializer(serializers.ModelSerializer):
@@ -165,7 +185,7 @@ def get_nested_questions(question_list):
 
 class OrderFullSerializer(serializers.ModelSerializer):
     questionnaire_type_id = serializers.PrimaryKeyRelatedField(source="questionnaire_type", read_only=True)
-    answers = QuestionnaireResponseSerializer(source="questionresponse_set", many=True)
+    answers = QuestionResponseSerializer(source="questionresponse_set", many=True)
 
     class Meta:
         model = OrderModel
