@@ -340,39 +340,68 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
             return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-@swagger_auto_schema(
-    operation_description=AttachFileAnswerPost.operation_description,
-    request_body=AttachFileAnswerPost.request_body,
-    responses=AttachFileAnswerPost.responses,
-    method="POST"
-)
-@api_view(["POST"])
-@permission_classes([IsOrderOwnerWithoutUser])
-@check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
-@check_user_quota
-def attach_file(request, question_id):
-    try:
-        order = OrderModel.objects.get(user_account=request.user) if request.user.is_authenticated \
-            else OrderModel.objects.get(key=request.COOKIES.get('key'), user_account__isnull=True)
-    except Exception:
-        raise errorcode.OrderIdNotFound
+    @swagger_auto_schema(
+        operation_description=AttachFileAnswerPost.operation_description,
+        request_body=AttachFileAnswerPost.request_body,
+        responses=AttachFileAnswerPost.responses,
+    )
+    @permission_classes([IsOrderOwner])
+    @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
+    @check_user_quota
+    def attach_file(request, order_id):
+        # try:
+        #     order = OrderModel.objects.get(user_account=request.user) if request.user.is_authenticated \
+        #         else OrderModel.objects.get(key=request.COOKIES.get('key'), user_account__isnull=True)
+        # except Exception:
+        #     raise errorcode.OrderIdNotFound
 
-    try:
-        Question.objects.get(id=question_id)
-    except Exception:
-        raise errorcode.QuestionIdNotFound()
+        # проверка на наличие order_id
+        try:
+            order = OrderModel.objects.get(id=order_id)
+        except OrderModel.DoesNotExist:
+            raise errorcode.OrderIdNotFound()
 
-    upload_file = request.FILES["upload_file"]
-    name = upload_file.name
-    if not os.path.exists("tmp"):
-        os.mkdir("tmp")
-    with open(f"tmp/{name}", "wb+") as file:
-        for chunk in upload_file.chunks():
-            file.write(chunk)
-    temp_file = f"tmp/{name}"
-    if temp_file.split('.')[-1] in IMAGE_FILE_FORMATS:
-        task = celery_upload_image_task_to_answer.delay(temp_file, order.id, request.user.id, question_id)
-    else:
-        task = celery_upload_file_task_to_answer.delay(temp_file, order.id, request.user.id, question_id)
+        # Извлекаем question_id из тела запроса
+        question_id = request.data.get('question_id')
+        try:
+            Question.objects.get(id=question_id)
+        except Exception:
+            raise errorcode.QuestionIdNotFound()
 
-    return Response({"task_id": task.id}, status=202)
+        # Проверка типа анкеты к заказу (интегрировал валидацию)
+        questionnaire_type = order.questionnaire_type
+        questionnaire_questions = Question.objects.filter(chapter__type=questionnaire_type)
+        try:
+            question = Question.objects.get(id=question_id)
+            if question not in questionnaire_questions:
+                raise ValidationError({
+                "question_id": ["Вопрос не соответствует анкете."]
+            })
+        except Question.DoesNotExist:
+            raise ValidationError({
+                "question_id": ["Указан неверный идентификатор вопроса."]
+            })
+
+        upload_file = request.FILES["upload_file"]
+        original_name = upload_file.name
+        # create new name for file
+        user_id = request.user.id
+        new_name = ServerFileSystem(original_name, user_id, order_id).generate_new_filename()
+
+        if order_id is None:
+            raise errorcode.IncorrectImageOrderUpload()
+        if order_id == "" or not order_id.isdigit() or not OrderModel.objects.filter(id=order_id).exists():
+            raise errorcode.IncorrectImageOrderUpload()
+
+        if not os.path.exists("tmp"):
+            os.mkdir("tmp")
+        with open(f"tmp/{new_name}", "wb+") as file:
+            for chunk in upload_file.chunks():
+                file.write(chunk)
+        temp_file = f"tmp/{new_name}"
+        if temp_file.split('.')[-1] in IMAGE_FILE_FORMATS:
+            task = celery_upload_image_task_to_answer.delay(temp_file, order_id, user_id, question_id, original_name)
+        else:
+            task = celery_upload_file_task_to_answer.delay(temp_file, order.id, user_id, question_id, original_name)
+
+        return Response({"task_id": task.id}, status=202)
