@@ -1,34 +1,81 @@
-from django.db.models import Sum
+from django.db.models import Sum, QuerySet, F, Sum
 
-from app.orders.models import OrderFileData, OrderModel
-from app.users.models import UserAccount
+from app.orders.models import OrderFileData, FileData
+from app.users.models import UserAccount, UserQuota
 
-def calculate_order_files_size_by_cookie_key(
-        user_obj: UserAccount,
-        cookie_key: str) -> tuple[int] | None:
-    """
-    Суммирует размеры на яндекс диске и на сервере 1 заказа
-    Взвращает кортеж где:
-    1 элемент сумма всех файлов этого заказа на облачном хранилище
-    2 элемент сумма всех файлов заказа на сервере
-    """
-    order = (
-        OrderModel.objects
-        .filter(key=cookie_key, user_account__isnull=True)
-        .first()
-        )
 
-    if order:
-        order.user_account = user_obj
-        order.save()
+class UserQuotaManager:
 
-        sizes = (
-            OrderFileData.objects
-            .filter(order_id__pk=order.pk)
-            .aggregate(
-            cloud_size=Sum("yandex_size"),
-            server_size=Sum("server_size")
+    def __init__(self, user: UserAccount):
+        self.user = user
+
+
+    def add(self, file: OrderFileData | FileData) -> UserQuota:
+        """
+        Добавляет размеры переданного файла к квоте юзер
+        """
+        user_quota: UserQuota = UserAccount.objects.get_or_create(user=self.user)[0]
+        (
+            UserQuota.objects.
+            filter(pk=user_quota.pk)
+            .update(
+                total_cloud_size=F("total_cloud_size")+file.yandex_size,
+                total_server_size=F("total_server_size")+file.server_size
+                )
             )
-        )
-        return (sizes.get("cloud_size"), sizes.get("server_size"))
-    return None
+        return user_quota
+
+
+    def add_many(self, files: QuerySet[OrderFileData | FileData]) -> UserQuota:
+        """
+        Добавляет сумму переданных файлов к квоте
+        """
+        user_quota: UserQuota = UserQuota.objects.get_or_create(user=self.user)[0]
+        (
+            UserQuota.objects
+            .filter(pk=user_quota.pk)
+            .update(
+                total_cloud_size=F("total_cloud_size")+files.aggregate(cloud_size=Sum("yandex_size")).get("cloud_size"),
+                total_server_size=F("total_server_size")+files.aggregate(server_size=Sum("server_size")).get("server_size")
+                )
+            )
+        return user_quota
+
+
+    def subtract(self, file: OrderFileData | FileData) -> UserQuota:
+        """
+        Вычитает размеры переданного файла из квоты юзера
+        """
+        user_quota: UserQuota = UserAccount.objects.get_or_create(user=self.user)[0]
+        (
+            UserQuota.objects
+            .filter(pk=user_quota.pk)
+            .update(
+                total_cloud_size=F("total_cloud_size")-file.yandex_size,
+                total_server_size=F("total_server_size")-file.server_size
+                )
+            )
+        return user_quota
+
+    def subtract_many(self, files: QuerySet[OrderFileData | FileData]) -> UserQuota:
+        """
+        Вычитает сумму переданных фалов из квоты
+        """
+        user_quota: UserQuota = UserAccount.objects.get_or_create(user=self.user)[0]
+        (
+            UserQuota.objects
+            .filter(pk=user_quota.pk)
+            .update(
+                total_cloud_size=F("total_cloud_size")+files.aggregate(cloud_size=Sum("yandex_size")).get("cloud_size"),
+                total_server_size=F("total_server_size")+files.aggregate(server_size=Sum("server_size")).get("server_size")
+                )
+            )
+
+        return user_quota
+
+
+    def quota(self) -> UserQuota:
+        """
+        Возвращает текущую квоту юзера
+        """
+        return UserQuota.objects.filter(user=self.user)
