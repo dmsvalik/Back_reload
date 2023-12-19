@@ -13,8 +13,7 @@ from rest_framework_simplejwt.settings import api_settings
 from app.sending.signals import new_notification
 from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
-from app.utils.views import recalculate_quota
-from app.users.utils import calculate_order_files_size_by_cookie_key
+from app.users.signals import post_request
 from config import settings
 
 
@@ -105,14 +104,8 @@ class CustomUserViewSet(UserViewSet):
         при наличии ключа в куки
         """
         response = super().create(request, *args, **kwargs)
-        key = request.COOKIES.get('key')
         user = self.user_instance
-
-        if key:
-            sizes: tuple[int] | None = calculate_order_files_size_by_cookie_key(user, key)
-            if sizes: recalculate_quota(user, *sizes)
-            response.delete_cookie('key')
-
+        post_request.send(sender=request, user=user, response=response, addition=True)
         return response
 
     @action(["post"], detail=False)
@@ -169,13 +162,8 @@ class CustomTokenViewBase(TokenViewBase):
             raise InvalidToken(e.args[0])
 
         user = serializer.user
-        key = request.COOKIES.get('key')
         response = Response(serializer.validated_data, status=status.HTTP_200_OK)
-
-        if key:
-            sizes: tuple[int] | None = calculate_order_files_size_by_cookie_key(user, key)
-            if sizes: recalculate_quota(user, *sizes)
-            response.delete_cookie('key')
+        post_request.send(sender=request, user=user, response=response, addition=True)
 
         return response
 
