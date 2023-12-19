@@ -9,6 +9,9 @@
 
 {% trans "Спасибо за использование нашего сайта!" %}
 
+{% trans "Для отключения уведомлений пожалуйста перейдите по ссылке:" %}
+{{ protocol }}://{{ site_name }}/{{ url|safe }}
+
 {% blocktrans %}Команда {{ site_name }}{% endblocktrans %}
 {% endblock text_body %}
 
@@ -17,6 +20,9 @@
 <p>{% blocktrans %}{{ username }}, ваш заказ "{{ order_name }}" отправлен исполнителям.{% endblocktrans %}</p>
 <br>
 <h2>{% trans "Спасибо за использование нашего сайта!" %}</h2>
+
+<p>{% trans "Для отключения уведомлений пожалуйста перейдите по ссылке:" %}</p>
+<p><a href="{{ protocol }}://{{ site_name }}/{{ url|safe }}">{{ protocol }}://{{ site_name }}/{{ url|safe }}</a></p>
 
 <p>{% blocktrans %}Команда {{ site_name }}{% endblocktrans %}</p>
 

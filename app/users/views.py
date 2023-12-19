@@ -3,63 +3,21 @@ from djoser.views import UserViewSet
 from djoser import signals
 from djoser.compat import get_user_email
 from djoser.conf import settings as djoser_settings
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework.decorators import action, permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
 
 from app.orders.models import OrderModel
+from app.sending.serializers import DisableNotificationsSerializer
 from app.sending.signals import new_notification
 from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
 from config import settings
-
-
-# class ActivateUser(UserViewSet):
-#     def get_serializer(self, *args, **kwargs):
-#         serializer_class = self.get_serializer_class()
-#         kwargs.setdefault("context", self.get_serializer_context())
-#
-#         # this line is the only change from the base implementation.
-#         kwargs["data"] = {"uid": self.kwargs["uid"], "token": self.kwargs["token"]}
-#         return serializer_class(*args, **kwargs)
-#
-#     @method_decorator(name='list', decorator=swagger_auto_schema(
-#         operation_description="Получить список запросов на сотрудничество",
-#         responses={
-#             status.HTTP_400_BAD_REQUEST: error_responses[status.HTTP_400_BAD_REQUEST],
-#             status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[status.HTTP_500_INTERNAL_SERVER_ERROR]
-#         }
-#     ))
-#     def activation(self, request, uid, token, *args, **kwargs):
-#         super().activation(request, *args, **kwargs)
-#         return Response({"активация": "активация аккаунта прошла успешно"})
-#
-#
-# def reset_password(request, uid, token):
-#     """ Тестовый сброс пароля - заменить на сторону фронта """
-#
-#     if request.method == "POST":
-#         # проверки на стороне фронта на корректность пароля - не пустое поле и тд
-#         new_pass = request.POST["new_pass"]
-#         uid_new = request.POST["uid_data"]
-#         token_new = request.POST["token_data"]
-#
-#         # надо поменять url когда на сервере будет
-#         url = "http://127.0.0.1:8000/auth/users/reset_password_confirm/"
-#         data = {"uid": uid_new, "token": token_new, "new_password": new_pass}
-#         headers = {"Accept": "application/json"}
-#
-#         # отправляем POST запрос и меняем пароль
-#         requests.post(url, headers=headers, data=data)
-#
-#         return JsonResponse({"обновление пароля": "22 прошло успешно"})
-#
-#     return render(
-#         request, "main_page/reset_password.html", {"uid": uid, "token_uid": token}
-#     )
 
 
 class CustomUserViewSet(UserViewSet):
@@ -138,14 +96,30 @@ class CustomUserViewSet(UserViewSet):
             order = user.ordermodel_set.get(state="draft")
             order.state = "offer"
             order.save()
-            context = {"order_name": order.name,
-                       "username": user.name}
+            context = {"order_id": order.id,
+                       "user_id": user.id}
             if user.notifications:
                 send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
         except Exception:
             pass
 
         return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @swagger_auto_schema(
+        request_body=DisableNotificationsSerializer(),
+        method="POST"
+    )
+    @action(["post"], detail=False, permission_classes=[AllowAny])
+    def disable_notifications(self, request, *args, **kwargs):
+        context = self.get_serializer_context()
+        serializer = DisableNotificationsSerializer(data=request.data, context=context)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.user
+        user.notifications = False
+        user.save()
+        user.usernotifications_set.all().delete()
+        return Response(status=204)
+
 
 
 class CustomTokenViewBase(TokenViewBase):
@@ -169,8 +143,8 @@ class CustomTokenViewBase(TokenViewBase):
                 order.user_account = user
                 order.state = "offer"
                 order.save()
-                context = {"order_name": order.name,
-                           "username": user.name}
+                context = {"order_id": order.id,
+                           "user_id": user.id}
                 if user.notifications:
                     send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
             response.delete_cookie('key')
