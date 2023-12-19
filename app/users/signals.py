@@ -42,4 +42,3 @@ def quota_recalculate(**kwargs):
 
 
 post_request.connect(quota_recalculate)
-post_request.connect(quota_recalculate)

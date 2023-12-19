@@ -1,4 +1,4 @@
-from django.db.models import Sum, QuerySet, F, Sum
+from django.db.models import Sum, QuerySet, F
 
 from app.orders.models import OrderFileData, FileData
 from app.users.models import UserAccount, UserQuota
@@ -78,4 +78,4 @@ class UserQuotaManager:
         """
         Возвращает текущую квоту юзера
         """
-        return UserQuota.objects.filter(user=self.user)
+        return UserQuota.objects.filter(user=self.user).first()
