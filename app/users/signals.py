@@ -29,6 +29,7 @@ class AuthSignal:
 
         if cookie_key:
             order: OrderModel | None = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            response.delete_cookie("key")
 
             if order:
                 OrderModel.objects.filter(pk=order.pk).update(
@@ -36,7 +37,6 @@ class AuthSignal:
                     state=STATE_CHOICES[1][0]
                 )
                 self.order = order
-                response.delete_cookie("key")
 
                 files: QuerySet[OrderFileData] | None = OrderFileData.objects.filter(order_id__pk=order.pk).all()
 
