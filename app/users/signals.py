@@ -28,6 +28,7 @@ class AuthSignal:
             notify: bool = False,
             **kwargs
             ):
+
         self._quota_recalcuate(request, addition, user, response)
         if notify:
             self._user_notify(user)
@@ -36,7 +37,7 @@ class AuthSignal:
         """
         Метод для запуска пересчета квоты пользователя после регистрации либо получения токена см. views.py
         При нахождении ключа "key" в куках удаляет его от туда,
-        Если находят заказ по ключю, то присваеват его пользователя и меняет стаутс заказа
+        Если находят заказ по ключю, то присваеват его пользователя и меняет стаутс заказа(если передан аргумент state_change)
         Если находит файлы этого заказа вызывает менеджер для управления квотой пользователя
         для пересчета квоты
         """
@@ -47,21 +48,27 @@ class AuthSignal:
             response.delete_cookie("key")
 
             if order:
-                OrderModel.objects.filter(pk=order.pk).update(
-                    user_account=user,
-                    state=STATE_CHOICES[1][0]
-                )
-                self.order = order
-
+                self.__update_order(request, order, user)
                 files: QuerySet[OrderFileData] | None = OrderFileData.objects.filter(order_id__pk=order.pk).all()
 
                 if files:
                     manager = UserQuotaManager(user)
-                    if bool(addition):
+                    if addition:
                         manager.add_many(files=files)
                     else:
                         manager.subtract_many(files=files)
 
+
+    def __update_order(self, request: Request, order: OrderModel, user: UserAccount):
+        """
+        Смотрит на запрос, если это не аутентификация то стаутс заказа обновляется
+        Если это аутентификация то нет, применяется в методе _quota_recalcuate
+        """
+        update_data = {"user_account": user}
+        if not request.authenticators:
+            update_data.update({"state": STATE_CHOICES[1][0]})
+        OrderModel.objects.filter(pk=order.pk).update(**update_data)
+        self.order = order
 
 
     def _user_notify(self, user: UserAccount):
