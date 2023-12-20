@@ -4,7 +4,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from app.users.models import UserAccount
-from app.orders.models import OrderModel, OrderFileData
+from app.orders.models import OrderModel, OrderFileData, STATE_CHOICES
 from app.users.utils import UserQuotaManager
 from app.sending.views import send_user_notifications
 
@@ -31,8 +31,10 @@ class AuthSignal:
             order: OrderModel | None = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
 
             if order:
-                order.user_account = user
-                order.save()
+                OrderModel.objects.filter(pk=order.pk).update(
+                    user_account=user,
+                    state=STATE_CHOICES[1][0]
+                )
                 self.order = order
                 response.delete_cookie("key")
 
