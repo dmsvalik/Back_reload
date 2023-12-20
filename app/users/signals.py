@@ -34,6 +34,7 @@ class AuthSignal:
                 order.user_account = user
                 order.save()
                 self.order = order
+                response.delete_cookie("key")
 
                 files: QuerySet[OrderFileData] | None = OrderFileData.objects.filter(order_id__pk=order.pk).all()
 
@@ -44,7 +45,6 @@ class AuthSignal:
                     else:
                         manager.subtract_many(files=files)
 
-                    response.delete_cookie("key")
 
 
     def _user_notify(self, user: UserAccount):
