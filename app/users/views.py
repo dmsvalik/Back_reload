@@ -173,7 +173,8 @@ class CustomTokenViewBase(TokenViewBase):
             request=request,
             user=user,
             response=response,
-            addition=True
+            addition=True,
+            notify=True
             )
 
         return response

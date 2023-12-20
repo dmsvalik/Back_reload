@@ -18,10 +18,11 @@ class AuthSignal:
         addition: bool = bool(kwargs.get("addition", False))
         response: Response = kwargs.get("response")
         user: UserAccount = kwargs.get("user")
+        notify: bool = bool(kwargs.get("notify", False))
 
         self._quota_recalcuate(request, addition, user, response)
-        self._user_notify(user)
-
+        if notify:
+            self._user_notify(user)
 
     def _quota_recalcuate(self, request: Request, addition: bool, user: UserAccount, response: Response):
         cookie_key: str = request.COOKIES.get("key")
