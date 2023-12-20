@@ -5,7 +5,7 @@ from rest_framework.response import Response
 
 from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderFileData, STATE_CHOICES
-from app.users.utils import UserQuotaManager
+from app.users.utils.quota_manager import UserQuotaManager
 from app.sending.views import send_user_notifications
 
 post_request = Signal()
