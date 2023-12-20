@@ -54,7 +54,7 @@ class AuthSignal:
             send_user_notifications(
             user,
             "ORDER_CREATE_CONFIRMATION",
-            {"order_name": self.order.name,"user_id": user.id},
+            {"order_id": self.order.id,"user_id": user.id},
             [user.email]
             )
 
