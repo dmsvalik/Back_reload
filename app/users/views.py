@@ -104,8 +104,13 @@ class CustomUserViewSet(UserViewSet):
         при наличии ключа в куки
         """
         response = super().create(request, *args, **kwargs)
-        user = self.user_instance
-        post_request.send(sender=request, user=user, response=response, addition=True)
+        post_request.send(
+            sender=self.__class__,
+            request=request,
+            user=self.user_instance,
+            response=response,
+            addition=True
+            )
         return response
 
     @action(["post"], detail=False)
@@ -163,7 +168,13 @@ class CustomTokenViewBase(TokenViewBase):
 
         user = serializer.user
         response = Response(serializer.validated_data, status=status.HTTP_200_OK)
-        post_request.send(sender=request, user=user, response=response, addition=True)
+        post_request.send(
+            sender=self.__class__,
+            request=request,
+            user=user,
+            response=response,
+            addition=True
+            )
 
         return response
 
