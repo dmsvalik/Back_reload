@@ -12,19 +12,34 @@ post_request = Signal()
 
 
 class AuthSignal:
+    """
+    Отвечает за вызов всех сигналов которые нужны для приложения users
+    для реализации сигнала можно создать метод в этом классе и вызвать его
+    в методе __call__, передавать в сигнал можно либо имеющиеся аргументы
+    либо любые ключевы, которые попадут в kwargs
+    """
 
-    def __call__(self, **kwargs):
-        request: Request = kwargs.get("request")
-        addition: bool = bool(kwargs.get("addition", False))
-        response: Response = kwargs.get("response")
-        user: UserAccount = kwargs.get("user")
-        notify: bool = bool(kwargs.get("notify", False))
-
+    def __call__(
+            self,
+            request: Request,
+            user: UserAccount,
+            response: Response | None = None,
+            addition: bool = False,
+            notify: bool = False,
+            **kwargs
+            ):
         self._quota_recalcuate(request, addition, user, response)
         if notify:
             self._user_notify(user)
 
     def _quota_recalcuate(self, request: Request, addition: bool, user: UserAccount, response: Response):
+        """
+        Метод для запуска пересчета квоты пользователя после регистрации либо получения токена см. views.py
+        При нахождении ключа "key" в куках удаляет его от туда,
+        Если находят заказ по ключю, то присваеват его пользователя и меняет стаутс заказа
+        Если находит файлы этого заказа вызывает менеджер для управления квотой пользователя
+        для пересчета квоты
+        """
         cookie_key: str = request.COOKIES.get("key")
 
         if cookie_key:
@@ -50,6 +65,12 @@ class AuthSignal:
 
 
     def _user_notify(self, user: UserAccount):
+        """
+        Вызывает функицю для тправки уведомления юзеру
+        Этот метод должен вызываеться в методе __call__
+        После _quota_recalcuate, так как в том методе происхоит
+        присваивание заказа атрибуту класса "self.order = order"
+        """
         if hasattr(self, "order") and user.notifications:
             send_user_notifications(
             user,
