@@ -13,7 +13,8 @@ from rest_framework_simplejwt.settings import api_settings
 from app.sending.signals import new_notification
 from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
-from app.users.signals import post_request
+from app.users import signals
+from app.orders.models import OrderModel
 from config import settings
 
 
@@ -104,13 +105,17 @@ class CustomUserViewSet(UserViewSet):
         при наличии ключа в куки
         """
         response = super().create(request, *args, **kwargs)
-        post_request.send(
-            sender=self.__class__,
-            request=request,
-            user=self.user_instance,
-            response=response,
-            addition=True
-            )
+        cookie_key = request.COOKIES.get("key")
+
+        if cookie_key:
+            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            signals.quota_recalculate.send(
+                sender=self.__class__,
+                user=self.user_instance,
+                order=order
+                )
+            response.delete_cookie("key")
+
         return response
 
     @action(["post"], detail=False)
@@ -167,15 +172,23 @@ class CustomTokenViewBase(TokenViewBase):
             raise InvalidToken(e.args[0])
 
         user = serializer.user
+        cookie_key = request.COOKIES.get("key")
         response = Response(serializer.validated_data, status=status.HTTP_200_OK)
-        post_request.send(
-            sender=self.__class__,
-            request=request,
-            user=user,
-            response=response,
-            addition=True,
-            notify=True
+
+        if cookie_key:
+            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            signals.quota_recalculate.send(
+                sender=self.__class__,
+                user=user,
+                order=order,
+                change_order_state=True
+                )
+            signals.send_notify.send(
+                sender=self.__class__,
+                user=user,
+                order=order
             )
+            response.delete_cookie("key")
 
         return response
 
