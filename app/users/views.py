@@ -1,6 +1,6 @@
 from django.contrib.sites.shortcuts import get_current_site
 from djoser.views import UserViewSet
-from djoser import signals
+from djoser import signals as djoser_signals
 from djoser.compat import get_user_email
 from djoser.conf import settings as djoser_settings
 from drf_yasg.utils import swagger_auto_schema
@@ -31,7 +31,7 @@ class CustomUserViewSet(UserViewSet):
         user = serializer.save(*args, **kwargs)
         self.user_instance = user
 
-        signals.user_registered.send(
+        djoser_signals.user_registered.send(
             sender=self.__class__, user=user, request=self.request
         )
         # context = {"user": user}
@@ -85,7 +85,7 @@ class CustomUserViewSet(UserViewSet):
         user.is_active = True
         user.save()
 
-        signals.user_activated.send(
+        djoser_signals.user_activated.send(
             sender=self.__class__, user=user, request=self.request
         )
 

@@ -344,5 +344,5 @@ DRF_API_LOGGER_PATH_TYPE = 'FULL_PATH'
 DRF_API_LOGGER_SLOW_API_ABOVE = 200
 
 SENDING = {
-    "DISABLE_URL": "/disable_notifications/{uid}/{token}/"
+    "DISABLE_URL": "disable_notifications/{uid}/{token}/"
 }
