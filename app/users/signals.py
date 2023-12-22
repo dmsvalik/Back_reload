@@ -1,6 +1,5 @@
 from django.dispatch import Signal
 from django.db.models import QuerySet
-from rest_framework.request import Request
 
 from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderFileData, STATE_CHOICES
@@ -65,9 +64,10 @@ class SendNotifySignal:
         send_user_notifications(
             user,
             "ORDER_CREATE_CONFIRMATION",
-            {"order_id": order.id,"user_id": user.id},
+            {"order_id": order.id, "user_id": user.id},
             [user.email]
-            )
+        )
+
 
 quota_recalculate.connect(QuotaRecalculateSignal())
 send_notify.connect(SendNotifySignal())

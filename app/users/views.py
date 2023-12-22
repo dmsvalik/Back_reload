@@ -101,16 +101,16 @@ class CustomUserViewSet(UserViewSet):
                 to)
             new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
                                   type="email")
-        try:
-            order = user.ordermodel_set.get(state="draft")
+
+        order = user.ordermodel_set.filter(state="draft").first()
+        if order:
             order.state = "offer"
             order.save()
-            context = {"order_id": order.id,
-                       "user_id": user.id}
-            if user.notifications:
-                send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
-        except Exception:
-            pass
+            signals.send_notify.send(
+                sender=self.__class__,
+                user=user,
+                order=order
+            )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
