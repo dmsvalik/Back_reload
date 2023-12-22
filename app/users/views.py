@@ -10,10 +10,11 @@ from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
 
-from app.orders.models import OrderModel
 from app.sending.signals import new_notification
 from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
+from app.users import signals
+from app.orders.models import OrderModel
 from config import settings
 
 
@@ -65,7 +66,12 @@ from config import settings
 class CustomUserViewSet(UserViewSet):
 
     def perform_create(self, serializer, *args, **kwargs):
+        """
+        Сохранение пользователя после регистрации и отправка сообщения на почту
+        """
         user = serializer.save(*args, **kwargs)
+        self.user_instance = user
+
         signals.user_registered.send(
             sender=self.__class__, user=user, request=self.request
         )
@@ -92,22 +98,24 @@ class CustomUserViewSet(UserViewSet):
                                   type="email")
 
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        user = serializer.instance
-        headers = self.get_success_headers(serializer.data)
-        key = request.COOKIES.get('key')
-        response = Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-        if key:
-            try:
-                order = OrderModel.objects.get(key=key, user_account__isnull=True)
-            except OrderModel.DoesNotExist:
-                order = None
-            if order:
-                order.user_account = user
-                order.save()
-            response.delete_cookie('key')
+        """
+        Формирование ответа
+        Проверка на наличие ключа заказа в куки
+        Пересчет, выделеного для файлов, размера диска пользователя
+        при наличии ключа в куки
+        """
+        response = super().create(request, *args, **kwargs)
+        cookie_key = request.COOKIES.get("key")
+
+        if cookie_key:
+            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            signals.quota_recalculate.send(
+                sender=self.__class__,
+                user=self.user_instance,
+                order=order
+                )
+            response.delete_cookie("key")
+
         return response
 
     @action(["post"], detail=False)
@@ -150,6 +158,12 @@ class CustomUserViewSet(UserViewSet):
 
 class CustomTokenViewBase(TokenViewBase):
     def post(self, request, *args, **kwargs):
+        """
+        Создание токена
+        Проверка на наличие ключа заказа в куки
+        Пересчет, выделеного для файлов, размера диска пользователя
+        при наличии ключа в куки
+        """
         serializer = self.get_serializer(data=request.data)
 
         try:
@@ -158,22 +172,24 @@ class CustomTokenViewBase(TokenViewBase):
             raise InvalidToken(e.args[0])
 
         user = serializer.user
-        key = request.COOKIES.get('key')
+        cookie_key = request.COOKIES.get("key")
         response = Response(serializer.validated_data, status=status.HTTP_200_OK)
-        if key:
-            try:
-                order = OrderModel.objects.get(key=key, user_account__isnull=True)
-            except OrderModel.DoesNotExist:
-                order = None
-            if order:
-                order.user_account = user
-                order.state = "offer"
-                order.save()
-                context = {"order_name": order.name,
-                           "username": user.name}
-                if user.notifications:
-                    send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
-            response.delete_cookie('key')
+
+        if cookie_key:
+            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            signals.quota_recalculate.send(
+                sender=self.__class__,
+                user=user,
+                order=order,
+                change_order_state=True
+                )
+            signals.send_notify.send(
+                sender=self.__class__,
+                user=user,
+                order=order
+            )
+            response.delete_cookie("key")
+
         return response
 
 
