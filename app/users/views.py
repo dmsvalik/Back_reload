@@ -130,7 +130,6 @@ class CustomUserViewSet(UserViewSet):
         return Response(status=204)
 
 
-
 class CustomTokenViewBase(TokenViewBase):
     def post(self, request, *args, **kwargs):
         """
