@@ -19,6 +19,8 @@ ALLOWED_TYPES_EXTENSIONS = {
 def check_user_quota(func):
     @wraps(func)
     def wrapped(request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return func(request, *args, **kwargs)
         user_id = request.user.id
         try:
             user_quota = UserQuota.objects.get(user_id=user_id)

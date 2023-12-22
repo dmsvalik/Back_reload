@@ -18,8 +18,12 @@ class ImageWork(object):
     NUMBER_OF_CHARACTERS_IN_FILENAME = 7
 
     def __init__(self, temp_file, user_id, order_id=None):
+        # there are may be without an order and user
         if order_id is None:
             order_id = 'no_order'
+
+        if user_id is None:
+            user_id = 'no_user'
 
         self.temp_file = temp_file
         self.user = UserAccount.objects.get(id=user_id)

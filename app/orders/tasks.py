@@ -161,6 +161,9 @@ def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id
             os.remove(image.temp_file)
             return {"status": "SUCCESS"}
         else:
+            if os.path.exists(image.preview_path()):
+                os.remove(image.preview_path())
+            os.remove(image.temp_file)
             return {"status": "FAILURE", "response": f"Ошибка при загрузке файла: {result}"}
     except Exception as e:
         return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}
@@ -190,6 +193,9 @@ def celery_upload_file_task_to_answer(temp_file, order_id, user_id, question_id,
             os.remove(file.temp_file)
             return {"status": "SUCCESS"}
         else:
+            if os.path.exists(file.preview_path()):
+                os.remove(file.preview_path())
+            os.remove(file.temp_file)
             return {"status": "FAILURE", "response": f"Ошибка при загрузке файла: {result}"}
     except Exception as e:
         return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}

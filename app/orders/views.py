@@ -348,13 +348,7 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
     @permission_classes([IsOrderOwner])
     @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
     @check_user_quota
-    def attach_file(request, order_id):
-        # try:
-        #     order = OrderModel.objects.get(user_account=request.user) if request.user.is_authenticated \
-        #         else OrderModel.objects.get(key=request.COOKIES.get('key'), user_account__isnull=True)
-        # except Exception:
-        #     raise errorcode.OrderIdNotFound
-
+    def attach_file(self, request, order_id):
         # проверка на наличие order_id
         try:
             order = OrderModel.objects.get(id=order_id)
@@ -369,29 +363,30 @@ class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
             raise errorcode.QuestionIdNotFound()
 
         # Проверка типа анкеты к заказу (интегрировал валидацию)
-        questionnaire_type = order.questionnaire_type
-        questionnaire_questions = Question.objects.filter(chapter__type=questionnaire_type)
-        try:
-            question = Question.objects.get(id=question_id)
-            if question not in questionnaire_questions:
-                raise ValidationError({
-                "question_id": ["Вопрос не соответствует анкете."]
-            })
-        except Question.DoesNotExist:
-            raise ValidationError({
-                "question_id": ["Указан неверный идентификатор вопроса."]
-            })
+        # questionnaire_type = order.questionnaire_type
+        # questionnaire_questions = Question.objects.filter(chapter__type=questionnaire_type)
+        # try:
+        #     question = Question.objects.get(id=question_id)
+        #     if question not in questionnaire_questions:
+        #         raise ValidationError({
+        #         "question_id": ["Вопрос не соответствует анкете."]
+        #     })
+        # except Question.DoesNotExist:
+        #     raise ValidationError({
+        #         "question_id": ["Указан неверный идентификатор вопроса."]
+        #     })
 
         upload_file = request.FILES["upload_file"]
         original_name = upload_file.name
-        # create new name for file
-        user_id = request.user.id
-        new_name = ServerFileSystem(original_name, user_id, order_id).generate_new_filename()
 
-        if order_id is None:
-            raise errorcode.IncorrectImageOrderUpload()
-        if order_id == "" or not order_id.isdigit() or not OrderModel.objects.filter(id=order_id).exists():
-            raise errorcode.IncorrectImageOrderUpload()
+        # юзера при добавлении файла может не быть
+        if request.user.is_authenticated:
+            user_id = request.user.id
+        else:
+            user_id = None
+
+        # create new name for file
+        new_name = ServerFileSystem(original_name, user_id, order_id).generate_new_filename()
 
         if not os.path.exists("tmp"):
             os.mkdir("tmp")

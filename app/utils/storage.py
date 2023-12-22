@@ -21,9 +21,12 @@ class ServerFileSystem:
 
     def __init__(self, file_name, user_id, order_id=None):
 
-        # there may be documents without an order, in this case we save them in a special folder
+        # there may be documents without an order and user, in this case we save them in a special folder
         if order_id is None:
             order_id = 'no_order'
+
+        if user_id is None:
+            user_id = 'no_user'
 
         self.user = UserAccount.objects.get(id=user_id)
         self.file_format = file_name.split('.')[-1]
