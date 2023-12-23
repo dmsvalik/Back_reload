@@ -97,14 +97,14 @@ class InitialData(object):
         ]
 
         images = [
-            ['/media/main_page_images/gallery_images/1_1a.png', '/media/main_page_images/gallery_images/1_2.png',
-             '/media/main_page_images/gallery_images/1_4.png', '/media/main_page_images/gallery_images/1_3.png'],
+            ['/main_page_images/gallery_images/1_1a.png', '/main_page_images/gallery_images/1_2.png',
+             '/main_page_images/gallery_images/1_4.png', '/main_page_images/gallery_images/1_3.png'],
 
-            ['/media/main_page_images/gallery_images/2_5.png', '/media/main_page_images/gallery_images/2_7.png',
-             '/media/main_page_images/gallery_images/2_8.png', '/media/main_page_images/gallery_images/2_6.png'],
+            ['/main_page_images/gallery_images/2_5.png', '/main_page_images/gallery_images/2_7.png',
+             '/main_page_images/gallery_images/2_8.png', '/main_page_images/gallery_images/2_6.png'],
 
-            ['/media/main_page_images/gallery_images/3_9.png', '/media/main_page_images/gallery_images/3_10.png',
-             '/media/main_page_images/gallery_images/3_12.png', '/media/main_page_images/gallery_images/3_11.png']]
+            ['/main_page_images/gallery_images/3_9.png', '/main_page_images/gallery_images/3_10.png',
+             '/main_page_images/gallery_images/3_12.png', '/main_page_images/gallery_images/3_11.png']]
 
         # create 3 sliders and data images
         try:
