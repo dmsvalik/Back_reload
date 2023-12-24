@@ -2,6 +2,8 @@ from typing import List, Optional
 
 from drf_yasg import openapi
 
+from config.settings import SWAGGER_TAGS
+
 
 def generate_400_response(fields: List[str]):
     default_value = openapi.Schema(
@@ -85,4 +87,27 @@ class AllDelete(BaseSwaggerSchema):
         202: openapi.Response("Success response"),
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
+    }
+
+
+class DocsView(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get('files')]
+    operation_summary = 'Возврат ссылки на превью картинки'
+    operation_id = 'document-view'
+    operation_description = (
+        "Возврат ссылки на превью картинки.\n\n**Валидация:**\n\n"
+        "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
+        "-- Администратор\n-- Владелец\n-- Исполнитель")
+    manual_parameters = [
+        openapi.Parameter(
+            "path",
+            openapi.IN_PATH,
+            description="Путь до файла",
+            type=openapi.TYPE_INTEGER,
+            required=True,
+        )]
+    responses = {
+        202: openapi.Response("Success response"),
+        401: openapi.Response("Unauthorized"),
+        404: openapi.Response("FileNotFound"),
     }
