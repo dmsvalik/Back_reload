@@ -261,14 +261,20 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
 
 class AttachFileAnswerPost(BaseSwaggerSchema):
     operation_description = "Загрузка документа к ответу."
-    request_body = openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        required=["question_id", "upload_file"],
-        properties={
-            "question_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID вопроса"),
-            "upload_file": openapi.Schema(type=openapi.TYPE_FILE, description="Файл для загрузки")
-        }
-    )
+    manual_parameters = [
+        openapi.Parameter(
+            "upload_file",
+            openapi.IN_FORM,
+            type=openapi.TYPE_FILE,
+            required=True,
+            description='Upload file'),
+        openapi.Parameter(
+            "question_id",
+            openapi.IN_FORM,
+            type=openapi.TYPE_INTEGER,
+            required=True,
+            description='ID вопроса')
+    ]
     responses = {
         202: openapi.Response(
             description="Accepted",

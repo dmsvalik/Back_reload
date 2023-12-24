@@ -26,9 +26,7 @@ class ImageWork(object):
             user_id = 'no_user'
 
         self.temp_file = temp_file
-        self.user = UserAccount.objects.get(id=user_id)
-        self.order = order_id
-        self.dir_path = os.path.join(BASE_DIR, "files", str(self.user.id), str(self.order))
+        self.dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
 
         self.filename = temp_file.split('/')[-1]
         self.preview_path = self._prepare_and_save_preview()

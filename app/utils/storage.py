@@ -28,10 +28,10 @@ class ServerFileSystem:
         if user_id is None:
             user_id = 'no_user'
 
-        self.user = UserAccount.objects.get(id=user_id)
+        # self.user = UserAccount.objects.get(id=user_id)
         self.file_format = file_name.split('.')[-1]
-        self.dir_path = os.path.join(BASE_DIR, "files", str(self.user.id), str(order_id))
-        self.filename = self.generate_new_filename
+        self.dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
+        self.filename = self.generate_new_filename()
 
     def _prepare_catalog_file_names(self, dir_path):
         """Parsing a list of all file names in the user's order directory."""

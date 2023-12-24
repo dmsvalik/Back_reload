@@ -1,5 +1,6 @@
 import os
 
+from app.questionnaire.models import Question
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
 from celery.utils.log import get_task_logger
@@ -12,6 +13,8 @@ from rest_framework import status
 from app.orders.models import FileData, OrderFileData, OrderModel
 
 logger = get_task_logger(__name__)
+
+
 # celery -A config.celery worker
 
 
@@ -30,7 +33,7 @@ def celery_upload_image_task(temp_file, user_id, order_id):
     else:
         image = GifWork(temp_file, user_id, order_id)
     yandex = CloudStorage()
-    result = yandex.cloud_upload_image(image.temp_file, image.user.id, image.order,
+    result = yandex.cloud_upload_image(image.temp_file, user_id, order_id,
                                        image.filename)
     if result['status_code'] == status.HTTP_201_CREATED:
         FileData.objects.create(
@@ -137,20 +140,23 @@ def celery_delete_image_task(file_id):
 
 @shared_task()
 def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id, original_name):
+    if user_id is None:
+        user_id = "no_user"
     try:
-        order = OrderModel.objects.get(id=order_id)
+        order = OrderModel.objects.filter(id=order_id).first()
+        question = Question.objects.filter(id=question_id).first()
         file_format = temp_file.split('.')[-1]
         if file_format != 'gif':
             image = ImageWork(temp_file, user_id, order_id)
         else:
             image = GifWork(temp_file, user_id, order_id)
         yandex = CloudStorage()
-        result = yandex.cloud_upload_image(image.temp_file, image.user.id, image.order,
-                                        image.filename)
+        result = yandex.cloud_upload_image(image.temp_file, user_id, order_id,
+                                           image.filename)
         if result['status_code'] == status.HTTP_201_CREATED:
             OrderFileData.objects.create(
                 order_id=order,
-                question_id=question_id,
+                question_id=question,
                 original_name=original_name,
                 # original_name=temp_file.name,
                 yandex_path=result['yandex_path'],
@@ -161,8 +167,8 @@ def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id
             os.remove(image.temp_file)
             return {"status": "SUCCESS"}
         else:
-            if os.path.exists(image.preview_path()):
-                os.remove(image.preview_path())
+            if os.path.exists(image.preview_path):
+                os.remove(image.preview_path)
             os.remove(image.temp_file)
             return {"status": "FAILURE", "response": f"Ошибка при загрузке файла: {result}"}
     except Exception as e:
@@ -171,30 +177,31 @@ def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id
 
 @shared_task()
 def celery_upload_file_task_to_answer(temp_file, order_id, user_id, question_id, original_name):
+    if user_id is None:
+        user_id = "no_user"
     try:
-        order = OrderModel.objects.get(id=order_id)
-        file = FileWork(temp_file, user_id, order_id)
+        order = OrderModel.objects.filter(id=order_id).first()
+        question = Question.objects.filter(id=question_id).first()
+        file = FileWork(temp_file)
         filename = temp_file.split('/')[-1]
         yandex = CloudStorage()
-        result = yandex.cloud_upload_image(file.temp_file, file.user.id, file.order,
-                                        filename)
+        result = yandex.cloud_upload_image(file.temp_file, user_id, order_id,
+                                           filename)
         if result['status_code'] == status.HTTP_201_CREATED:
             OrderFileData.objects.create(
                 order_id=order,
-                question_id=question_id,
+                question_id=question,
                 # передаем оригинальное имя из фронта
                 original_name=original_name,
                 # original_name=temp_file.name,
                 yandex_path=result['yandex_path'],
-                server_path=file.preview_path(),
+                server_path=file.preview_path,
                 yandex_size=file.upload_file_size,
                 server_size=file.preview_file_size
             )
             os.remove(file.temp_file)
             return {"status": "SUCCESS"}
         else:
-            if os.path.exists(file.preview_path()):
-                os.remove(file.preview_path())
             os.remove(file.temp_file)
             return {"status": "FAILURE", "response": f"Ошибка при загрузке файла: {result}"}
     except Exception as e:
