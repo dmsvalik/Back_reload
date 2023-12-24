@@ -1,5 +1,6 @@
 import os
 from datetime import datetime, timedelta, timezone
+from djoser.compat import get_user_email
 from typing import Any
 
 from app.orders.permissions import (IsOrderFileDataOwnerWithoutUser,
@@ -42,6 +43,7 @@ from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upl
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
+from ..sending.views import send_user_notifications
 from ..utils.file_work import FileWork
 from ..utils.permissions import IsContactor, IsFileOwner
 
@@ -84,6 +86,11 @@ def create_order(request):
                          }, status=201)
     if not user:
         response.set_cookie("key", order.key, samesite="None", secure=True)
+    else:
+        context = {"order_id": order.id,
+                   "user_id": user.id}
+        if user.notifications:
+            send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
     return response
 
 
