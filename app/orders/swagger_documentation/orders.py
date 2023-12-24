@@ -4,6 +4,7 @@ from drf_yasg import openapi
 
 from app.orders.serializers import AllOrdersClientSerializer, OrderOfferSerializer
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
+from config.settings import SWAGGER_TAGS
 
 
 def generate_400_response(fields: List[str]):
@@ -177,7 +178,13 @@ class ArchiveOrdersClientGetList(BaseSwaggerSchema):
 
 
 class FileOrderGet(BaseSwaggerSchema):
-    operation_description = "Получение изображения и передача его на фронт."
+    tags = [SWAGGER_TAGS.get('files')]
+    operation_id = 'get-image-order'
+    operation_summary = "Получение прямой ссылки на скачивание изображения"
+    operation_description = (
+        "Получение прямой ссылки на скачивание изображения.\nДанный эндпоинт "
+        "аналогичен /download/, но выполняется с помощью get-запроса с "
+        "указанием ID файла в адресной строке.")
     manual_parameters = [
         openapi.Parameter(
             "file_id",
@@ -196,13 +203,23 @@ class FileOrderGet(BaseSwaggerSchema):
 
 
 class UploadImageOrderPost(BaseSwaggerSchema):
-    operation_description = "Загрузка изображения заказа."
+    tags = [SWAGGER_TAGS.get("files")]
+    operation_id = "upload-image-order"
+    operation_summary = "Прием изображения для сохранения на сервере"
+    operation_description = (
+        "Эндпоинт предназначен для загрузки изображения заказа на сервер.\n"
+        "При обращении необходимо передать ID заказа и изображение.\n\n"
+        "**Ограничение на формат файлов:**\n* \"image/jpg\"\n* \"image/gif\""
+        "\n* \"image/jpeg\"\n* \"application/pdf\"")
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=["order_id", "upload_file"],
         properties={
-            "order_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID заказа"),
-            "upload_file": openapi.Schema(type=openapi.TYPE_FILE, description="Файл изображения для загрузки")
+            "order_id": openapi.Schema(
+                type=openapi.TYPE_STRING, description="ID заказа"),
+            "upload_file": openapi.Schema(
+                type=openapi.TYPE_FILE,
+                description="Файл изображения для загрузки")
         }
     )
     responses = {
@@ -211,7 +228,9 @@ class UploadImageOrderPost(BaseSwaggerSchema):
             schema=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    "task_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID задачи обработки изображения")
+                    "task_id": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description="ID задачи обработки изображения")
                 }
             )
         ),
@@ -222,7 +241,14 @@ class UploadImageOrderPost(BaseSwaggerSchema):
 
 
 class FileOrderDelete(BaseSwaggerSchema):
-    operation_description = "Удаление файла"
+    tags = [SWAGGER_TAGS.get("files")]
+    operation_id = "delete-file-order"
+    operation_summary = "Удаление файла из Yandex"
+    operation_description = (
+        "Удаление файла из Yandex и передача ссылки на его получение.\n"
+        "\n\n**Валидация:**\n\n1. Проверка пользователя(или):\n-- Владелец"
+        "\n-- Файл без владельца"
+    )
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=['file_id', ],
@@ -260,17 +286,20 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
 
 
 class FileOrderDownload(BaseSwaggerSchema):
-    tags = ['Work with files']
-    operation_description = ("Получение прямой ссылки на скачивание файла. "
-                             "Эндпоинт принимает id файла в БД и возвращает "
-                             "прямую ссылку на скачивание файла с "
-                             "ЯндексCloud")
+    tags = [SWAGGER_TAGS.get("files")]
+    operation_id = "file-order-download"
+    operation_summary = "Получение прямой ссылки на скачивание файла"
+    operation_description = (
+        "Эндпоинт принимает id файла в БД и возвращает прямую ссылку на "
+        "скачивание файла с ЯндексCloud.\n\n**Валидация:**\n\n"
+        "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
+        "-- Администратор\n-- Владелец\n-- Исполнитель")
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        required=['file_id', ],
+        required=["file_id", ],
         properties={
-            'file_id': openapi.Schema(
-                title='Id файла',
+            "file_id": openapi.Schema(
+                title="Id файла",
                 type=openapi.TYPE_INTEGER,
             )
         })
