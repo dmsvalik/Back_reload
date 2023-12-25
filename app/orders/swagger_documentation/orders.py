@@ -184,7 +184,9 @@ class FileOrderGet(BaseSwaggerSchema):
     operation_description = (
         "Получение прямой ссылки на скачивание изображения.\nДанный эндпоинт "
         "аналогичен /download/, но выполняется с помощью get-запроса с "
-        "указанием ID файла в адресной строке.")
+        "указанием ID файла в адресной строке.\n"
+        "**В случае успешной обработки возвращается прямая ссылка на "
+        "изображение**\n")
     manual_parameters = [
         openapi.Parameter(
             "file_id",
@@ -195,7 +197,9 @@ class FileOrderGet(BaseSwaggerSchema):
         ),
     ]
     responses = {
-        200: openapi.Response("Success response"),
+        200: openapi.Response("Success response", openapi.Schema(
+            type=openapi.TYPE_STRING, title="image url"
+        )),
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
@@ -208,7 +212,8 @@ class UploadImageOrderPost(BaseSwaggerSchema):
     operation_summary = "Прием изображения для сохранения на сервере"
     operation_description = (
         "Эндпоинт предназначен для загрузки изображения заказа на сервер.\n"
-        "При обращении необходимо передать ID заказа и изображение.\n\n"
+        "При обращении необходимо передать ID заказа и изображение.\n"
+        "**В случае успешной обработки возвращается ID CeleryTask**\n\n"
         "**Ограничение на формат файлов:**\n* \"image/jpg\"\n* \"image/gif\""
         "\n* \"image/jpeg\"\n* \"application/pdf\"")
     request_body = openapi.Schema(
@@ -245,8 +250,10 @@ class FileOrderDelete(BaseSwaggerSchema):
     operation_id = "delete-file-order"
     operation_summary = "Удаление файла из Yandex"
     operation_description = (
-        "Удаление файла из Yandex и передача ссылки на его получение.\n"
-        "\n\n**Валидация:**\n\n1. Проверка пользователя(или):\n-- Владелец"
+        "Удаление файла из Yandex.Cloud.\nПроверяется наличие записи о файле,"
+        " после удаляется сам файл и связанные с ним элементы (превью и "
+        "запись в бд).\n**При наличии файла возвращается ID CeleryTask**\n"
+        "\n\n**Ограничения:**\n\n1. Проверка пользователя(или):\n-- Владелец"
         "\n-- Файл без владельца"
     )
     request_body = openapi.Schema(
@@ -259,7 +266,14 @@ class FileOrderDelete(BaseSwaggerSchema):
             )
         })
     responses = {
-        202: openapi.Response("Success response"),
+        202: openapi.Response("Success response", openapi.Schema(
+            type=openapi.TYPE_OBJECT, description='ID Task', properties={
+                "task_id": openapi.Schema(
+                    title='ID Task',
+                    type=openapi.TYPE_STRING
+                )
+            }
+        )),
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
     }
@@ -290,8 +304,8 @@ class FileOrderDownload(BaseSwaggerSchema):
     operation_id = "file-order-download"
     operation_summary = "Получение прямой ссылки на скачивание файла"
     operation_description = (
-        "Эндпоинт принимает id файла в БД и возвращает прямую ссылку на "
-        "скачивание файла с ЯндексCloud.\n\n**Валидация:**\n\n"
+        "Эндпоинт принимает id файла в БД и **возвращает прямую ссылку на "
+        "скачивание файла с ЯндексCloud.**\n\n**Ограничения:**\n\n"
         "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
         "-- Администратор\n-- Владелец\n-- Исполнитель")
     request_body = openapi.Schema(
@@ -304,7 +318,8 @@ class FileOrderDownload(BaseSwaggerSchema):
             )
         })
     responses = {
-        202: openapi.Response("Success response"),
+        202: openapi.Response("Success response", openapi.Schema(
+            title="download url", type=openapi.TYPE_STRING)),
         401: openapi.Response("Unauthorized"),
         404: openapi.Response("FileNotFound"),
     }

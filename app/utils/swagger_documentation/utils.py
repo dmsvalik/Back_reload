@@ -92,10 +92,11 @@ class AllDelete(BaseSwaggerSchema):
 
 class DocsView(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get('files')]
-    operation_summary = 'Возврат ссылки на превью картинки'
+    operation_summary = 'Редирект на превью картинки'
     operation_id = 'document-view'
     operation_description = (
-        "Возврат ссылки на превью картинки.\n\n**Валидация:**\n\n"
+        "Редирект на превью картинки, с добавлением ограничений доступа."
+        "\n\n**Ограничения:**\n\n"
         "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
         "-- Администратор\n-- Владелец\n-- Исполнитель")
     manual_parameters = [

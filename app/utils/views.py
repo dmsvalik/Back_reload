@@ -76,6 +76,7 @@ def get_task_status(request, task_id):
 
 @swagger_auto_schema(
     tags=DocsView.tags,
+    operation_id=DocsView.operation_id,
     operation_summary=DocsView.operation_summary,
     operation_description=DocsView.operation_description,
     manual_parameters=DocsView.manual_parameters,
