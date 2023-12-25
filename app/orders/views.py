@@ -352,6 +352,7 @@ def delete_file_order(request):
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
 def attach_file(request, pk):
+    """ Добавление файла к определенному вопросу заказа."""
     # проверка на наличие order_id
     order_id = pk
     try:
@@ -373,10 +374,6 @@ def attach_file(request, pk):
         raise ValidationError({
             "question_id": ["Вопрос не соответствует анкете."]
         })
-    # except Question.DoesNotExist:
-    #     raise ValidationError({
-    #         "question_id": ["Указан неверный идентификатор вопроса."]
-    #     })
 
     upload_file = request.FILES["upload_file"]
     original_name = upload_file.name
