@@ -287,7 +287,6 @@ class AttachFileAnswerPost(BaseSwaggerSchema):
         ),
         400: generate_400_response(["question_id", "upload_file"]),
         403: DEFAULT_RESPONSES[403],
-        413: DEFAULT_RESPONSES[413],
     }
 
 
