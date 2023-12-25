@@ -1,6 +1,10 @@
 import os
 from datetime import datetime, timedelta, timezone
-from app.orders.permissions import IsOrderFileDataOwnerWithoutUser
+from djoser.compat import get_user_email
+from typing import Any
+
+from app.orders.permissions import (IsOrderFileDataOwnerWithoutUser,
+                                    IsFileExistById)
 
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
@@ -14,9 +18,8 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
-
 
 from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
@@ -43,25 +46,27 @@ from .tasks import (
     celery_upload_file_task_to_answer,
     celery_upload_image_task_to_answer,
 )
-from app.products.models import Category
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
-from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
 from app.questionnaire.permissions import IsOrderOwnerWithoutUser
+from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
+from app.sending.views import send_user_notifications
+from app.utils.file_work import FileWork
+from app.utils.permissions import IsContactor, IsFileOwner
+
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
 
 @swagger_auto_schema(
-        operation_description=OrderCreate.operation_description,
-        request_body=OrderCreate.request_body,
-        responses=OrderCreate.responses,
-        method = "POST"
-    )
+    operation_description=OrderCreate.operation_description,
+    request_body=OrderCreate.request_body,
+    responses=OrderCreate.responses,
+    method="POST"
+)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_order(request):
-
     """ Создание заказа клиента """
     if "order_name" in request.data:
         order_name = request.data.get("order_name")
@@ -89,6 +94,11 @@ def create_order(request):
                          }, status=201)
     if not user:
         response.set_cookie("key", order.key, samesite="None", secure=True)
+    else:
+        context = {"order_id": order.id,
+                   "user_id": user.id}
+        if user.notifications:
+            send_user_notifications(user, "ORDER_CREATE_CONFIRMATION", context, [get_user_email(user)])
     return response
 
 
@@ -107,7 +117,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        order_id = self.kwargs['pk']
+        order_id = self.kwargs.get("pk", None)
         if OrderModel.objects.filter(id=order_id).exists():
             date = OrderModel.objects.get(id=order_id).order_time
             if (datetime.now(timezone.utc) - date) > timedelta(hours=24):
@@ -245,7 +255,7 @@ def get_file_order(request, file_id):
     # get download_url from Yandex
     yandex = CloudStorage()
     try:
-        image_data = yandex.cloud_get_image(yandex_path)
+        image_data = yandex.cloud_get_file(yandex_path)
     except Exception as e:
         return Response(
             {
@@ -256,9 +266,6 @@ def get_file_order(request, file_id):
     return Response(image_data)
 
 
-
-
-
 @swagger_auto_schema(
     operation_description=QuestionnaireResponsePost.operation_description,
     request_body=QuestionnaireResponsePost.request_body,
@@ -267,7 +274,7 @@ def get_file_order(request, file_id):
 )
 @api_view(["POST"])
 @permission_classes([IsOrderOwner])
-def create_answers_to_oder(request, pk):
+def create_answers_to_order(request, pk):
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -305,7 +312,7 @@ def create_answers_to_oder(request, pk):
 )
 @api_view(["GET"])
 @permission_classes([IsOrderOwner])
-def get_answers_to_oder(request, pk):
+def get_answers_to_order(request, pk):
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -399,3 +406,31 @@ def attach_file(request, pk):
         task = celery_upload_file_task_to_answer.delay(temp_file, order.id, user_id, question_id, original_name)
 
     return Response({"task_id": task.id}, status=202)
+
+
+
+@swagger_auto_schema(
+    tags=FileOrderDownload.tags,
+    operation_description=FileOrderDownload.operation_description,
+    responses=FileOrderDownload.responses,
+    request_body=FileOrderDownload.request_body,
+    method="POST",
+)
+@api_view(['POST'])
+@permission_classes([
+    IsFileExistById,
+    IsAdminUser | IsContactor | IsFileOwner
+])
+def get_download_file_link(request) -> Any:
+    """
+    Получение и передача на фронт ссылки на скачивание файла
+    """
+    try:
+        file_link = FileWork.get_download_file_link(
+            file_id=request.data.get('file_id'))
+    except Exception as e:
+        return Response(
+            str(e),
+            status=status.HTTP_404_NOT_FOUND)
+
+    return Response(file_link, status=status.HTTP_200_OK)

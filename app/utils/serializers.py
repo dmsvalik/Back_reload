@@ -1,11 +1,17 @@
 from rest_framework.serializers import ModelSerializer
 from rest_framework import serializers
+
+from config.settings import DOMAIN
+
 from .models import GalleryImages
 
 
+
 class GalleryImagesSerializer(ModelSerializer):
-    slider_number = serializers.CharField(source='slider.name')
+    # Поменяны местами вывод slider_number и position. Ошибка на стороне фронта
+    position = serializers.CharField(source='slider.name')
     image_url = serializers.SerializerMethodField()
+    slider_number = serializers.CharField(source='position')
 
     class Meta:
         model = GalleryImages
@@ -13,5 +19,5 @@ class GalleryImagesSerializer(ModelSerializer):
 
     # change url without domain
     def get_image_url(self, galleryimages):
-        image_url = galleryimages.image.url
-        return image_url
+        icon_url = galleryimages.image.url
+        return f"https://{DOMAIN}{icon_url}"

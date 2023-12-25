@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from rest_framework import permissions
 from rest_framework.exceptions import ValidationError
 
+from django.db.models import Q
 
 from app.orders.models import OrderFileData, OrderModel
 from app.utils.errorcode import FileNotFound
@@ -54,3 +55,15 @@ class IsOrderOwner(permissions.BasePermission):
         if request.user.is_authenticated and OrderModel.objects.filter(id=order_id, user_account=request.user).exists():
             return True
         return False
+
+
+class IsFileExistById(permissions.BasePermission):
+    """Проверка на наличие информации о запрошенном файле в БД"""
+
+    message = {'detail': 'No file information found for the specified id'}
+
+    def has_permission(self, request, view):
+        file_id = view.kwargs.get('file_id') if view.kwargs.get('file_id') \
+            else request.data.get('file_id')
+
+        return OrderModel.objects.filter(id=file_id).exists()

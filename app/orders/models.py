@@ -17,7 +17,7 @@ STATE_CHOICES = (
 
 class OrderModel(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True)
+    user_account = models.ForeignKey(UserAccount, on_delete=models.SET_NULL, null=True, blank=True)
     order_time = models.DateTimeField("Дата создания заказа", auto_now_add=True)
     name = models.CharField("Название заказа", max_length=150, null=True)
     order_description = models.CharField("Описание заказа", max_length=300, blank=True)

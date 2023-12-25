@@ -85,6 +85,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     )
     person_address = models.CharField("Адрес", max_length=200, blank=True, null=True)
     role = models.CharField('Роль', max_length=11, choices=ROLES_CHOICES, default='client')
+    notifications = models.BooleanField("Отправка уведомлений", default=False)
 
     objects = UserAccountManager()
 
