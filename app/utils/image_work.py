@@ -29,9 +29,10 @@ class ImageWork(object):
         self.dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
 
         self.filename = temp_file.split('/')[-1]
-        self.preview_path = self._prepare_and_save_preview()
+        self.preview = self._prepare_and_save_preview()
+        self.preview_path = self.preview.split("files/")[-1]
         self.upload_file_size = os.path.getsize(self._prepare_before_upload())
-        self.preview_file_size = os.path.getsize(self.preview_path)
+        self.preview_file_size = os.path.getsize(self.preview)
 
     def _prepare_and_save_preview(self):
         """Reducing the size of the image and saving it as a preview.

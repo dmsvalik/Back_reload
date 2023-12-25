@@ -20,7 +20,7 @@ class FileWork(object):
 
     def preview_path(self):
         """Preparing preview path"""
-        return os.path.join(self.dir_path, f"{self.temp_file.split('.')[-1]}_thumbnails.jpg")
+        return os.path.join("media_type", f"{self.temp_file.split('.')[-1]}_thumbnails.jpg")
 
     def _upload_file_size(self):
         """Calculating the file size."""
@@ -28,7 +28,7 @@ class FileWork(object):
 
     def _preview_file_size(self):
         """Calculating the preview file size"""
-        return os.path.getsize(self.preview_path())
+        return os.path.getsize(os.path.join(BASE_DIR, self.preview_path()))
 
 
     @staticmethod

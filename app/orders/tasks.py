@@ -1,6 +1,7 @@
 import os
 
 from app.questionnaire.models import Question
+from app.questionnaire.serializers import FileSerializer
 from app.sending.email_sending import OrderEmail
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
@@ -158,7 +159,7 @@ def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id
         result = yandex.cloud_upload_image(image.temp_file, user_id, order_id,
                                            image.filename)
         if result['status_code'] == status.HTTP_201_CREATED:
-            file, _ = OrderFileData.objects.create(
+            created_file = OrderFileData.objects.create(
                 order_id=order,
                 question_id=question,
                 original_name=original_name,
@@ -168,8 +169,9 @@ def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id
                 server_size=image.preview_file_size
             )
             os.remove(image.temp_file)
-            # serializer =
-            return {"status": "SUCCESS"}
+            serializer = FileSerializer(instance=created_file)
+            return {"status": "SUCCESS",
+                    "response": serializer.data}
         else:
             if os.path.exists(image.preview_path):
                 os.remove(image.preview_path)
@@ -192,19 +194,21 @@ def celery_upload_file_task_to_answer(temp_file, order_id, user_id, question_id,
         result = yandex.cloud_upload_image(file.temp_file, user_id, order_id,
                                            filename)
         if result['status_code'] == status.HTTP_201_CREATED:
-            OrderFileData.objects.create(
+            created_file = OrderFileData.objects.create(
                 order_id=order,
                 question_id=question,
                 # передаем оригинальное имя из фронта
                 original_name=original_name,
                 # original_name=temp_file.name,
                 yandex_path=result['yandex_path'],
-                server_path=file.preview_path,
+                server_path=file.preview_path(),
                 yandex_size=file.upload_file_size,
-                server_size=file.preview_file_size
+                server_size=0
             )
             os.remove(file.temp_file)
-            return {"status": "SUCCESS"}
+            serializer = FileSerializer(instance=created_file)
+            return {"status": "SUCCESS",
+                    "response": serializer.data}
         else:
             os.remove(file.temp_file)
             return {"status": "FAILURE", "response": f"Ошибка при загрузке файла: {result}"}

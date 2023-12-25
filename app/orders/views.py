@@ -36,7 +36,7 @@ from .swagger_documentation.orders import (
     OrderCreate,
     QuestionnaireResponsePost,
     QuestionnaireResponseGet,
-    AttachFileAnswerPost,
+    AttachFileAnswerPost, FileOrderDownload,
 )
 from .tasks import (
     celery_delete_file_task,
