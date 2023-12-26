@@ -380,10 +380,9 @@ def attach_file(request, pk: int):
         raise errorcode.OrderIdNotFound()
     except Question.DoesNotExist:
         raise errorcode.QuestionIdNotFound()
-
-    upload_file = request.FILES["upload_file"]
-    if not upload_file:
+    if "upload_file" not in request.FILES:
         raise ValidationError({"detail": "Файл не добавлен."})
+    upload_file = request.FILES["upload_file"]
     original_name = upload_file.name
 
     if request.user.is_authenticated:
