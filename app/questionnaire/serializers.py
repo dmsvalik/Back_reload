@@ -38,6 +38,8 @@ class FileSerializer(serializers.ModelSerializer):
         """
         Generate preview_url field for url path to preview
         """
+        if not order_file_data_obj.server_path:
+            return None
         preview = "https://{domain}/documents/{server_path}"
         return preview.format(
             domain=settings.DOMAIN,
@@ -54,7 +56,11 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
         fields = ["id", "question_id", "response", "files"]
 
     def get_files(self, question_response: QuestionResponse):
-        files = question_response.question.orderfiledata_set.all()
+        # files = question_response.question.orderfiledata_set.all()
+        files = OrderFileData.objects.filter(
+            order_id=question_response.order,
+            question_id=question_response.question
+        )
         return FileSerializer(instance=files, many=True).data
 
 

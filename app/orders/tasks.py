@@ -13,7 +13,7 @@ from celery import shared_task
 from rest_framework import status
 
 from app.orders.models import FileData, OrderFileData, OrderModel
-
+from config.settings import BASE_DIR
 
 logger = get_task_logger(__name__)
 
@@ -90,10 +90,12 @@ def celery_upload_file_task(temp_file, user_id, order_id):
             "response": f"Unexpected response from Yandex.Disk: {result['status_code']}"}
 
 
-
 @shared_task
-def celery_delete_file_task(file_id):
-    """Task to delete a file."""
+def celery_delete_file_task(file_id: int):
+    """
+    Удаление файла с ЯД.
+    file_id: int - id модели OrderFileData
+    """
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
         yandex = CloudStorage()
@@ -117,17 +119,21 @@ def celery_delete_file_task(file_id):
 
 
 @shared_task
-def celery_delete_image_task(file_id):
-    """Task to delete a image."""
+def celery_delete_image_task(file_id: int):
+    """
+    Удаление изображения с сервера и ЯД.
+    file_id: int - id модели OrderFileData
+    """
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
         yandex = CloudStorage()
-        # Удаление файла из папки превью (если она есть)
         preview_path = file_to_delete.server_path
-        if preview_path and os.path.exists(preview_path) and "media/" not in preview_path:
-            os.remove(preview_path)
         if file_to_delete.yandex_path:
             yandex.cloud_delete_file(file_to_delete.yandex_path)
+        if preview_path:
+            full_preview_path = os.path.join(BASE_DIR, "files/", preview_path)
+            if os.path.exists(full_preview_path):
+                os.remove(full_preview_path)
         file_to_delete.delete()
         logger.info(f"Файл с id {file_id} успешно удален.")
         return {"status": "SUCCESS",
@@ -144,12 +150,25 @@ def celery_delete_image_task(file_id):
 
 
 @shared_task()
-def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id, original_name):
+def celery_upload_image_task_to_answer(temp_file: str,
+                                       order_id: int,
+                                       user_id: int | None,
+                                       question_id: int,
+                                       original_name: str):
+    """
+    Загрузка изображения на ЯД, создание превью картинки и сохранение ее на сервере.
+    temp_file: str - адрес временного файла сохраненного в папке tmp,
+    order_id: int - id заказа к которому крепится изображение,
+    user_id: int | None - id пользователя прикреплюящего изображение, может быть None,
+    question_id: int - id вопроса к которому прилагается изображения,
+    original_name: str - изначальное имя изображения переданного пользователем
+    """
     if user_id is None:
         user_id = "no_user"
     try:
-        order = OrderModel.objects.filter(id=order_id).first()
-        question = Question.objects.filter(id=question_id).first()
+        order = OrderModel.objects.get(id=order_id)
+        question = Question.objects.get(id=question_id)
+
         file_format = temp_file.split('.')[-1]
         if file_format != 'gif':
             image = ImageWork(temp_file, user_id, order_id)
@@ -177,17 +196,33 @@ def celery_upload_image_task_to_answer(temp_file, order_id, user_id, question_id
                 os.remove(image.preview_path)
             os.remove(image.temp_file)
             return {"status": "FAILURE", "response": f"Ошибка при загрузке файла: {result}"}
+    except OrderModel.DoesNotExist:
+        return {"status": "FAILURE", "response": "Заказ не найден."}
+    except Question.DoesNotExist:
+        return {"status": "FAILURE", "response": "Вопрос не найден."}
     except Exception as e:
         return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}
 
 
 @shared_task()
-def celery_upload_file_task_to_answer(temp_file, order_id, user_id, question_id, original_name):
+def celery_upload_file_task_to_answer(temp_file: str,
+                                      order_id: int,
+                                      user_id: int | None,
+                                      question_id: int,
+                                      original_name: str):
+    """
+    Загрузка файла на ЯД, создание превью картинки и сохранение ее на сервере.
+    temp_file: str - адрес временного файла сохраненного в папке tmp,
+    order_id: int - id заказа к которому крепится файл,
+    user_id: int | None - id пользователя прикреплюящего файл, может быть None,
+    question_id: int - id вопроса к которому прилагается файл,
+    original_name: str - изначальное имя файла переданного пользователем
+    """
     if user_id is None:
         user_id = "no_user"
     try:
-        order = OrderModel.objects.filter(id=order_id).first()
-        question = Question.objects.filter(id=question_id).first()
+        order = OrderModel.objects.get(id=order_id)
+        question = Question.objects.get(id=question_id)
         file = FileWork(temp_file)
         filename = temp_file.split('/')[-1]
         yandex = CloudStorage()
@@ -197,11 +232,8 @@ def celery_upload_file_task_to_answer(temp_file, order_id, user_id, question_id,
             created_file = OrderFileData.objects.create(
                 order_id=order,
                 question_id=question,
-                # передаем оригинальное имя из фронта
                 original_name=original_name,
-                # original_name=temp_file.name,
                 yandex_path=result['yandex_path'],
-                server_path=file.preview_path(),
                 yandex_size=file.upload_file_size,
                 server_size=0
             )
@@ -212,5 +244,9 @@ def celery_upload_file_task_to_answer(temp_file, order_id, user_id, question_id,
         else:
             os.remove(file.temp_file)
             return {"status": "FAILURE", "response": f"Ошибка при загрузке файла: {result}"}
+    except OrderModel.DoesNotExist:
+        return {"status": "FAILURE", "response": "Заказ не найден."}
+    except Question.DoesNotExist:
+        return {"status": "FAILURE", "response": "Вопрос не найден."}
     except Exception as e:
         return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}

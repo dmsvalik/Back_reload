@@ -331,7 +331,8 @@ def get_answers_to_order(request, pk):
 @permission_classes([IsOrderFileDataOwnerWithoutUser])
 def delete_file_order(request):
     """
-    Удаление файла из Yandex и передача ссылки на его получение для фронта
+    Удаление файла из Yandex и превью с сервера
+    file_id: int - id файла (модели OrderFileData) привязанного к вопросу анкеты
     """
     file_id = request.data.get('file_id')
     try:
@@ -358,40 +359,38 @@ def delete_file_order(request):
 @parser_classes([MultiPartParser])
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
-def attach_file(request, pk):
-    """ Добавление файла к определенному вопросу заказа."""
-    # проверка на наличие order_id
+def attach_file(request, pk: int):
+    """
+    Добавление файла к определенному вопросу заказа.
+    URL: http://localhost/order/<int:pk>/files/
+    METHOD - "POST"
+    pk:int (обязательное) - id заказа к которому крепится файл,
+    Данные которые передаются через form-data
+        - question_id: int (обязательное) - id вопроса к которому
+        прилагается файл или изображение,
+        - upload_file (обязательное) - файл или изображение, отправляемые пользователем,
+        передается через request.FILES
+    """
     order_id = pk
-    try:
-        order = OrderModel.objects.get(id=order_id)
-    except OrderModel.DoesNotExist:
-        raise errorcode.OrderIdNotFound()
-
-    # Извлекаем question_id из тела запроса
     question_id = request.data.get('question_id')
     try:
-        question = Question.objects.get(id=question_id)
-    except Exception:
+        order = OrderModel.objects.get(id=order_id)
+        question = Question.objects.get(id=question_id, chapter__type=order.questionnaire_type)
+    except OrderModel.DoesNotExist:
+        raise errorcode.OrderIdNotFound()
+    except Question.DoesNotExist:
         raise errorcode.QuestionIdNotFound()
 
-    # Проверка типа анкеты к заказу (интегрировал валидацию)
-    questionnaire_type = order.questionnaire_type
-    questionnaire_questions = Question.objects.filter(chapter__type=questionnaire_type)
-    if question not in questionnaire_questions:
-        raise ValidationError({
-            "question_id": ["Вопрос не соответствует анкете."]
-        })
-
     upload_file = request.FILES["upload_file"]
+    if not upload_file:
+        raise ValidationError({"detail": "Файл не добавлен."})
     original_name = upload_file.name
 
-    # юзера при добавлении файла может не быть
     if request.user.is_authenticated:
         user_id = request.user.id
     else:
         user_id = None
 
-    # create new name for file
     new_name = ServerFileSystem(original_name, user_id, order_id).filename
 
     if not os.path.exists("tmp"):
@@ -406,7 +405,6 @@ def attach_file(request, pk):
         task = celery_upload_file_task_to_answer.delay(temp_file, order.id, user_id, question_id, original_name)
 
     return Response({"task_id": task.id}, status=202)
-
 
 
 @swagger_auto_schema(
