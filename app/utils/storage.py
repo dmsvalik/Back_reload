@@ -22,14 +22,17 @@ class ServerFileSystem:
 
     def __init__(self, file_name, user_id, order_id=None):
 
-        # there may be documents without an order, in this case we save them in a special folder
+        # there may be documents without an order and user, in this case we save them in a special folder
         if order_id is None:
             order_id = 'no_order'
 
-        self.user = UserAccount.objects.get(id=user_id)
+        if user_id is None:
+            user_id = 'no_user'
+
+        # self.user = UserAccount.objects.get(id=user_id)
         self.file_format = file_name.split('.')[-1]
-        self.dir_path = os.path.join(BASE_DIR, "files", str(self.user.id), str(order_id))
-        self.filename = self.generate_new_filename
+        self.dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
+        self.filename = self.generate_new_filename()
 
     def _prepare_catalog_file_names(self, dir_path):
         """Parsing a list of all file names in the user's order directory."""
