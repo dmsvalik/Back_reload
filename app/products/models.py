@@ -1,5 +1,6 @@
 from django.db import models
 
+
 CATEGORY_TYPES = {
     ("kitchen", 'кухня'),
     ("table", 'стол'),

@@ -6,7 +6,6 @@ from config.settings import DOMAIN
 from .models import GalleryImages
 
 
-
 class GalleryImagesSerializer(ModelSerializer):
     # Поменяны местами вывод slider_number и position. Ошибка на стороне фронта
     position = serializers.CharField(source='slider.name')

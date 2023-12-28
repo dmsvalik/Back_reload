@@ -42,7 +42,7 @@ def recalculate_quota(user_account, cloud_size, server_size):
 
     """
 
-    user_quota = UserQuota.objects.get(user=user_account)
+    user_quota = UserQuota.objects.get_or_create(user=user_account)[0]
     current_cloud_size = user_quota.total_cloud_size
     current_server_size = user_quota.total_server_size
 
@@ -61,6 +61,7 @@ def recalculate_quota(user_account, cloud_size, server_size):
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def get_task_status(request, task_id):
     task_result = AsyncResult(task_id)
     result = {
