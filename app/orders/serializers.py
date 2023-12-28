@@ -24,7 +24,7 @@ class FilePreviewSerializer(serializers.ModelSerializer):
 
     def get_preview_path(self, obj):
         server_path = obj.server_path
-        return '/documents/' + server_path.split('files/')[-1]
+        return "/documents/" + server_path.split("files/")[-1]
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -72,12 +72,17 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
 
     def get_files(self, obj):
         queryset = FileData.objects.filter(order_id=obj.id)
-        serializer = FilePreviewSerializer(queryset, many=True, )
+        serializer = FilePreviewSerializer(
+            queryset,
+            many=True,
+        )
         return serializer.data
 
 
 class OrderOfferSerializer(serializers.ModelSerializer):
-    user_account = UserAccountSerializer(read_only=True, default=serializers.CurrentUserDefault())
+    user_account = UserAccountSerializer(
+        read_only=True, default=serializers.CurrentUserDefault()
+    )
     order_id = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
@@ -97,14 +102,14 @@ class OrderOfferSerializer(serializers.ModelSerializer):
         )
 
     def get_order_id(self, value):
-        return self.context['view'].kwargs['pk']
+        return self.context["view"].kwargs["pk"]
 
     def validate(self, data):
-        order_id = self.context['view'].kwargs['pk']
+        order_id = self.context["view"].kwargs["pk"]
         if not OrderModel.objects.filter(id=order_id).exists():
             raise errorcode.OrderIdNotFound()
-        user = self.context['view'].request.user
-        if user.role != 'contractor':
+        user = self.context["view"].request.user
+        if user.role != "contractor":
             raise errorcode.NotContractorOffer()
         # Вот тут надо продумать как автоматически создавать ContractorData
         # если у пользователя role = 'contractor'
@@ -112,7 +117,9 @@ class OrderOfferSerializer(serializers.ModelSerializer):
             raise errorcode.OrderInWrongStatus()
         if not ContractorData.objects.get(user=user).is_active:
             raise errorcode.ContractorIsInactive()
-        if OrderOffer.objects.filter(user_account=user, order_id=order_id).exists():
+        if OrderOffer.objects.filter(
+            user_account=user, order_id=order_id
+        ).exists():
             raise errorcode.UniqueOrderOffer()
 
         return data

@@ -12,8 +12,7 @@ from .swagger_documentation.products import QuestionnaireTypeGetList
 from app.questionnaire.models import QuestionnaireType
 
 
-class CategoryViewSet(mixins.ListModelMixin,
-                      GenericViewSet):
+class CategoryViewSet(mixins.ListModelMixin, GenericViewSet):
     permission_classes = [AllowAny]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -23,10 +22,14 @@ class CategoryViewSet(mixins.ListModelMixin,
         operation_description=QuestionnaireTypeGetList.operation_description,
         request_body=QuestionnaireTypeGetList.request_body,
         responses=QuestionnaireTypeGetList.responses,
-        method="GET"
+        method="GET",
     )
-    @action(detail=True,
-            methods=['get', ])
+    @action(
+        detail=True,
+        methods=[
+            "get",
+        ],
+    )
     def questionnaires(self, request, pk):
         queryset = QuestionnaireType.objects.filter(category=pk)
         serializer = QuestionnaireShortTypeSerializer(queryset, many=True)

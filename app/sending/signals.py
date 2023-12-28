@@ -16,12 +16,10 @@ def create_user_notification(sender, instance, created, **kwargs):
 post_save.connect(create_user_notification, sender=UserAccount)
 
 
-def create_notification_record(sender, user: UserAccount, theme: str, type: str, **kwargs):
-    SentNotification.objects.create(
-        user=user,
-        theme=theme,
-        type=type
-    )
+def create_notification_record(
+    sender, user: UserAccount, theme: str, type: str, **kwargs
+):
+    SentNotification.objects.create(user=user, theme=theme, type=type)
 
 
 new_notification.connect(create_notification_record)

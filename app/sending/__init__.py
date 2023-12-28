@@ -1,1 +1,1 @@
-default_app_config = 'app.sending.apps.SendingConfig'
+default_app_config = "app.sending.apps.SendingConfig"

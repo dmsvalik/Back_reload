@@ -8,7 +8,6 @@ User = get_user_model()
 
 
 class CooperationOfferSerializer(ModelSerializer):
-
     class Meta:
         model = CooperationOffer
         fields = "__all__"
@@ -24,11 +23,11 @@ class ContactSupportSerializer(ModelSerializer):
             "user_account",
             "user_question",
             "admin_response",
-            "resolved"
+            "resolved",
         ]
 
 
 class ContractorAgreementSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContractorAgreement
-        fields = ['user_account', 'created_date']
+        fields = ["user_account", "created_date"]

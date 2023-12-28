@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import ContactSupport, ContractorAgreement, ContractorData, CooperationOffer
+from .models import (
+    ContactSupport,
+    ContractorAgreement,
+    ContractorData,
+    CooperationOffer,
+)
 
 
 @admin.register(ContractorData)

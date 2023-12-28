@@ -9,17 +9,32 @@ class UserNotifications(models.Model):
         TEL = "tel", "Уведомление по номеру телефона"
 
     user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False)
-    notification_type = models.CharField(choices=NotificationTypes.choices, max_length=10,
-                                         null=True, blank=False, default=NotificationTypes.EMAIL)
+    notification_type = models.CharField(
+        choices=NotificationTypes.choices,
+        max_length=10,
+        null=True,
+        blank=False,
+        default=NotificationTypes.EMAIL,
+    )
 
     class Meta:
         verbose_name = "Тип уведомлений"
         verbose_name_plural = "Типы уведомлений"
-        constraints = [models.UniqueConstraint(fields=['user', 'notification_type'], name='unique_notification'), ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "notification_type"],
+                name="unique_notification",
+            ),
+        ]
 
 
 class SentNotification(models.Model):
-    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=False, verbose_name="Пользователь")
+    user = models.ForeignKey(
+        UserAccount,
+        on_delete=models.CASCADE,
+        null=False,
+        verbose_name="Пользователь",
+    )
     created_at = models.DateTimeField("Дата уведомления", auto_now_add=True)
     theme = models.CharField("Тема уведомления", max_length=200)
     type = models.CharField("Тип уведомления", max_length=200)

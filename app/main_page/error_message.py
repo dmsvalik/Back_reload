@@ -3,8 +3,7 @@ from rest_framework import status
 
 
 authentication_error_schema = openapi.Schema(
-    type=openapi.TYPE_ARRAY,
-    items=openapi.Schema(type=openapi.TYPE_STRING)
+    type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)
 )
 
 
@@ -16,9 +15,7 @@ error_responses = {
         description="Error: Bad Request.",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                "errors": openapi.Schema(type=openapi.TYPE_STRING)
-            }
+            properties={"errors": openapi.Schema(type=openapi.TYPE_STRING)},
         ),
         examples={
             "application/json": {
@@ -30,9 +27,7 @@ error_responses = {
         description="Error: Unauthorized",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                "detail": openapi.Schema(type=openapi.TYPE_STRING)
-            }
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)},
         ),
         examples={
             "application/json": {
@@ -44,9 +39,7 @@ error_responses = {
         description="Error: Forbidden",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                "detail": openapi.Schema(type=openapi.TYPE_STRING)
-            }
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)},
         ),
         examples={
             "application/json": {
@@ -58,9 +51,7 @@ error_responses = {
         description="Error: NOT_FOUND",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                "detail": openapi.Schema(type=openapi.TYPE_STRING)
-            }
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)},
         ),
         examples={
             "application/json": {
@@ -72,14 +63,12 @@ error_responses = {
         description="Error: INTERNAL_SERVER_ERROR",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                "error": openapi.Schema(type=openapi.TYPE_STRING)
-            }
+            properties={"error": openapi.Schema(type=openapi.TYPE_STRING)},
         ),
         examples={
             "application/json": {
                 "detail": "Internal server error occurred.",
             }
         },
-    )
+    ),
 }

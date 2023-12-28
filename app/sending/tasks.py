@@ -11,4 +11,6 @@ def send_email_notification(sending, context, recipients):
         notification_class = import_string(sending)(context=context)
         notification_class.send(recipients)
     except Exception as er:
-        logger.error(f"Ошибка при отправке письма пользователям {recipients} с ошибкой {er}")
+        logger.error(
+            f"Ошибка при отправке письма пользователям {recipients} с ошибкой {er}"
+        )

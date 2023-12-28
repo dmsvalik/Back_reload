@@ -18,7 +18,6 @@ def get_serialized_data(messages):
 
 
 class AsyncChatConsumer(AsyncWebsocketConsumer):
-
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         self.chat_id = None
@@ -35,26 +34,31 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         хендшейк.
         """
 
-        if self.scope['user'] and self.scope['user'].is_authenticated:
-            self.user = self.scope['user']
+        if self.scope["user"] and self.scope["user"].is_authenticated:
+            self.user = self.scope["user"]
             if self.user is None:
                 await self.close()
         else:
             await self.close()
 
-        self.chat_id = self.scope['url_route']['kwargs'].get('chat_id')
+        self.chat_id = self.scope["url_route"]["kwargs"].get("chat_id")
 
         if await Conversation.objects.filter(pk=self.chat_id).aexists():
-            self.conversation = await Conversation.objects.aget(pk=self.chat_id)
+            self.conversation = await Conversation.objects.aget(
+                pk=self.chat_id
+            )
             if self.conversation.is_blocked:
                 await self.close()
         else:
             await self.close()
 
-        if self.user.role == 'contractor' and self.conversation.is_match is False:
+        if (
+            self.user.role == "contractor"
+            and self.conversation.is_match is False
+        ):
             await self.close()
 
-        self.chat_group_name = f'chat_{self.chat_id}'
+        self.chat_group_name = f"chat_{self.chat_id}"
 
         await self.channel_layer.group_add(
             self.chat_group_name,
@@ -81,13 +85,13 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         Отправка одного конкретного сообщения.
         """
 
-        message = event.get('message')
-        sender = event.get('sender')
+        message = event.get("message")
+        sender = event.get("sender")
         await self.send(
             text_data=json.dumps(
                 {
-                    'message': message,
-                    'sender': sender,
+                    "message": message,
+                    "sender": sender,
                 },
                 ensure_ascii=False,
             ),
@@ -97,9 +101,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         """
         Send content to WebSocket to display it
         """
-        await self.send(
-            text_data=json.dumps(content)
-        )
+        await self.send(text_data=json.dumps(content))
 
     async def fetch_messages(self, data):
         """
@@ -107,7 +109,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         """
         messages = self.conversation.messages.all()
         content = {
-            'messages': await sync_to_async(get_serialized_data)(messages)
+            "messages": await sync_to_async(get_serialized_data)(messages)
         }
         await self.display_content(content)
 
@@ -116,7 +118,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         Send new message to this chat
         """
         sender = self.user
-        message = data.get('message')
+        message = data.get("message")
         self.messages_for_db.append(
             ChatMessage(
                 conversation=self.conversation,
@@ -126,21 +128,21 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             )
         )
         await self.channel_layer.group_send(
-            self.chat_group_name, {
-                'type': 'chat.message',
-                'message': message,
-                'sender': sender.email
-            }
+            self.chat_group_name,
+            {
+                "type": "chat.message",
+                "message": message,
+                "sender": sender.email,
+            },
         )
 
-    commands = {
-        'fetch_messages': fetch_messages,
-        'new_message': new_message
-    }
+    commands = {"fetch_messages": fetch_messages, "new_message": new_message}
 
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
-        message = text_data_json.get('message')
+        message = text_data_json.get("message")
 
         if message:
-            await self.commands[text_data_json['command']](self, text_data_json)
+            await self.commands[text_data_json["command"]](
+                self, text_data_json
+            )

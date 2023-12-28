@@ -20,25 +20,29 @@ class QuotaRecalculateSignal:
 
     """
 
-    def __call__(self,
-                user: UserAccount,
-                order: OrderModel,
-                change_order_state: bool = False,
-                **kwargs
-                 ):
+    def __call__(
+        self,
+        user: UserAccount,
+        order: OrderModel,
+        change_order_state: bool = False,
+        **kwargs
+    ):
         if not order:
             return
 
         self._update_order(order, user, change_order_state)
 
-        files: QuerySet[OrderFileData] | None = OrderFileData.objects.filter(order_id__pk=order.pk).all()
+        files: QuerySet[OrderFileData] | None = OrderFileData.objects.filter(
+            order_id__pk=order.pk
+        ).all()
 
         if files:
             manager = UserQuotaManager(user)
             manager.add_many(files=files)
 
-
-    def _update_order(self, order: OrderModel, user: UserAccount, change_state: bool = False):
+    def _update_order(
+        self, order: OrderModel, user: UserAccount, change_state: bool = False
+    ):
         """
         Обновляет заказ, присваивает заказу пользователя
         и при положительном знаении change_state - меняет статус
@@ -65,7 +69,7 @@ class SendNotifySignal:
             user,
             "ORDER_CREATE_CONFIRMATION",
             {"order_id": order.id, "user_id": user.id},
-            [user.email]
+            [user.email],
         )
 
 

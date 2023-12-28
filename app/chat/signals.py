@@ -15,10 +15,10 @@ User = get_user_model()
 @receiver(
     post_save,
     sender=OrderOffer,
-    dispatch_uid='create_new_chat_and_first_message',
+    dispatch_uid="create_new_chat_and_first_message",
 )
 def manage_chats_for_offer(sender, instance, **kwargs):
-    if kwargs.get('created'):
+    if kwargs.get("created"):
         try:
             contractor = instance.user_account
             new_conversation = Conversation.objects.create(
@@ -33,15 +33,19 @@ def manage_chats_for_offer(sender, instance, **kwargs):
             )
         except Exception as e:
             # FIXME! Залоггировать
-            print('Shit happens', e)
+            print("Shit happens", e)
     else:
         try:
             order = instance.order_id
             if instance.offer_status:
                 client = order.user_account
-                offers_users_ids = OrderOffer.objects.filter(
-                    order_id=order,
-                ).exclude(pk=instance.pk).values_list('user_account', flat=True)
+                offers_users_ids = (
+                    OrderOffer.objects.filter(
+                        order_id=order,
+                    )
+                    .exclude(pk=instance.pk)
+                    .values_list("user_account", flat=True)
+                )
                 chats = Conversation.objects.filter(
                     client=client,
                     contractor__in=offers_users_ids,
@@ -49,7 +53,8 @@ def manage_chats_for_offer(sender, instance, **kwargs):
                 for chat in chats:
                     chat.is_blocked = True
                 Conversation.objects.bulk_update(
-                    chats, ['is_blocked'],
+                    chats,
+                    ["is_blocked"],
                 )
                 if Conversation.objects.filter(
                     client=client,
@@ -64,4 +69,4 @@ def manage_chats_for_offer(sender, instance, **kwargs):
 
         except Exception as e:
             # FIXME! Залоггировать
-            print('Shit happens', e)
+            print("Shit happens", e)

@@ -11,12 +11,13 @@ from .models import Conversation
 from .serializers import ChatSerializer
 
 
-class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
-                  viewsets.GenericViewSet):
+class ChatViewSet(
+    mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet
+):
     """Вьюсет для просмотра списка чатов и создания нового чата."""
 
-    lookup_field = 'id'
-    http_method_names = ('get', 'post', 'head', 'patch', 'delete')
+    lookup_field = "id"
+    http_method_names = ("get", "post", "head", "patch", "delete")
     serializer_class = ChatSerializer
     permission_classes = (IsAuthenticated,)
     pagination_class = None
@@ -29,30 +30,28 @@ class ChatViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
         """
         user = self.request.user
         if user.is_authenticated:
-            if user.role == 'contractor':
+            if user.role == "contractor":
                 order_ids = OrderOffer.objects.filter(
                     user_account=user,
-                ).values_list('order_id', flat=True)
+                ).values_list("order_id", flat=True)
                 client_ids = OrderModel.objects.filter(
                     pk__in=order_ids,
-                ).values_list('user_account', flat=True)
+                ).values_list("user_account", flat=True)
                 return Conversation.objects.filter(
                     contractor=user,
                     is_blocked=False,
                     client__in=client_ids,
                 )
-            available_date = (datetime.now() - timedelta(
-                days=settings.CHATTING['DAYS_TO_UNLOCK'],
-            ))
+            available_date = datetime.now() - timedelta(
+                days=settings.CHATTING["DAYS_TO_UNLOCK"],
+            )
             orders_ids = OrderModel.objects.filter(
                 user_account=user,
                 order_time__lte=available_date,
-            ).values_list(
-                'pk', flat=True
-            )
+            ).values_list("pk", flat=True)
             contractor_ids = OrderOffer.objects.filter(
                 order_id__in=orders_ids,
-            ).values_list('user_account', flat=True)
+            ).values_list("user_account", flat=True)
             return Conversation.objects.filter(
                 client=user,
                 is_blocked=False,

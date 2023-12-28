@@ -7,11 +7,10 @@ import os
 from PIL import Image, ImageSequence
 
 from config.settings import BASE_DIR
-from app.users.models import UserAccount
 
 
 class ImageWork(object):
-    FILE_FORMAT = 'jpg'
+    FILE_FORMAT = "jpg"
     MAX_IMAGE_SIZE_IN_B = 1024 * 1024
     MAXIMUM_DIMENSIONS_OF_SIDES = (300, 300)
     COEFFICIENT_OF_SIZE_CHANGING = 0.9
@@ -20,15 +19,17 @@ class ImageWork(object):
     def __init__(self, temp_file, user_id, order_id=None):
         # there are may be without an order and user
         if order_id is None:
-            order_id = 'no_order'
+            order_id = "no_order"
 
         if user_id is None:
-            user_id = 'no_user'
+            user_id = "no_user"
 
         self.temp_file = temp_file
-        self.dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
+        self.dir_path = os.path.join(
+            BASE_DIR, "files", str(user_id), str(order_id)
+        )
 
-        self.filename = temp_file.split('/')[-1]
+        self.filename = temp_file.split("/")[-1]
         self.preview = self._prepare_and_save_preview()
         self.preview_path = self.preview.split("files/")[-1]
         self.upload_file_size = os.path.getsize(self._prepare_before_upload())
@@ -51,8 +52,10 @@ class ImageWork(object):
         img = Image.open(self.temp_file)
         while image_size > self.MAX_IMAGE_SIZE_IN_B:
             img = img.resize(
-                (int(img.size[0] * self.COEFFICIENT_OF_SIZE_CHANGING),
-                 int(img.size[1] * self.COEFFICIENT_OF_SIZE_CHANGING))
+                (
+                    int(img.size[0] * self.COEFFICIENT_OF_SIZE_CHANGING),
+                    int(img.size[1] * self.COEFFICIENT_OF_SIZE_CHANGING),
+                )
             )
             img.save(self.temp_file)
             image_size = os.path.getsize(self.temp_file)
@@ -60,7 +63,7 @@ class ImageWork(object):
 
 
 class GifWork(ImageWork):
-    FILE_FORMAT = 'gif'
+    FILE_FORMAT = "gif"
     COEFFICIENT_OF_SIZE_CHANGING = 0.7
 
     def _prepare_and_save_preview(self):
@@ -72,19 +75,32 @@ class GifWork(ImageWork):
         with Image.open(self.temp_file) as img:
             for frame in ImageSequence.Iterator(img):
                 if frame.size[0] >= frame.size[1]:
-                    reduction_ratio = self.MAXIMUM_DIMENSIONS_OF_SIDES[0] / frame.size[0]
+                    reduction_ratio = (
+                        self.MAXIMUM_DIMENSIONS_OF_SIDES[0] / frame.size[0]
+                    )
                 else:
-                    reduction_ratio = self.MAXIMUM_DIMENSIONS_OF_SIDES[0] / frame.size[1]
+                    reduction_ratio = (
+                        self.MAXIMUM_DIMENSIONS_OF_SIDES[0] / frame.size[1]
+                    )
                 # и уменьшим согласно коэффициента
-                size = (int(frame.size[0] * reduction_ratio), int(frame.size[1] * reduction_ratio))
+                size = (
+                    int(frame.size[0] * reduction_ratio),
+                    int(frame.size[1] * reduction_ratio),
+                )
                 frame = frame.resize(size)
                 # добавляем обраборанный фрейм в список
                 frames.append(frame)
 
         # сохраняем обработанное GIF-изображение
         preview_path = os.path.join(self.dir_path, self.filename)
-        frames[0].save(preview_path, save_all=True, loop=0,
-                       append_images=frames[1:], optimize=False, duration=3)
+        frames[0].save(
+            preview_path,
+            save_all=True,
+            loop=0,
+            append_images=frames[1:],
+            optimize=False,
+            duration=3,
+        )
         return preview_path
 
     def _prepare_before_upload(self):
@@ -97,14 +113,22 @@ class GifWork(ImageWork):
             with Image.open(self.temp_file) as img:
                 for frame in ImageSequence.Iterator(img):
                     # и уменьшим согласно коэффициента
-                    size = (int(frame.size[0] * self.COEFFICIENT_OF_SIZE_CHANGING),
-                            int(frame.size[1] * self.COEFFICIENT_OF_SIZE_CHANGING))
+                    size = (
+                        int(frame.size[0] * self.COEFFICIENT_OF_SIZE_CHANGING),
+                        int(frame.size[1] * self.COEFFICIENT_OF_SIZE_CHANGING),
+                    )
                     frame = frame.resize(size)
                     # добавляем обраборанный фрейм в список
                     frames.append(frame)
 
             # сохраняем обработанное GIF-изображение
-            frames[0].save(self.temp_file, save_all=True, loop=0,
-                           append_images=frames[1:], optimize=False, duration=3)
+            frames[0].save(
+                self.temp_file,
+                save_all=True,
+                loop=0,
+                append_images=frames[1:],
+                optimize=False,
+                duration=3,
+            )
             gif_size = os.path.getsize(self.temp_file)
         return self.temp_file

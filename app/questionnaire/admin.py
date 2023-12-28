@@ -1,7 +1,13 @@
 from django.contrib import admin
 
-from app.questionnaire.models import QuestionnaireCategory, QuestionnaireType, Question, Option, QuestionnaireChapter, \
-    QuestionResponse
+from app.questionnaire.models import (
+    QuestionnaireCategory,
+    QuestionnaireType,
+    Question,
+    Option,
+    QuestionnaireChapter,
+    QuestionResponse,
+)
 
 
 @admin.register(QuestionnaireCategory)
@@ -18,7 +24,7 @@ class QuestionnaireTypeAdmin(admin.ModelAdmin):
 class QuestionnaireChapterAdmin(admin.ModelAdmin):
     list_display = ["id", "name", "type", "get_quest_category"]
 
-    @admin.display(description='Относится к Анкете', ordering='type_category')
+    @admin.display(description="Относится к Анкете", ordering="type_category")
     def get_quest_category(self, obj):
         return obj.type.category
 
