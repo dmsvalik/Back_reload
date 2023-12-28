@@ -196,6 +196,9 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
 
 
 @swagger_auto_schema(
+    tags=UploadImageOrderPost.tags,
+    operation_id=UploadImageOrderPost.operation_id,
+    operation_summary=UploadImageOrderPost.operation_summary,
     operation_description=UploadImageOrderPost.operation_description,
     request_body=UploadImageOrderPost.request_body,
     responses=UploadImageOrderPost.responses,
@@ -236,6 +239,9 @@ def upload_image_order(request):
 
 
 @swagger_auto_schema(
+    tags=FileOrderGet.tags,
+    operation_id=FileOrderGet.operation_id,
+    operation_summary=FileOrderGet.operation_summary,
     operation_description=FileOrderGet.operation_description,
     responses=FileOrderGet.responses,
     manual_parameters=FileOrderGet.manual_parameters,
@@ -322,6 +328,9 @@ def get_answers_to_order(request, pk):
 
 
 @swagger_auto_schema(
+    tags=FileOrderDelete.tags,
+    operation_id=FileOrderDelete.operation_id,
+    operation_summary=FileOrderDelete.operation_summary,
     operation_description=FileOrderDelete.operation_description,
     responses=FileOrderDelete.responses,
     request_body=FileOrderDelete.request_body,
@@ -407,11 +416,11 @@ def attach_file(request, pk: int):
 
 
 @swagger_auto_schema(
-    tags=FileOrderDownload.tags,
+    tags=FileOrderDownload.tags, operation_id=FileOrderDownload.operation_id,
+    operation_summary=FileOrderDownload.operation_summary,
     operation_description=FileOrderDownload.operation_description,
     responses=FileOrderDownload.responses,
-    request_body=FileOrderDownload.request_body,
-    method="POST",
+    request_body=FileOrderDownload.request_body, method="POST",
 )
 @api_view(['POST'])
 @permission_classes([

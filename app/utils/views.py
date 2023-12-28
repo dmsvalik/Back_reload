@@ -14,7 +14,7 @@ from drf_yasg.utils import swagger_auto_schema
 from app.users.models import UserAccount, UserQuota
 from app.orders.models import OrderModel, OrderOffer
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
-from app.utils.swagger_documentation.utils import AllDelete
+from app.utils.swagger_documentation.utils import AllDelete, DocsView
 
 from .serializers import GalleryImagesSerializer
 from .models import GalleryImages
@@ -75,12 +75,22 @@ def get_task_status(request, task_id):
     return Response(result, status=200)
 
 
+@swagger_auto_schema(
+    tags=DocsView.tags,
+    operation_id=DocsView.operation_id,
+    operation_summary=DocsView.operation_summary,
+    operation_description=DocsView.operation_description,
+    manual_parameters=DocsView.manual_parameters,
+    responses=DocsView.responses,
+    method="get",
+)
 @api_view(('GET',))
 @permission_classes([
     IsFileExist,
     IsAdminUser | IsContactor | IsFileOwner,
 ])
 def document_view(request, path):
+    """Возврат ссылки на превью картинки"""
     res = Response()
     res["X-Accel-Redirect"] = "/files/" + path
     return res
