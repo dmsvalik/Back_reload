@@ -9,6 +9,11 @@ from celery.schedules import crontab
 env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+FONT_DIR = os.path.join(BASE_DIR, 'fonts')
+ttf_file = os.path.join(FONT_DIR, 'Montserrat-Medium.ttf')
+PDF_DIR = os.path.join(BASE_DIR, 'media/pdf_storage')
+design_pdf = os.path.join(PDF_DIR, 'designpdf.pdf')
+
 environ.Env.read_env()
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
