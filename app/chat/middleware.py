@@ -16,8 +16,8 @@ User = get_user_model()
 async def map_headers(bheaders):
     headers = dict()
     for header, value in bheaders.items():
-        new_header = header.decode('utf8')
-        new_value = value.decode('utf8')
+        new_header = header.decode("utf8")
+        new_value = value.decode("utf8")
         headers[new_header] = new_value
     return headers
 
@@ -29,32 +29,40 @@ class JWTAuthMiddleware:
     async def __call__(self, scope, receive, send):
         close_old_connections()
         try:
-            headers = await map_headers(dict(scope['headers']))
-            if headers.get('authorization'):
-                jwt_token = headers.get('authorization').split(' ')[1]
+            headers = await map_headers(dict(scope["headers"]))
+            if headers.get("authorization"):
+                jwt_token = headers.get("authorization").split(" ")[1]
                 jwt_payload = self.get_payload(jwt_token)
                 user_credentials = self.get_user_credentials(jwt_payload)
                 user = await self.get_logged_in_user(user_credentials)
-                scope['user'] = user
+                scope["user"] = user
             else:
-                scope['user'] = AnonymousUser()
-        except (InvalidSignatureError, KeyError, ExpiredSignatureError, DecodeError):
+                scope["user"] = AnonymousUser()
+        except (
+            InvalidSignatureError,
+            KeyError,
+            ExpiredSignatureError,
+            DecodeError,
+        ):
             traceback.print_exc()
-            scope['user'] = AnonymousUser()
+            scope["user"] = AnonymousUser()
         except Exception:
-            scope['user'] = AnonymousUser()
+            scope["user"] = AnonymousUser()
         return await self.app(scope, receive, send)
 
     def get_payload(self, jwt_token):
         return jwt_decode(
-            jwt_token, settings.SECRET_KEY, algorithms=settings.SIMPLE_JWT.get('ALGORITHM'))
+            jwt_token,
+            settings.SECRET_KEY,
+            algorithms=settings.SIMPLE_JWT.get("ALGORITHM"),
+        )
 
     def get_user_credentials(self, payload):
         """
         method to get user credentials from jwt token payload.
         defaults to user id.
         """
-        return payload['user_id']
+        return payload["user_id"]
 
     async def get_logged_in_user(self, user_id):
         return await self.get_user(user_id)

@@ -2,15 +2,20 @@ from django.db import models
 
 
 CATEGORY_TYPES = {
-    ("kitchen", 'кухня'),
-    ("table", 'стол'),
-    ("bedside_table", 'ночной столик')
+    ("kitchen", "кухня"),
+    ("table", "стол"),
+    ("bedside_table", "ночной столик"),
 }
 
 
 class Category(models.Model):
     id = models.AutoField(primary_key=True, unique=True)
-    name = models.CharField("тип - кухня, шкафы, кровати", max_length=50, null=True, choices=CATEGORY_TYPES)
+    name = models.CharField(
+        "тип - кухня, шкафы, кровати",
+        max_length=50,
+        null=True,
+        choices=CATEGORY_TYPES,
+    )
     active = models.BooleanField("Активная категория", default=True)
 
     class Meta:

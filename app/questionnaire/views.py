@@ -6,7 +6,9 @@ from rest_framework.permissions import AllowAny
 
 from app.questionnaire.models import QuestionnaireType
 from app.questionnaire.serializers import QuestionnaireTypeSerializer
-from app.questionnaire.swagger_documentation.questionnaire import QuestionnaireGetList
+from app.questionnaire.swagger_documentation.questionnaire import (
+    QuestionnaireGetList,
+)
 from app.utils import errorcode
 
 
@@ -14,7 +16,7 @@ from app.utils import errorcode
     operation_description=QuestionnaireGetList.operation_description,
     request_body=QuestionnaireGetList.request_body,
     responses=QuestionnaireGetList.responses,
-    method="GET"
+    method="GET",
 )
 @api_view(["GET"])
 @permission_classes([AllowAny])

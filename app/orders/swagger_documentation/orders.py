@@ -2,23 +2,28 @@ from typing import List, Optional
 
 from drf_yasg import openapi
 
-from app.orders.serializers import AllOrdersClientSerializer, OrderOfferSerializer
-from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
+from app.orders.serializers import (
+    AllOrdersClientSerializer,
+    OrderOfferSerializer,
+)
+from app.questionnaire.serializers import (
+    QuestionnaireResponseSerializer,
+    OrderFullSerializer,
+)
 from config.settings import SWAGGER_TAGS
 
 
 def generate_400_response(fields: List[str]):
     default_value = openapi.Schema(
-        type=openapi.TYPE_ARRAY,
-        items=openapi.Schema(type=openapi.TYPE_STRING)
+        type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING)
     )
     properties = {}
     for field in fields:
         properties[field] = default_value
-    return openapi.Response("Bad Request", openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties=properties
-    ))
+    return openapi.Response(
+        "Bad Request",
+        openapi.Schema(type=openapi.TYPE_OBJECT, properties=properties),
+    )
 
 
 DEFAULT_RESPONSES = {
@@ -27,51 +32,47 @@ DEFAULT_RESPONSES = {
         description="Unauthorized",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                "detail": openapi.Schema(type=openapi.TYPE_STRING)
-            }
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)},
         ),
         examples={
             "application/json": {
                 "detail": "Authentication credentials were not provided.",
             }
-        }
+        },
     ),
-    403: openapi.Response("Forbidden", openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'detail': openapi.Schema(type=openapi.TYPE_STRING)
-        }
-    )),
-    404: openapi.Response("Not Found", openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        properties={
-            'detail': openapi.Schema(type=openapi.TYPE_STRING)
-        }
-    )),
+    403: openapi.Response(
+        "Forbidden",
+        openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)},
+        ),
+    ),
+    404: openapi.Response(
+        "Not Found",
+        openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)},
+        ),
+    ),
     413: openapi.Response(
         description="Request Entity Too Large",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                'detail': openapi.Schema(type=openapi.TYPE_STRING)
-            }
-        )
+            properties={"detail": openapi.Schema(type=openapi.TYPE_STRING)},
+        ),
     ),
     500: openapi.Response(
         description="INTERNAL_SERVER_ERROR",
         schema=openapi.Schema(
             type=openapi.TYPE_OBJECT,
-            properties={
-                "error": openapi.Schema(type=openapi.TYPE_STRING)
-            }
+            properties={"error": openapi.Schema(type=openapi.TYPE_STRING)},
         ),
         examples={
             "application/json": {
                 "detail": "Internal server error occurred.",
             }
         },
-    )
+    ),
 }
 
 
@@ -86,8 +87,10 @@ class OfferGetList(BaseSwaggerSchema):
     operation_description = "Вывод всех офферов к заказу."
     request_body = None
     responses = {
-        200: openapi.Response("Success response", OrderOfferSerializer(many=True)),
-        404: DEFAULT_RESPONSES[404]
+        200: openapi.Response(
+            "Success response", OrderOfferSerializer(many=True)
+        ),
+        404: DEFAULT_RESPONSES[404],
     }
 
 
@@ -95,31 +98,40 @@ class OrderCreate(BaseSwaggerSchema):
     operation_description = "Создание заказа"
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        required=['questionnaire_type_id', ],
+        required=[
+            "questionnaire_type_id",
+        ],
         properties={
-            'order_name': openapi.Schema(
-                title='Название заказа',
+            "order_name": openapi.Schema(
+                title="Название заказа",
                 maxLength=150,
                 type=openapi.TYPE_STRING,
             ),
-            'order_description': openapi.Schema(
-                title='Описание заказа',
+            "order_description": openapi.Schema(
+                title="Описание заказа",
                 maxLength=300,
-                type=openapi.TYPE_STRING
+                type=openapi.TYPE_STRING,
             ),
-            'questionnaire_type_id': openapi.Schema(
-                title='Связанная анкета',
-                type=openapi.TYPE_INTEGER
-            )
-        })
+            "questionnaire_type_id": openapi.Schema(
+                title="Связанная анкета", type=openapi.TYPE_INTEGER
+            ),
+        },
+    )
     responses = {
-        201: openapi.Response("Success response", openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'success': openapi.Schema(default='the order was created', type=openapi.TYPE_STRING),
-                'order_id': openapi.Schema(type=openapi.TYPE_INTEGER),
-            })),
-        404: DEFAULT_RESPONSES[404]
+        201: openapi.Response(
+            "Success response",
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "success": openapi.Schema(
+                        default="the order was created",
+                        type=openapi.TYPE_STRING,
+                    ),
+                    "order_id": openapi.Schema(type=openapi.TYPE_INTEGER),
+                },
+            ),
+        ),
+        404: DEFAULT_RESPONSES[404],
     }
 
 
@@ -127,66 +139,84 @@ class OfferCreate(BaseSwaggerSchema):
     operation_description = "Cоздание оффера к заказу."
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        required=['offer_price', 'offer_execution_time'],
+        required=["offer_price", "offer_execution_time"],
         properties={
-            'offer_price': openapi.Schema(
-                title='Цена офера',
+            "offer_price": openapi.Schema(
+                title="Цена офера",
                 maxLength=300,
                 type=openapi.TYPE_STRING,
             ),
-            'offer_execution_time': openapi.Schema(
-                title='Время выполнения офера',
+            "offer_execution_time": openapi.Schema(
+                title="Время выполнения офера",
                 maxLength=300,
-                type=openapi.TYPE_STRING
+                type=openapi.TYPE_STRING,
             ),
-            'offer_description': openapi.Schema(
-                title='Описание офера',
-                maxLength=300,
-                type=openapi.TYPE_STRING
-            )
-        })
+            "offer_description": openapi.Schema(
+                title="Описание офера", maxLength=300, type=openapi.TYPE_STRING
+            ),
+        },
+    )
     responses = {
         201: openapi.Response("Success response", OrderOfferSerializer),
-        400: generate_400_response(['offer_price', 'offer_execution_time', 'offer_description']),
+        400: generate_400_response(
+            ["offer_price", "offer_execution_time", "offer_description"]
+        ),
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404],
     }
 
 
 class AllOrdersClientGetList(BaseSwaggerSchema):
-    operation_description = "Краткая информация обо всех заказах пользователя, кроме выполненных."
+    operation_description = (
+        "Краткая информация обо всех заказах пользователя, кроме выполненных."
+    )
     request_body = None
     responses = {
-        200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
+        200: openapi.Response(
+            "Success response", AllOrdersClientSerializer(many=True)
+        ),
         401: DEFAULT_RESPONSES[401],
         403: DEFAULT_RESPONSES[403],
         500: DEFAULT_RESPONSES[500],
     }
-    manual_parameters = [openapi.Parameter('Authorization', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)]
+    manual_parameters = [
+        openapi.Parameter(
+            "Authorization", in_=openapi.IN_HEADER, type=openapi.TYPE_STRING
+        )
+    ]
 
 
 class ArchiveOrdersClientGetList(BaseSwaggerSchema):
-    operation_description = "Краткая информация о выполненных заказах пользователя."
+    operation_description = (
+        "Краткая информация о выполненных заказах пользователя."
+    )
     request_body = None
     responses = {
-        200: openapi.Response("Success response", AllOrdersClientSerializer(many=True)),
+        200: openapi.Response(
+            "Success response", AllOrdersClientSerializer(many=True)
+        ),
         401: DEFAULT_RESPONSES[401],
         403: DEFAULT_RESPONSES[403],
         500: DEFAULT_RESPONSES[500],
     }
-    manual_parameters = [openapi.Parameter('Authorization', in_=openapi.IN_HEADER, type=openapi.TYPE_STRING)]
+    manual_parameters = [
+        openapi.Parameter(
+            "Authorization", in_=openapi.IN_HEADER, type=openapi.TYPE_STRING
+        )
+    ]
 
 
 class FileOrderGet(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get('files')]
-    operation_id = 'get-image-order'
+    tags = [SWAGGER_TAGS.get("files")]
+    operation_id = "get-image-order"
     operation_summary = "Получение прямой ссылки на скачивание изображения"
     operation_description = (
         "Получение прямой ссылки на скачивание изображения.\nДанный эндпоинт "
         "аналогичен /download/, но выполняется с помощью get-запроса с "
         "указанием ID файла в адресной строке.\n"
         "**В случае успешной обработки возвращается прямая ссылка на "
-        "изображение**\n")
+        "изображение**\n"
+    )
     manual_parameters = [
         openapi.Parameter(
             "file_id",
@@ -197,9 +227,10 @@ class FileOrderGet(BaseSwaggerSchema):
         ),
     ]
     responses = {
-        200: openapi.Response("Success response", openapi.Schema(
-            type=openapi.TYPE_STRING, title="image url"
-        )),
+        200: openapi.Response(
+            "Success response",
+            openapi.Schema(type=openapi.TYPE_STRING, title="image url"),
+        ),
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
@@ -214,18 +245,21 @@ class UploadImageOrderPost(BaseSwaggerSchema):
         "Эндпоинт предназначен для загрузки изображения заказа на сервер.\n"
         "При обращении необходимо передать ID заказа и изображение.\n"
         "**В случае успешной обработки возвращается ID CeleryTask**\n\n"
-        "**Ограничение на формат файлов:**\n* \"image/jpg\"\n* \"image/gif\""
-        "\n* \"image/jpeg\"\n* \"application/pdf\"")
+        '**Ограничение на формат файлов:**\n* "image/jpg"\n* "image/gif"'
+        '\n* "image/jpeg"\n* "application/pdf"'
+    )
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=["order_id", "upload_file"],
         properties={
             "order_id": openapi.Schema(
-                type=openapi.TYPE_STRING, description="ID заказа"),
+                type=openapi.TYPE_STRING, description="ID заказа"
+            ),
             "upload_file": openapi.Schema(
                 type=openapi.TYPE_FILE,
-                description="Файл изображения для загрузки")
-        }
+                description="Файл изображения для загрузки",
+            ),
+        },
     )
     responses = {
         202: openapi.Response(
@@ -235,9 +269,10 @@ class UploadImageOrderPost(BaseSwaggerSchema):
                 properties={
                     "task_id": openapi.Schema(
                         type=openapi.TYPE_STRING,
-                        description="ID задачи обработки изображения")
-                }
-            )
+                        description="ID задачи обработки изображения",
+                    )
+                },
+            ),
         ),
         400: generate_400_response(["order_id", "upload_file"]),
         403: DEFAULT_RESPONSES[403],
@@ -258,22 +293,29 @@ class FileOrderDelete(BaseSwaggerSchema):
     )
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        required=['file_id', ],
+        required=[
+            "file_id",
+        ],
         properties={
-            'file_id': openapi.Schema(
-                title='Id файла',
+            "file_id": openapi.Schema(
+                title="Id файла",
                 type=openapi.TYPE_INTEGER,
             )
-        })
+        },
+    )
     responses = {
-        202: openapi.Response("Success response", openapi.Schema(
-            type=openapi.TYPE_OBJECT, description='ID Task', properties={
-                "task_id": openapi.Schema(
-                    title='ID Task',
-                    type=openapi.TYPE_STRING
-                )
-            }
-        )),
+        202: openapi.Response(
+            "Success response",
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                description="ID Task",
+                properties={
+                    "task_id": openapi.Schema(
+                        title="ID Task", type=openapi.TYPE_STRING
+                    )
+                },
+            ),
+        ),
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
     }
@@ -283,9 +325,11 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
     operation_description = "Отправка ответов на анкету."
     request_body = QuestionnaireResponseSerializer(many=True)
     responses = {
-        201: openapi.Response("Success response", QuestionnaireResponseSerializer(many=True)),
+        201: openapi.Response(
+            "Success response", QuestionnaireResponseSerializer(many=True)
+        ),
         400: generate_400_response(["question"]),
-        404: DEFAULT_RESPONSES[404]
+        404: DEFAULT_RESPONSES[404],
     }
 
 
@@ -295,7 +339,7 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
     responses = {
         200: openapi.Response("Success response", OrderFullSerializer()),
         403: DEFAULT_RESPONSES[403],
-        404: DEFAULT_RESPONSES[404]
+        404: DEFAULT_RESPONSES[404],
     }
 
 
@@ -307,13 +351,15 @@ class AttachFileAnswerPost(BaseSwaggerSchema):
             openapi.IN_FORM,
             type=openapi.TYPE_FILE,
             required=True,
-            description='Upload file'),
+            description="Upload file",
+        ),
         openapi.Parameter(
             "question_id",
             openapi.IN_FORM,
             type=openapi.TYPE_INTEGER,
             required=True,
-            description='ID вопроса')
+            description="ID вопроса",
+        ),
     ]
     responses = {
         202: openapi.Response(
@@ -321,9 +367,12 @@ class AttachFileAnswerPost(BaseSwaggerSchema):
             schema=openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    "task_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID задачи обработки документа")
-                }
-            )
+                    "task_id": openapi.Schema(
+                        type=openapi.TYPE_STRING,
+                        description="ID задачи обработки документа",
+                    )
+                },
+            ),
         ),
         400: generate_400_response(["question_id", "upload_file"]),
         403: DEFAULT_RESPONSES[403],
@@ -338,19 +387,25 @@ class FileOrderDownload(BaseSwaggerSchema):
         "Эндпоинт принимает id файла в БД и **возвращает прямую ссылку на "
         "скачивание файла с ЯндексCloud.**\n\n**Ограничения:**\n\n"
         "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
-        "-- Администратор\n-- Владелец\n-- Исполнитель")
+        "-- Администратор\n-- Владелец\n-- Исполнитель"
+    )
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
-        required=["file_id", ],
+        required=[
+            "file_id",
+        ],
         properties={
             "file_id": openapi.Schema(
                 title="Id файла",
                 type=openapi.TYPE_INTEGER,
             )
-        })
+        },
+    )
     responses = {
-        202: openapi.Response("Success response", openapi.Schema(
-            title="download url", type=openapi.TYPE_STRING)),
+        202: openapi.Response(
+            "Success response",
+            openapi.Schema(title="download url", type=openapi.TYPE_STRING),
+        ),
         401: openapi.Response("Unauthorized"),
         404: openapi.Response("FileNotFound"),
     }

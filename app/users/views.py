@@ -5,7 +5,7 @@ from djoser.compat import get_user_email
 from djoser.conf import settings as djoser_settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
@@ -15,7 +15,6 @@ from rest_framework_simplejwt.settings import api_settings
 
 from app.sending.serializers import DisableNotificationsSerializer
 from app.sending.signals import new_notification
-from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
 from app.users import signals
 from app.orders.models import OrderModel
@@ -23,7 +22,6 @@ from config import settings
 
 
 class CustomUserViewSet(UserViewSet):
-
     def perform_create(self, serializer, *args, **kwargs):
         """
         Сохранение пользователя после регистрации и отправка сообщения на почту
@@ -40,21 +38,25 @@ class CustomUserViewSet(UserViewSet):
         if djoser_settings.SEND_ACTIVATION_EMAIL:
             # djoser_settings.EMAIL.activation(self.request, context).send(to)
             send_django_users_emails.delay(
-                "EMAIL.activation",
-                context,
-                user.id,
-                to)
-            new_notification.send(sender=self.__class__, user=user, theme="Письмо активации аккаунта",
-                                  type="email")
+                "EMAIL.activation", context, user.id, to
+            )
+            new_notification.send(
+                sender=self.__class__,
+                user=user,
+                theme="Письмо активации аккаунта",
+                type="email",
+            )
         elif djoser_settings.SEND_CONFIRMATION_EMAIL:
             # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
             send_django_users_emails.delay(
-                "EMAIL.confirmation",
-                context,
-                user.id,
-                to)
-            new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
-                                  type="email")
+                "EMAIL.confirmation", context, user.id, to
+            )
+            new_notification.send(
+                sender=self.__class__,
+                user=user,
+                theme="Подтверждение активации аккаунта",
+                type="email",
+            )
 
     def create(self, request, *args, **kwargs):
         """
@@ -67,12 +69,12 @@ class CustomUserViewSet(UserViewSet):
         cookie_key = request.COOKIES.get("key")
 
         if cookie_key:
-            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            order: OrderModel = OrderModel.objects.filter(
+                key=cookie_key, user_account__isnull=True
+            ).first()
             signals.quota_recalculate.send(
-                sender=self.__class__,
-                user=self.user_instance,
-                order=order
-                )
+                sender=self.__class__, user=self.user_instance, order=order
+            )
             response.delete_cookie("key")
 
         return response
@@ -95,33 +97,34 @@ class CustomUserViewSet(UserViewSet):
             # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
             context = site_data_from_request(request)
             send_django_users_emails.delay(
-                "EMAIL.confirmation",
-                context,
-                user.id,
-                to)
-            new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
-                                  type="email")
+                "EMAIL.confirmation", context, user.id, to
+            )
+            new_notification.send(
+                sender=self.__class__,
+                user=user,
+                theme="Подтверждение активации аккаунта",
+                type="email",
+            )
 
         order = user.ordermodel_set.filter(state="draft").first()
         if order:
             order.state = "offer"
             order.save()
             signals.send_notify.send(
-                sender=self.__class__,
-                user=user,
-                order=order
+                sender=self.__class__, user=user, order=order
             )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @swagger_auto_schema(
-        request_body=DisableNotificationsSerializer(),
-        method="POST"
+        request_body=DisableNotificationsSerializer(), method="POST"
     )
     @action(["post"], detail=False, permission_classes=[AllowAny])
     def disable_notifications(self, request, *args, **kwargs):
         context = self.get_serializer_context()
-        serializer = DisableNotificationsSerializer(data=request.data, context=context)
+        serializer = DisableNotificationsSerializer(
+            data=request.data, context=context
+        )
         serializer.is_valid(raise_exception=True)
         user = serializer.user
         user.notifications = False
@@ -147,20 +150,22 @@ class CustomTokenViewBase(TokenViewBase):
 
         user = serializer.user
         cookie_key = request.COOKIES.get("key")
-        response = Response(serializer.validated_data, status=status.HTTP_200_OK)
+        response = Response(
+            serializer.validated_data, status=status.HTTP_200_OK
+        )
 
         if cookie_key:
-            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            order: OrderModel = OrderModel.objects.filter(
+                key=cookie_key, user_account__isnull=True
+            ).first()
             signals.quota_recalculate.send(
                 sender=self.__class__,
                 user=user,
                 order=order,
-                change_order_state=True
-                )
+                change_order_state=True,
+            )
             signals.send_notify.send(
-                sender=self.__class__,
-                user=user,
-                order=order
+                sender=self.__class__, user=user, order=order
             )
             response.delete_cookie("key")
 
@@ -168,19 +173,20 @@ class CustomTokenViewBase(TokenViewBase):
 
 
 class CustomTokenObtainPairView(CustomTokenViewBase):
-
     _serializer_class = api_settings.TOKEN_OBTAIN_SERIALIZER
 
 
 def site_data_from_request(request):
     context = {}
     site = get_current_site(request)
-    domain = getattr(settings, 'DOMAIN', '') or site.domain
-    protocol = 'https' if request.is_secure() else 'http'
-    site_name = getattr(settings, 'SITE_NAME', '') or site.name
-    context.update({
-        'domain': domain,
-        'protocol': protocol,
-        'site_name': site_name,
-    })
+    domain = getattr(settings, "DOMAIN", "") or site.domain
+    protocol = "https" if request.is_secure() else "http"
+    site_name = getattr(settings, "SITE_NAME", "") or site.name
+    context.update(
+        {
+            "domain": domain,
+            "protocol": protocol,
+            "site_name": site_name,
+        }
+    )
     return context

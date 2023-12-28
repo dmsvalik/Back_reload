@@ -11,35 +11,36 @@ class Conversation(models.Model):
     Объединяет участников и сообщения.
     Нейминг для избежания подмены понятий
     """
+
     client = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
-        verbose_name='заказчик',
-        related_name='client_chats',
+        verbose_name="заказчик",
+        related_name="client_chats",
         null=True,
     )
     contractor = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
-        verbose_name='исполнитель',
-        related_name='contractor_chats',
+        verbose_name="исполнитель",
+        related_name="contractor_chats",
         null=True,
     )
     is_match = models.BooleanField(
-        verbose_name='случился ли match',
+        verbose_name="случился ли match",
         default=False,
     )
     is_blocked = models.BooleanField(
-        verbose_name='заблокирован ли чат',
+        verbose_name="заблокирован ли чат",
         default=False,
     )
 
     class Meta:
-        verbose_name = 'чат'
-        verbose_name_plural = 'чаты'
+        verbose_name = "чат"
+        verbose_name_plural = "чаты"
 
     def __str__(self):
-        return f'{self.client} - {self.contractor}'
+        return f"{self.client} - {self.contractor}"
 
 
 class ChatMessage(models.Model):
@@ -49,32 +50,33 @@ class ChatMessage(models.Model):
     и содержит ссылку на юзера.
     Желательно НЕ менять ордеринг
     """
+
     conversation = models.ForeignKey(
         Conversation,
         on_delete=models.CASCADE,
-        verbose_name='сообщение',
-        related_name='messages',
+        verbose_name="сообщение",
+        related_name="messages",
     )
     sender = models.ForeignKey(
         User,
         on_delete=models.SET_NULL,
-        verbose_name='отправитель',
-        related_name='messages',
+        verbose_name="отправитель",
+        related_name="messages",
         null=True,
         blank=True,
     )
     text = models.TextField(
-        verbose_name='текст',
+        verbose_name="текст",
     )
     sent_at = models.DateTimeField(
-        verbose_name='Время отправки',
+        verbose_name="Время отправки",
         editable=False,
     )
 
     class Meta:
-        verbose_name = 'сообщение в чате'
-        verbose_name_plural = 'сообщения в чатах'
-        ordering = ('-sent_at',)
+        verbose_name = "сообщение в чате"
+        verbose_name_plural = "сообщения в чатах"
+        ordering = ("-sent_at",)
 
     def __str__(self):
         return self.text[:15]
