@@ -18,18 +18,21 @@ class ImageWork(object):
     NUMBER_OF_CHARACTERS_IN_FILENAME = 7
 
     def __init__(self, temp_file, user_id, order_id=None):
+        # there are may be without an order and user
         if order_id is None:
             order_id = 'no_order'
 
+        if user_id is None:
+            user_id = 'no_user'
+
         self.temp_file = temp_file
-        self.user = UserAccount.objects.get(id=user_id)
-        self.order = order_id
-        self.dir_path = os.path.join(BASE_DIR, "files", str(self.user.id), str(self.order))
+        self.dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
 
         self.filename = temp_file.split('/')[-1]
-        self.preview_path = self._prepare_and_save_preview()
+        self.preview = self._prepare_and_save_preview()
+        self.preview_path = self.preview.split("files/")[-1]
         self.upload_file_size = os.path.getsize(self._prepare_before_upload())
-        self.preview_file_size = os.path.getsize(self.preview_path)
+        self.preview_file_size = os.path.getsize(self.preview)
 
     def _prepare_and_save_preview(self):
         """Reducing the size of the image and saving it as a preview.
