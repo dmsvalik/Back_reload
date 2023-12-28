@@ -15,11 +15,11 @@ from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
 from rest_framework import status, viewsets
-from rest_framework.decorators import api_view, permission_classes, action
+from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
-from rest_framework.generics import GenericAPIView
 
 from .models import STATE_CHOICES, FileData, OrderFileData, OrderModel, OrderOffer
 from .permissions import IsOrderOwner
@@ -35,17 +35,25 @@ from .swagger_documentation.orders import (
     FileOrderDelete,
     OrderCreate,
     QuestionnaireResponsePost,
-    QuestionnaireResponseGet, FileOrderDownload,
-
+    QuestionnaireResponseGet,
+    AttachFileAnswerPost, FileOrderDownload,
 )
-
-from .tasks import celery_delete_file_task, celery_delete_image_task, celery_upload_file_task, celery_upload_image_task
+from .tasks import (
+    celery_delete_file_task,
+    celery_delete_image_task,
+    celery_upload_file_task,
+    celery_upload_image_task,
+    celery_upload_file_task_to_answer,
+    celery_upload_image_task_to_answer,
+)
 from app.main_page.permissions import IsContractor
 from app.questionnaire.models import QuestionnaireType, Question, QuestionResponse
+from app.questionnaire.permissions import IsOrderOwnerWithoutUser
 from app.questionnaire.serializers import QuestionnaireResponseSerializer, OrderFullSerializer
-from ..sending.views import send_user_notifications
-from ..utils.file_work import FileWork
-from ..utils.permissions import IsContactor, IsFileOwner
+from app.sending.views import send_user_notifications
+from app.utils.file_work import FileWork
+from app.utils.permissions import IsContactor, IsFileOwner
+
 
 IMAGE_FILE_FORMATS = ["jpg", "gif", "jpeg", ]
 
@@ -319,33 +327,92 @@ def get_answers_to_order(request, pk):
     return Response(serializer.data)
 
 
-class OrderFileAPIView(viewsets.ViewSet, GenericAPIView):
+@swagger_auto_schema(
+    tags=FileOrderDelete.tags,
+    operation_id=FileOrderDelete.operation_id,
+    operation_summary=FileOrderDelete.operation_summary,
+    operation_description=FileOrderDelete.operation_description,
+    responses=FileOrderDelete.responses,
+    request_body=FileOrderDelete.request_body,
+    method="DELETE"
+)
+@api_view(["DELETE"])
+@permission_classes([IsOrderFileDataOwnerWithoutUser])
+def delete_file_order(request):
+    """
+    Удаление файла из Yandex и превью с сервера
+    file_id: int - id файла (модели OrderFileData) привязанного к вопросу анкеты
+    """
+    file_id = request.data.get('file_id')
+    try:
+        file_to_delete = OrderFileData.objects.get(id=file_id)
+        if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
+            task = celery_delete_image_task.delay(file_id)
+        else:
+            task = celery_delete_file_task.delay(file_id)
+        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+    except OrderFileData.DoesNotExist:
+        return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
+    except Exception as e:
+        return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-    @swagger_auto_schema(
-        tags=FileOrderDelete.tags,
-        operation_id=FileOrderDelete.operation_id,
-        operation_summary=FileOrderDelete.operation_summary,
-        operation_description=FileOrderDelete.operation_description,
-        responses=FileOrderDelete.responses,
-        request_body=FileOrderDelete.request_body,
-    )
-    @permission_classes([IsOrderFileDataOwnerWithoutUser])
-    def delete_file_order(self, request):
-        """
-        Удаление файла из Yandex и передача ссылки на его получение для фронта
-        """
-        file_id = request.data.get('file_id')
-        try:
-            file_to_delete = OrderFileData.objects.get(id=file_id)
-            if file_to_delete.original_name.split('.')[-1] in IMAGE_FILE_FORMATS:
-                task = celery_delete_image_task.delay(file_id)
-            else:
-                task = celery_delete_file_task.delay(file_id)
-            return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
-        except OrderFileData.DoesNotExist:
-            return Response({"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"detail": f"Ошибка: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+@swagger_auto_schema(
+    operation_description=AttachFileAnswerPost.operation_description,
+    responses=AttachFileAnswerPost.responses,
+    manual_parameters=AttachFileAnswerPost.manual_parameters,
+    method="POST"
+)
+@api_view(["POST"])
+@permission_classes([IsOrderOwner])
+@parser_classes([MultiPartParser])
+@check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
+@check_user_quota
+def attach_file(request, pk: int):
+    """
+    Добавление файла к определенному вопросу заказа.
+    URL: http://localhost/order/<int:pk>/files/
+    METHOD - "POST"
+    pk:int (обязательное) - id заказа к которому крепится файл,
+    Данные которые передаются через form-data
+        - question_id: int (обязательное) - id вопроса к которому
+        прилагается файл или изображение,
+        - upload_file (обязательное) - файл или изображение, отправляемые пользователем,
+        передается через request.FILES
+    """
+    order_id = pk
+    question_id = request.data.get('question_id')
+    try:
+        order = OrderModel.objects.get(id=order_id)
+        question = Question.objects.get(id=question_id, chapter__type=order.questionnaire_type)
+    except OrderModel.DoesNotExist:
+        raise errorcode.OrderIdNotFound()
+    except Question.DoesNotExist:
+        raise errorcode.QuestionIdNotFound()
+    if "upload_file" not in request.FILES:
+        raise ValidationError({"detail": "Файл не добавлен."})
+    upload_file = request.FILES["upload_file"]
+    original_name = upload_file.name
+
+    if request.user.is_authenticated:
+        user_id = request.user.id
+    else:
+        user_id = None
+
+    new_name = ServerFileSystem(original_name, user_id, order_id).filename
+
+    if not os.path.exists("tmp"):
+        os.mkdir("tmp")
+    with open(f"tmp/{new_name}", "wb+") as file:
+        for chunk in upload_file.chunks():
+            file.write(chunk)
+    temp_file = f"tmp/{new_name}"
+    if temp_file.split('.')[-1] in IMAGE_FILE_FORMATS:
+        task = celery_upload_image_task_to_answer.delay(temp_file, order_id, user_id, question_id, original_name)
+    else:
+        task = celery_upload_file_task_to_answer.delay(temp_file, order.id, user_id, question_id, original_name)
+
+    return Response({"task_id": task.id}, status=202)
 
 
 @swagger_auto_schema(

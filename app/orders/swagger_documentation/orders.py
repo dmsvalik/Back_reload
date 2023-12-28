@@ -299,6 +299,37 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
     }
 
 
+class AttachFileAnswerPost(BaseSwaggerSchema):
+    operation_description = "Загрузка документа к ответу."
+    manual_parameters = [
+        openapi.Parameter(
+            "upload_file",
+            openapi.IN_FORM,
+            type=openapi.TYPE_FILE,
+            required=True,
+            description='Upload file'),
+        openapi.Parameter(
+            "question_id",
+            openapi.IN_FORM,
+            type=openapi.TYPE_INTEGER,
+            required=True,
+            description='ID вопроса')
+    ]
+    responses = {
+        202: openapi.Response(
+            description="Accepted",
+            schema=openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "task_id": openapi.Schema(type=openapi.TYPE_STRING, description="ID задачи обработки документа")
+                }
+            )
+        ),
+        400: generate_400_response(["question_id", "upload_file"]),
+        403: DEFAULT_RESPONSES[403],
+    }
+
+
 class FileOrderDownload(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("files")]
     operation_id = "file-order-download"

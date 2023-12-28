@@ -61,6 +61,7 @@ def recalculate_quota(user_account, cloud_size, server_size):
 
 
 @api_view(["GET"])
+@permission_classes([AllowAny])
 def get_task_status(request, task_id):
     task_result = AsyncResult(task_id)
     result = {
