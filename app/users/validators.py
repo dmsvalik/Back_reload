@@ -4,6 +4,8 @@ import string
 
 
 class UserValidationFields:
+    """Валидация данных при обновлении пользователя."""
+
     def __init__(
         self,
         person_telephone="person_telephone",

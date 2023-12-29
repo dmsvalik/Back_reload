@@ -10,7 +10,7 @@ from app.users.models import (
 
 @admin.register(UserAccount)
 class UserAccountAdmin(admin.ModelAdmin):
-    list_display = ["email", "id", "name", "is_active", "role"]
+    list_display = ["id", "email", "name", "is_active", "role"]
 
 
 @admin.register(EmailSendTime)
@@ -21,6 +21,7 @@ class EmailSendTimeAdmin(admin.ModelAdmin):
 @admin.register(UserQuota)
 class UserQuotaAdmin(admin.ModelAdmin):
     list_display = [
+        "id",
         "user",
         "total_cloud_size",
         "total_server_size",
@@ -30,4 +31,4 @@ class UserQuotaAdmin(admin.ModelAdmin):
 
 @admin.register(UserAgreement)
 class UserAgreementAdmin(admin.ModelAdmin):
-    list_display = ["user_account", "date"]
+    list_display = ["id", "user_account", "date"]

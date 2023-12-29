@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
-from .models import UserAccount
 from .validators import UserValidationFields
 
 
@@ -9,6 +8,8 @@ User = get_user_model()
 
 
 class UserCreateSerializer(serializers.ModelSerializer):
+    """Сериализатор создания пользователя."""
+
     class Meta:
         model = User
         fields = (
@@ -19,10 +20,13 @@ class UserCreateSerializer(serializers.ModelSerializer):
             "surname",
             "password",
         )
+        extra_kwargs = {"password": {"write_only": True}}
 
 
 class UserAccountSerializer(serializers.ModelSerializer):
+    """Сериализатор вывода и обновления данных о пользователе."""
+
     class Meta:
-        model = UserAccount
+        model = User
         fields = ("id", "email", "name", "person_telephone", "surname", "role")
         validators = [UserValidationFields()]

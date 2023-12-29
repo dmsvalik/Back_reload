@@ -21,6 +21,8 @@ from app.utils.errorcode import (
 
 # Create your models here.
 class UserAccountManager(BaseUserManager):
+    """Manager для создания аккаунта пользователя."""
+
     def create(
         self, email, name, person_telephone=None, surname=None, password=None
     ):
@@ -97,6 +99,8 @@ class UserAccountManager(BaseUserManager):
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
+    """Модель пользователя."""
+
     ROLES_CHOICES = [("contractor", "Исполнитель"), ("client", "Заказчик")]
     email = models.EmailField(
         max_length=50,
@@ -132,7 +136,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         "Рейтинг клиента", blank=True, null=True
     )
     person_created = models.DateTimeField(
-        "Дата создания аккаунта", auto_now=True
+        "Дата создания аккаунта", auto_now_add=True
     )
     person_telephone = models.CharField(
         "Номер телефона",
@@ -172,6 +176,8 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
 
 
 class EmailSendTime(models.Model):
+    """Модель отметки при отправке письма на сброс почты."""
+
     email = models.CharField(
         "Почта на которую было отправлено письмо", max_length=100, blank=True
     )
@@ -186,6 +192,8 @@ class EmailSendTime(models.Model):
 
 
 class UserQuota(models.Model):
+    """Модель для квоты дискового пространства пользователя."""
+
     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
     total_cloud_size = models.PositiveIntegerField(default=0)
     total_server_size = models.PositiveIntegerField(default=0)
@@ -197,7 +205,7 @@ class UserQuota(models.Model):
 
 
 class UserAgreement(models.Model):
-    """Модель принятия оферты пользователем при регистрации"""
+    """Модель принятия оферты пользователем при регистрации."""
 
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(

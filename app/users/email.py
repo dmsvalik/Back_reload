@@ -39,7 +39,8 @@ class UsernameReset(email.UsernameResetEmail):
             result = time_now - score[0]
             if result <= 60:
                 raise EmailTimestampError(
-                    "We have already sent message to this email. Try 1 hour latter"
+                    f"We have already sent message to this email. "
+                    f"Try 1 hour latter"
                 )
 
         context["uid"] = utils.encode_uid(user.pk)

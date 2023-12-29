@@ -1,7 +1,5 @@
-from django.contrib.sites.shortcuts import get_current_site
 from djoser.views import UserViewSet
 from djoser import signals as djoser_signals
-from djoser.compat import get_user_email
 from djoser.conf import settings as djoser_settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
@@ -18,7 +16,9 @@ from app.sending.signals import new_notification
 from app.users.tasks import send_django_users_emails
 from app.users import signals
 from app.orders.models import OrderModel
-from config import settings
+from config.settings import DJOSER
+
+from .utils.helpers import site_data_from_request
 
 
 class CustomUserViewSet(UserViewSet):
@@ -32,13 +32,15 @@ class CustomUserViewSet(UserViewSet):
         djoser_signals.user_registered.send(
             sender=self.__class__, user=user, request=self.request
         )
-        # context = {"user": user}
         context = site_data_from_request(self.request)
-        to = [get_user_email(user)]
         if djoser_settings.SEND_ACTIVATION_EMAIL:
-            # djoser_settings.EMAIL.activation(self.request, context).send(to)
             send_django_users_emails.delay(
-                "EMAIL.activation", context, user.id, to
+                DJOSER.get("EMAIL").get("activation"),
+                context,
+                user.id,
+                [
+                    user.email,
+                ],
             )
             new_notification.send(
                 sender=self.__class__,
@@ -47,9 +49,13 @@ class CustomUserViewSet(UserViewSet):
                 type="email",
             )
         elif djoser_settings.SEND_CONFIRMATION_EMAIL:
-            # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
             send_django_users_emails.delay(
-                "EMAIL.confirmation", context, user.id, to
+                DJOSER.get("EMAIL").get("confirmation"),
+                context,
+                user.id,
+                [
+                    user.email,
+                ],
             )
             new_notification.send(
                 sender=self.__class__,
@@ -81,6 +87,12 @@ class CustomUserViewSet(UserViewSet):
 
     @action(["post"], detail=False)
     def activation(self, request, *args, **kwargs):
+        """
+        Активация аккаунта
+        Проверка на наличие ключа заказа в куки
+        Активация заказа при наличии у пользователя заказа в статусе draft.
+        Отправка уведомления об активации заказа
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.user
@@ -92,12 +104,14 @@ class CustomUserViewSet(UserViewSet):
         )
 
         if djoser_settings.SEND_CONFIRMATION_EMAIL:
-            # context = {"user": user}
-            to = [get_user_email(user)]
-            # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
             context = site_data_from_request(request)
             send_django_users_emails.delay(
-                "EMAIL.confirmation", context, user.id, to
+                DJOSER.get("EMAIL").get("confirmation"),
+                context,
+                user.id,
+                [
+                    user.email,
+                ],
             )
             new_notification.send(
                 sender=self.__class__,
@@ -121,6 +135,9 @@ class CustomUserViewSet(UserViewSet):
     )
     @action(["post"], detail=False, permission_classes=[AllowAny])
     def disable_notifications(self, request, *args, **kwargs):
+        """
+        Отключение всех типов уведомлений пользователя.
+        """
         context = self.get_serializer_context()
         serializer = DisableNotificationsSerializer(
             data=request.data, context=context
@@ -138,8 +155,8 @@ class CustomTokenViewBase(TokenViewBase):
         """
         Создание токена
         Проверка на наличие ключа заказа в куки
-        Пересчет, выделеного для файлов, размера диска пользователя
-        при наличии ключа в куки
+        Пересчет, выделеного для файлов, размера диска пользователя и
+        отправка уведомления об активации заказа при наличии ключа в куки.
         """
         serializer = self.get_serializer(data=request.data)
 
@@ -174,19 +191,3 @@ class CustomTokenViewBase(TokenViewBase):
 
 class CustomTokenObtainPairView(CustomTokenViewBase):
     _serializer_class = api_settings.TOKEN_OBTAIN_SERIALIZER
-
-
-def site_data_from_request(request):
-    context = {}
-    site = get_current_site(request)
-    domain = getattr(settings, "DOMAIN", "") or site.domain
-    protocol = "https" if request.is_secure() else "http"
-    site_name = getattr(settings, "SITE_NAME", "") or site.name
-    context.update(
-        {
-            "domain": domain,
-            "protocol": protocol,
-            "site_name": site_name,
-        }
-    )
-    return context
