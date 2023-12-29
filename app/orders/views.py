@@ -433,6 +433,9 @@ def delete_file_order(request):
 
 
 @swagger_auto_schema(
+    tags=AttachFileAnswerPost.tags,
+    operation_id=AttachFileAnswerPost.operation_id,
+    operation_summary=AttachFileAnswerPost.operation_summary,
     operation_description=AttachFileAnswerPost.operation_description,
     responses=AttachFileAnswerPost.responses,
     manual_parameters=AttachFileAnswerPost.manual_parameters,

@@ -10,7 +10,7 @@ from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
     OrderFullSerializer,
 )
-from config.settings import SWAGGER_TAGS
+from config.settings import SWAGGER_TAGS, MAX_STORAGE_QUOTA
 
 
 def generate_400_response(fields: List[str]):
@@ -242,9 +242,11 @@ class UploadImageOrderPost(BaseSwaggerSchema):
     operation_id = "upload-image-order"
     operation_summary = "Прием изображения для сохранения на сервере"
     operation_description = (
-        "Эндпоинт предназначен для загрузки изображения заказа на сервер.\n"
-        "При обращении необходимо передать ID заказа и изображение.\n"
-        "**В случае успешной обработки возвращается ID CeleryTask**\n\n"
+        "Эндпоинт предназначен для загрузки изображения заказа на сервер."
+        " При обращении необходимо передать ID заказа и изображение.\n"
+        "**В случае успешной обработки возвращается ID CeleryTask**\n"
+        "\n**(Общий объем данных пользователя не должен превышать установле"
+        f"нную квоту в размере {MAX_STORAGE_QUOTA / 1024 / 1024} mb.)**\n\n"
         '**Ограничение на формат файлов:**\n* "image/jpg"\n* "image/gif"'
         '\n* "image/jpeg"\n* "application/pdf"'
     )
@@ -344,7 +346,25 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
 
 
 class AttachFileAnswerPost(BaseSwaggerSchema):
-    operation_description = "Загрузка документа к ответу."
+    tags = [SWAGGER_TAGS.get("files")]
+    operation_id = "file attach"
+    operation_summary = "Загрузка документа к ответу"
+    operation_description = (
+        "Добавление файла к определенному вопросу заказа.\n**(Общий объем "
+        "данных пользователя не должен превышать установленную квоту в разме"
+        f"ре {MAX_STORAGE_QUOTA / 1024 / 1024} mb.)**\n\n"
+        "**Входные данные:**\n"
+        "- pk:int (обязательное) - id заказа к которому крепится файл,"
+        "\n- Данные которые передаются через form-data:"
+        "\n-- question_id: int (обязательное) - id вопроса к которому"
+        "прилагается файл или изображение,"
+        "\n-- upload_file (обязательное) - файл или изображение, отправляемые"
+        "пользователем, передается через request.FILES"
+        "**\n\n**Ограничения:**\n"
+        "1. Проверка пользователя:\n-- Владелец\n 2. Формат файлов:\n"
+        '--"image/jpg"\n--"image/gif"\n--"image/jpeg"\n--'
+        '"application/pdf"'
+    )
     manual_parameters = [
         openapi.Parameter(
             "upload_file",
