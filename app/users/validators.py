@@ -2,6 +2,8 @@ from django.core.validators import validate_email
 from rest_framework import serializers
 import string
 
+from .constants import ErrorMessages
+
 
 class UserValidationFields:
     """Валидация данных при обновлении пользователя."""
@@ -27,32 +29,34 @@ class UserValidationFields:
             ):
                 raise serializers.ValidationError(
                     {
-                        "error": "Телефон должен начинаться с +7, иметь 12 знаков(цифры)."
+                        "person_telephone": ErrorMessages.PHONE_FIELD_VALIDATION_ERROR
                     }
                 )
 
         if self.name in value:
-            # если надо сделать уникальным поменяй в модели unique=True - это для channels
+            # если надо сделать уникальным поменяй в модели unique=True - это
+            # для channels
             if len(value[self.name]) <= 2 or len(value[self.name]) >= 50:
                 raise serializers.ValidationError(
-                    {"error": "Не корретное количество букв в имени"}
+                    {"name": ErrorMessages.WRONG_NUMBER_OF_LETTER}
                 )
 
             if any(x for x in string.punctuation if x in value[self.name]):
                 raise serializers.ValidationError(
-                    {"error": "не допустимые символы в имени!"}
+                    {"name": ErrorMessages.INVALID_CHARACTERS}
                 )
 
         if self.surname in value:
-            # если надо сделать уникальным поменяй в модели unique=True - это для channels
+            # если надо сделать уникальным поменяй в модели unique=True - это
+            # для channels
             if len(value[self.surname]) <= 2 or len(value[self.surname]) >= 50:
                 raise serializers.ValidationError(
-                    {"error": "Не корретное количество букв в имени"}
+                    {"surname": ErrorMessages.WRONG_NUMBER_OF_LETTER}
                 )
 
             if any(x for x in string.punctuation if x in value[self.surname]):
                 raise serializers.ValidationError(
-                    {"error": "не допустимые символы в имени!"}
+                    {"surname": ErrorMessages.INVALID_CHARACTERS}
                 )
 
             if self.email in value:

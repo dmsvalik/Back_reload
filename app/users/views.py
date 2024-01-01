@@ -16,7 +16,7 @@ from app.sending.signals import new_notification
 from app.users.tasks import send_django_users_emails
 from app.users import signals
 from app.orders.models import OrderModel
-from config.settings import DJOSER
+from config.settings import DJOSER, ORDER_COOKIE_KEY_NAME
 
 from .utils.helpers import site_data_from_request
 
@@ -72,7 +72,7 @@ class CustomUserViewSet(UserViewSet):
         при наличии ключа в куки
         """
         response = super().create(request, *args, **kwargs)
-        cookie_key = request.COOKIES.get("key")
+        cookie_key = request.COOKIES.get(ORDER_COOKIE_KEY_NAME)
 
         if cookie_key:
             order: OrderModel = OrderModel.objects.filter(
@@ -81,7 +81,7 @@ class CustomUserViewSet(UserViewSet):
             signals.quota_recalculate.send(
                 sender=self.__class__, user=self.user_instance, order=order
             )
-            response.delete_cookie("key")
+            response.delete_cookie(ORDER_COOKIE_KEY_NAME)
 
         return response
 
@@ -166,7 +166,7 @@ class CustomTokenViewBase(TokenViewBase):
             raise InvalidToken(e.args[0])
 
         user = serializer.user
-        cookie_key = request.COOKIES.get("key")
+        cookie_key = request.COOKIES.get(ORDER_COOKIE_KEY_NAME)
         response = Response(
             serializer.validated_data, status=status.HTTP_200_OK
         )
@@ -184,7 +184,7 @@ class CustomTokenViewBase(TokenViewBase):
             signals.send_notify.send(
                 sender=self.__class__, user=user, order=order
             )
-            response.delete_cookie("key")
+            response.delete_cookie(ORDER_COOKIE_KEY_NAME)
 
         return response
 

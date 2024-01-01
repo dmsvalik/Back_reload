@@ -1,5 +1,6 @@
 from djoser import email
 from django.contrib.auth.tokens import default_token_generator
+from .constants import ErrorMessages
 from .models import EmailSendTime
 
 from djoser import utils
@@ -39,8 +40,7 @@ class UsernameReset(email.UsernameResetEmail):
             result = time_now - score[0]
             if result <= 60:
                 raise EmailTimestampError(
-                    f"We have already sent message to this email. "
-                    f"Try 1 hour latter"
+                    ErrorMessages.RETRY_USERNAME_RESET_ERROR
                 )
 
         context["uid"] = utils.encode_uid(user.pk)

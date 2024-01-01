@@ -18,6 +18,8 @@ from app.utils.errorcode import (
     IncorrectPasswordCreateUser,
 )
 
+from .constants import ModelChoices
+
 
 # Create your models here.
 class UserAccountManager(BaseUserManager):
@@ -27,7 +29,7 @@ class UserAccountManager(BaseUserManager):
         self, email, name, person_telephone=None, surname=None, password=None
     ):
         if not email:
-            raise ValidationError({"error": "Не указана почта"})
+            raise ValidationError({"email": ["This field is required."]})
         email = email.lower()
         if not re.match(r"^[a-zA-Z-0-9\-.@]{5,50}$", email):
             raise IncorrectEmailCreateUser
@@ -101,7 +103,6 @@ class UserAccountManager(BaseUserManager):
 class UserAccount(AbstractBaseUser, PermissionsMixin):
     """Модель пользователя."""
 
-    ROLES_CHOICES = [("contractor", "Исполнитель"), ("client", "Заказчик")]
     email = models.EmailField(
         max_length=50,
         unique=True,
@@ -152,7 +153,10 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         "Адрес", max_length=200, blank=True, null=True
     )
     role = models.CharField(
-        "Роль", max_length=11, choices=ROLES_CHOICES, default="client"
+        "Роль",
+        max_length=11,
+        choices=ModelChoices.ROLES_CHOICES,
+        default="client",
     )
     notifications = models.BooleanField("Отправка уведомлений", default=False)
 

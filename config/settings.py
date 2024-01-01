@@ -355,3 +355,5 @@ DRF_API_LOGGER_SLOW_API_ABOVE = 200
 SENDING = {
     "DISABLE_URL": "disable_notifications/{uid}/{token}/"
 }
+
+ORDER_COOKIE_KEY_NAME = "key"
