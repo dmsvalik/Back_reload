@@ -51,4 +51,9 @@ urlpatterns = [
     ),
     path("order/<int:pk>/files/", views.attach_file, name="file attach"),
     path("download/", views.get_download_file_link, name="get-download-link"),
+    path(
+        "order/<int:pk>/finish/",
+        views.OrderStateActivateView.as_view(),
+        name="order-activate",
+    ),
 ]

@@ -16,7 +16,7 @@ from app.utils.storage import CloudStorage, ServerFileSystem
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, views
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -32,10 +32,16 @@ from .models import (
     OrderFileData,
     OrderModel,
     OrderOffer,
+    STATE_CHOICES,
 )
 from .permissions import IsOrderOwner
 
-from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
+from .serializers import (
+    AllOrdersClientSerializer,
+    OrderOfferSerializer,
+    OrderModelSerializer,
+)
+from .utils.order_state import OrderStateActivate
 from .swagger_documentation.orders import (
     AllOrdersClientGetList,
     ArchiveOrdersClientGetList,
@@ -543,3 +549,26 @@ def get_download_file_link(request) -> Any:
         return Response(str(e), status=status.HTTP_404_NOT_FOUND)
 
     return Response(file_link, status=status.HTTP_200_OK)
+
+
+class OrderStateActivateView(views.APIView):
+    """
+    Активирует заказ меняя его статус на offer
+    """
+
+    permission_classes = (AllowAny,)
+    UPDATE_DATA = {"state": STATE_CHOICES[1][0]}
+
+    def get_object(self) -> OrderModel:
+        instance = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
+        return instance
+
+    def serialize(self, instance: OrderModel):
+        serializer = OrderModelSerializer(instance=instance)
+        return serializer.data
+
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+        OrderStateActivate(instance).execute()
+        data = self.serialize(instance)
+        return Response(data=data, status=200)
