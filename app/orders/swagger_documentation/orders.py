@@ -84,7 +84,22 @@ class BaseSwaggerSchema:
 
 
 class OfferGetList(BaseSwaggerSchema):
-    operation_description = "Вывод всех офферов к заказу."
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("offer")]
+    operation_id = "order-create"
+    operation_summary = "Вывод всех офферов к заказу."
+    operation_description = (
+        "Используйте этот метод для получения списка всех офферов к заказу.\n"
+        "**Ограничения:**\n\n"
+        "- Доступ только для авторизованного пользователя\n"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     request_body = None
     responses = {
         200: openapi.Response(
@@ -95,7 +110,17 @@ class OfferGetList(BaseSwaggerSchema):
 
 
 class OrderCreate(BaseSwaggerSchema):
-    operation_description = "Создание заказа"
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "order-create"
+    operation_summary = "Создание заказа"
+    operation_description = (
+        "Используйтие этот общедоступный метод для создания нового заказa.\n"
+        "Если пользователь "
+        "авторизован, то становится владельцем заказа. В противном случае в "
+        "куки получает уникальный ключ для идентификации после регистрации.\n"
+        " В случае успешного создания заказа, пользователь получит на "
+        "указанный ранее email письмо с параметрами заказа"
+    )
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=[
@@ -136,7 +161,22 @@ class OrderCreate(BaseSwaggerSchema):
 
 
 class OfferCreate(BaseSwaggerSchema):
-    operation_description = "Cоздание оффера к заказу."
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("offer")]
+    operation_summary = "Создание оффера к заказу"
+    operation_description = (
+        "Используйте этот метод для создания оффера к заказу.\n"
+        "**Ограничения:**\n\n"
+        "- Доступ только для **авторизованного пользователя**\n"
+        "- Доступ только для **исполнителя**"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=["offer_price", "offer_execution_time"],
@@ -167,8 +207,13 @@ class OfferCreate(BaseSwaggerSchema):
 
 
 class AllOrdersClientGetList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users")]
+    operation_summary = "Список активных заказов авторизованного пользователя"
     operation_description = (
-        "Краткая информация обо всех заказах пользователя, кроме выполненных."
+        "Используйте этот метод для получения списка краткой информации обо "
+        "всех заказах пользователя, кроме "
+        "выполненных.\n\n**Ограничения:**\n"
+        "- Доступ только для **авторизованного пользователя**\n"
     )
     request_body = None
     responses = {
@@ -187,8 +232,15 @@ class AllOrdersClientGetList(BaseSwaggerSchema):
 
 
 class ArchiveOrdersClientGetList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users")]
+    operation_summary = (
+        "Список завершенных заказов авторизованного " "пользователя"
+    )
     operation_description = (
-        "Краткая информация о выполненных заказах пользователя."
+        "Используйте этот метод для получения списка завершенных заказов "
+        "авторизованного пользователя"
+        "\n\n**Ограничения:**\n"
+        "- Доступ только для **авторизованного пользователя**\n"
     )
     request_body = None
     responses = {
@@ -324,8 +376,25 @@ class FileOrderDelete(BaseSwaggerSchema):
 
 
 class QuestionnaireResponsePost(BaseSwaggerSchema):
-    operation_description = "Отправка ответов на анкету."
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "post-order-answers"
+    operation_summary = "Отправка ответов на анкету к заказу"
+    operation_description = (
+        "Используйте этот метод для отправки ответов на анкету заказа."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является **владельцем заказа**\n"
+        "- В куках неавторизованного пользователя **содержится уникальный "
+        "ключ**"
+    )
     request_body = QuestionnaireResponseSerializer(many=True)
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     responses = {
         201: openapi.Response(
             "Success response", QuestionnaireResponseSerializer(many=True)
@@ -336,7 +405,24 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
 
 
 class QuestionnaireResponseGet(BaseSwaggerSchema):
-    operation_description = "Получение ответов на анкету к заказу."
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "get-order-answers"
+    operation_summary = "Получение вопросов анкеты к заказу"
+    operation_description = (
+        "Используйте этот метод для получения вопросов для анкеты к заказу."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является **владельцем заказа**\n"
+        "- В куках неавторизованного пользователя **содержится уникальный "
+        "ключ**"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     request_body = None
     responses = {
         200: openapi.Response("Success response", OrderFullSerializer()),
