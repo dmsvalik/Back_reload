@@ -18,6 +18,7 @@ from app.users import signals
 from app.orders.models import OrderModel
 from config.settings import DJOSER, ORDER_COOKIE_KEY_NAME
 
+from .constants import EmailThemes
 from .utils.helpers import site_data_from_request
 
 
@@ -45,7 +46,7 @@ class CustomUserViewSet(UserViewSet):
             new_notification.send(
                 sender=self.__class__,
                 user=user,
-                theme="Письмо активации аккаунта",
+                theme=EmailThemes.ACTIVATION,
                 type="email",
             )
         elif djoser_settings.SEND_CONFIRMATION_EMAIL:
@@ -60,7 +61,7 @@ class CustomUserViewSet(UserViewSet):
             new_notification.send(
                 sender=self.__class__,
                 user=user,
-                theme="Подтверждение активации аккаунта",
+                theme=EmailThemes.ACTIVATION_CONFIRMATION,
                 type="email",
             )
 
@@ -116,7 +117,7 @@ class CustomUserViewSet(UserViewSet):
             new_notification.send(
                 sender=self.__class__,
                 user=user,
-                theme="Подтверждение активации аккаунта",
+                theme=EmailThemes.ACTIVATION_CONFIRMATION,
                 type="email",
             )
 

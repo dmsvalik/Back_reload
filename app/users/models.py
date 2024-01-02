@@ -63,7 +63,8 @@ class UserAccountManager(BaseUserManager):
 
         if (
             not re.match(
-                r"^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,:\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$",
+                r"^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,"
+                r":\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$",
                 password,
             )
             or len(re.findall(r"\d+", password)) == 0
@@ -177,22 +178,6 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     class Meta:
         verbose_name = "UserAccount"
         verbose_name_plural = "UserAccount"
-
-
-class EmailSendTime(models.Model):
-    """Модель отметки при отправке письма на сброс почты."""
-
-    email = models.CharField(
-        "Почта на которую было отправлено письмо", max_length=100, blank=True
-    )
-    api_call = models.CharField("Api запрос", max_length=100, blank=True)
-    timestamp = models.DateTimeField(
-        "Время отправки запроса на сброс почты", auto_now=True
-    )
-
-    class Meta:
-        verbose_name = "Email - Send Control"
-        verbose_name_plural = "Email - Send Control"
 
 
 class UserQuota(models.Model):

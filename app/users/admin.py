@@ -2,7 +2,6 @@ from django.contrib import admin
 
 from app.users.models import (
     UserAccount,
-    EmailSendTime,
     UserQuota,
     UserAgreement,
 )
@@ -11,11 +10,6 @@ from app.users.models import (
 @admin.register(UserAccount)
 class UserAccountAdmin(admin.ModelAdmin):
     list_display = ["id", "email", "name", "is_active", "role"]
-
-
-@admin.register(EmailSendTime)
-class EmailSendTimeAdmin(admin.ModelAdmin):
-    list_display = ["id", "email", "timestamp"]
 
 
 @admin.register(UserQuota)

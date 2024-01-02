@@ -5,11 +5,14 @@ class ErrorMessages:
     PHONE_FIELD_VALIDATION_ERROR = (
         "Телефон должен начинаться с +7, иметь 12 знаков(цифры)."
     )
-    WRONG_NUMBER_OF_LETTER = (
-        "Количество букв должно быть не менее 2 и не более 50."
-    )
     INVALID_CHARACTERS = "Недопустимые символы!"
 
 
 class ModelChoices:
     ROLES_CHOICES = [("contractor", "Исполнитель"), ("client", "Заказчик")]
+
+
+class EmailThemes:
+    ACTIVATION_CONFIRMATION = "Подтверждение активации аккаунта."
+    ACTIVATION = "Письмо активации аккаунта."
+    RESET_EMAIL = "Письмо на сброс почты."
