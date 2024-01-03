@@ -136,6 +136,9 @@ class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
     # class AllDeleteAPIView(APIView):
     @permission_classes([IsAdminUser])
     @swagger_auto_schema(
+        tags=AllDelete.tags,
+        operation_id=AllDelete.operation_id,
+        operation_summary=AllDelete.operation_summary,
         operation_description=AllDelete.operation_description,
         responses=AllDelete.responses,
         request_body=AllDelete.request_body,

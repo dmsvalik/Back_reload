@@ -76,7 +76,15 @@ class BaseSwaggerSchema:
 
 
 class AllDelete(BaseSwaggerSchema):
-    operation_description = "Удаление заказа"
+    tags = [SWAGGER_TAGS.get("service")]
+    operation_id = "delete"
+    operation_summary = "Очистка базы данных"
+    operation_description = (
+        "Используйте этот метод для полной очистки базы данных. База данных "
+        "будет очищена полностью кроме записи админа\n"
+        "**Ограничения**\n\n- Администратор\n**Использование метода крайне "
+        "опасно, так как полностью очищает базу данных**"
+    )
     request_body = None
     responses = {
         202: openapi.Response("Success response"),
@@ -108,4 +116,35 @@ class DocsView(BaseSwaggerSchema):
         202: openapi.Response("Success response"),
         401: openapi.Response("Unauthorized"),
         404: openapi.Response("FileNotFound"),
+    }
+
+
+class CreateAdmin(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("service")]
+    operation_id = "create_admin"
+    operation_summary = "Создание пользователя с правами администратора"
+    operation_description = (
+        "Используйте этот метод для создания "
+        "пользователя с правами администратора"
+    )
+    request_body = None
+    responses = {
+        202: openapi.Response("Success response"),
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
+    }
+
+
+class CreateAllData(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("service")]
+    operation_id = "create_all_data"
+    operation_summary = "Создание тестового наполнения базы данных"
+    operation_description = (
+        "Используйте этот метод для тестового наполнения базы данных"
+    )
+    request_body = None
+    responses = {
+        202: openapi.Response("Success response"),
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
     }

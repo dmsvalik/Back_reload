@@ -321,6 +321,11 @@ SWAGGER_SETTINGS = {
 
 SWAGGER_TAGS = {
     "files": "Работа с файлами",
+    "order": "Работа с заказами",
+    "offer": "Офферы",
+    "users": "Пользователи",
+    "auth": "Авторизация",
+    "service": "Сервисные функции",
 }
 
 MAX_SERVER_QUOTA = 5 * 1024 * 1024

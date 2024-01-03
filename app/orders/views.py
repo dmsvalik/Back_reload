@@ -80,6 +80,9 @@ IMAGE_FILE_FORMATS = [
 
 
 @swagger_auto_schema(
+    tags=OrderCreate.tags,
+    operation_id=OrderCreate.operation_id,
+    operation_summary=OrderCreate.operation_summary,
     operation_description=OrderCreate.operation_description,
     request_body=OrderCreate.request_body,
     responses=OrderCreate.responses,
@@ -167,7 +170,10 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return []
 
     @swagger_auto_schema(
+        tags=OfferGetList.tags,
+        operation_summary=OfferGetList.operation_summary,
         operation_description=OfferGetList.operation_description,
+        manual_parameters=OfferGetList.manual_parameters,
         responses=OfferGetList.responses,
     )
     def list(self, request, *args, **kwargs):
@@ -179,7 +185,10 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @swagger_auto_schema(
+        tags=OfferCreate.tags,
+        operation_summary=OfferCreate.operation_summary,
         operation_description=OfferCreate.operation_description,
+        manual_parameters=OfferCreate.manual_parameters,
         request_body=OfferCreate.request_body,
         responses=OfferCreate.responses,
     )
@@ -206,6 +215,8 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
         )
 
     @swagger_auto_schema(
+        tags=AllOrdersClientGetList.tags,
+        operation_summary=AllOrdersClientGetList.operation_summary,
         operation_description=AllOrdersClientGetList.operation_description,
         request_body=AllOrdersClientGetList.request_body,
         responses=AllOrdersClientGetList.responses,
@@ -228,6 +239,8 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
         return OrderModel.objects.filter(user_account=user, state="completed")
 
     @swagger_auto_schema(
+        tags=ArchiveOrdersClientGetList.tags,
+        operation_summary=ArchiveOrdersClientGetList.operation_summary,
         operation_description=ArchiveOrdersClientGetList.operation_description,
         request_body=ArchiveOrdersClientGetList.request_body,
         responses=ArchiveOrdersClientGetList.responses,
@@ -323,6 +336,10 @@ def get_file_order(request, file_id):
 
 
 @swagger_auto_schema(
+    tags=QuestionnaireResponsePost.tags,
+    operation_id=QuestionnaireResponsePost.operation_id,
+    operation_summary=QuestionnaireResponsePost.operation_summary,
+    manual_parameters=QuestionnaireResponsePost.manual_parameters,
     operation_description=QuestionnaireResponsePost.operation_description,
     request_body=QuestionnaireResponsePost.request_body,
     responses=QuestionnaireResponsePost.responses,
@@ -382,6 +399,10 @@ def create_answers_to_order(request, pk):
 
 
 @swagger_auto_schema(
+    tags=QuestionnaireResponseGet.tags,
+    operation_id=QuestionnaireResponseGet.operation_id,
+    operation_summary=QuestionnaireResponseGet.operation_summary,
+    manual_parameters=QuestionnaireResponseGet.manual_parameters,
     operation_description=QuestionnaireResponseGet.operation_description,
     responses=QuestionnaireResponseGet.responses,
     method="GET",
@@ -433,6 +454,9 @@ def delete_file_order(request):
 
 
 @swagger_auto_schema(
+    tags=AttachFileAnswerPost.tags,
+    operation_id=AttachFileAnswerPost.operation_id,
+    operation_summary=AttachFileAnswerPost.operation_summary,
     operation_description=AttachFileAnswerPost.operation_description,
     responses=AttachFileAnswerPost.responses,
     manual_parameters=AttachFileAnswerPost.manual_parameters,

@@ -10,7 +10,7 @@ from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
     OrderFullSerializer,
 )
-from config.settings import SWAGGER_TAGS
+from config.settings import SWAGGER_TAGS, MAX_STORAGE_QUOTA
 
 
 def generate_400_response(fields: List[str]):
@@ -84,7 +84,22 @@ class BaseSwaggerSchema:
 
 
 class OfferGetList(BaseSwaggerSchema):
-    operation_description = "Вывод всех офферов к заказу."
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("offer")]
+    operation_id = "order-create"
+    operation_summary = "Вывод всех офферов к заказу."
+    operation_description = (
+        "Используйте этот метод для получения списка всех офферов к заказу.\n"
+        "**Ограничения:**\n\n"
+        "- Доступ только для авторизованного пользователя\n"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     request_body = None
     responses = {
         200: openapi.Response(
@@ -95,7 +110,17 @@ class OfferGetList(BaseSwaggerSchema):
 
 
 class OrderCreate(BaseSwaggerSchema):
-    operation_description = "Создание заказа"
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "order-create"
+    operation_summary = "Создание заказа"
+    operation_description = (
+        "Используйтие этот общедоступный метод для создания нового заказa.\n"
+        "Если пользователь "
+        "авторизован, то становится владельцем заказа. В противном случае в "
+        "куки получает уникальный ключ для идентификации после регистрации.\n"
+        " В случае успешного создания заказа, пользователь получит на "
+        "указанный ранее email письмо с параметрами заказа"
+    )
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=[
@@ -136,7 +161,22 @@ class OrderCreate(BaseSwaggerSchema):
 
 
 class OfferCreate(BaseSwaggerSchema):
-    operation_description = "Cоздание оффера к заказу."
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("offer")]
+    operation_summary = "Создание оффера к заказу"
+    operation_description = (
+        "Используйте этот метод для создания оффера к заказу.\n"
+        "**Ограничения:**\n\n"
+        "- Доступ только для **авторизованного пользователя**\n"
+        "- Доступ только для **исполнителя**"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=["offer_price", "offer_execution_time"],
@@ -167,8 +207,13 @@ class OfferCreate(BaseSwaggerSchema):
 
 
 class AllOrdersClientGetList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users")]
+    operation_summary = "Список активных заказов авторизованного пользователя"
     operation_description = (
-        "Краткая информация обо всех заказах пользователя, кроме выполненных."
+        "Используйте этот метод для получения списка краткой информации обо "
+        "всех заказах пользователя, кроме "
+        "выполненных.\n\n**Ограничения:**\n"
+        "- Доступ только для **авторизованного пользователя**\n"
     )
     request_body = None
     responses = {
@@ -187,8 +232,15 @@ class AllOrdersClientGetList(BaseSwaggerSchema):
 
 
 class ArchiveOrdersClientGetList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users")]
+    operation_summary = (
+        "Список завершенных заказов авторизованного " "пользователя"
+    )
     operation_description = (
-        "Краткая информация о выполненных заказах пользователя."
+        "Используйте этот метод для получения списка завершенных заказов "
+        "авторизованного пользователя"
+        "\n\n**Ограничения:**\n"
+        "- Доступ только для **авторизованного пользователя**\n"
     )
     request_body = None
     responses = {
@@ -242,9 +294,11 @@ class UploadImageOrderPost(BaseSwaggerSchema):
     operation_id = "upload-image-order"
     operation_summary = "Прием изображения для сохранения на сервере"
     operation_description = (
-        "Эндпоинт предназначен для загрузки изображения заказа на сервер.\n"
-        "При обращении необходимо передать ID заказа и изображение.\n"
-        "**В случае успешной обработки возвращается ID CeleryTask**\n\n"
+        "Эндпоинт предназначен для загрузки изображения заказа на сервер."
+        " При обращении необходимо передать ID заказа и изображение.\n"
+        "**В случае успешной обработки возвращается ID CeleryTask**\n"
+        "\n**(Общий объем данных пользователя не должен превышать установле"
+        f"нную квоту в размере {MAX_STORAGE_QUOTA / 1024 / 1024} mb.)**\n\n"
         '**Ограничение на формат файлов:**\n* "image/jpg"\n* "image/gif"'
         '\n* "image/jpeg"\n* "application/pdf"'
     )
@@ -322,8 +376,25 @@ class FileOrderDelete(BaseSwaggerSchema):
 
 
 class QuestionnaireResponsePost(BaseSwaggerSchema):
-    operation_description = "Отправка ответов на анкету."
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "post-order-answers"
+    operation_summary = "Отправка ответов на анкету к заказу"
+    operation_description = (
+        "Используйте этот метод для отправки ответов на анкету заказа."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является **владельцем заказа**\n"
+        "- В куках неавторизованного пользователя **содержится уникальный "
+        "ключ**"
+    )
     request_body = QuestionnaireResponseSerializer(many=True)
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     responses = {
         201: openapi.Response(
             "Success response", QuestionnaireResponseSerializer(many=True)
@@ -334,7 +405,24 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
 
 
 class QuestionnaireResponseGet(BaseSwaggerSchema):
-    operation_description = "Получение ответов на анкету к заказу."
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "get-order-answers"
+    operation_summary = "Получение вопросов анкеты к заказу"
+    operation_description = (
+        "Используйте этот метод для получения вопросов для анкеты к заказу."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является **владельцем заказа**\n"
+        "- В куках неавторизованного пользователя **содержится уникальный "
+        "ключ**"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
     request_body = None
     responses = {
         200: openapi.Response("Success response", OrderFullSerializer()),
@@ -344,7 +432,25 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
 
 
 class AttachFileAnswerPost(BaseSwaggerSchema):
-    operation_description = "Загрузка документа к ответу."
+    tags = [SWAGGER_TAGS.get("files")]
+    operation_id = "file attach"
+    operation_summary = "Загрузка документа к ответу"
+    operation_description = (
+        "Добавление файла к определенному вопросу заказа.\n**(Общий объем "
+        "данных пользователя не должен превышать установленную квоту в разме"
+        f"ре {MAX_STORAGE_QUOTA / 1024 / 1024} mb.)**\n\n"
+        "**Входные данные:**\n"
+        "- pk:int (обязательное) - id заказа к которому крепится файл,"
+        "\n- Данные которые передаются через form-data:"
+        "\n-- question_id: int (обязательное) - id вопроса к которому"
+        "прилагается файл или изображение,"
+        "\n-- upload_file (обязательное) - файл или изображение, отправляемые"
+        "пользователем, передается через request.FILES"
+        "**\n\n**Ограничения:**\n"
+        "1. Проверка пользователя:\n-- Владелец\n 2. Формат файлов:\n"
+        '--"image/jpg"\n--"image/gif"\n--"image/jpeg"\n--'
+        '"application/pdf"'
+    )
     manual_parameters = [
         openapi.Parameter(
             "upload_file",
