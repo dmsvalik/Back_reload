@@ -18,14 +18,18 @@ from app.utils.errorcode import (
     IncorrectPasswordCreateUser,
 )
 
+from .constants import ModelChoices
+
 
 # Create your models here.
 class UserAccountManager(BaseUserManager):
+    """Manager для создания аккаунта пользователя."""
+
     def create(
         self, email, name, person_telephone=None, surname=None, password=None
     ):
         if not email:
-            raise ValidationError({"error": "Не указана почта"})
+            raise ValidationError({"email": ["This field is required."]})
         email = email.lower()
         if not re.match(r"^[a-zA-Z-0-9\-.@]{5,50}$", email):
             raise IncorrectEmailCreateUser
@@ -59,7 +63,8 @@ class UserAccountManager(BaseUserManager):
 
         if (
             not re.match(
-                r"^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,:\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$",
+                r"^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,"
+                r":\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$",
                 password,
             )
             or len(re.findall(r"\d+", password)) == 0
@@ -97,7 +102,8 @@ class UserAccountManager(BaseUserManager):
 
 
 class UserAccount(AbstractBaseUser, PermissionsMixin):
-    ROLES_CHOICES = [("contractor", "Исполнитель"), ("client", "Заказчик")]
+    """Модель пользователя."""
+
     email = models.EmailField(
         max_length=50,
         unique=True,
@@ -132,7 +138,7 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         "Рейтинг клиента", blank=True, null=True
     )
     person_created = models.DateTimeField(
-        "Дата создания аккаунта", auto_now=True
+        "Дата создания аккаунта", auto_now_add=True
     )
     person_telephone = models.CharField(
         "Номер телефона",
@@ -148,7 +154,10 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         "Адрес", max_length=200, blank=True, null=True
     )
     role = models.CharField(
-        "Роль", max_length=11, choices=ROLES_CHOICES, default="client"
+        "Роль",
+        max_length=11,
+        choices=ModelChoices.ROLES_CHOICES,
+        default="client",
     )
     notifications = models.BooleanField("Отправка уведомлений", default=False)
 
@@ -171,21 +180,9 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "UserAccount"
 
 
-class EmailSendTime(models.Model):
-    email = models.CharField(
-        "Почта на которую было отправлено письмо", max_length=100, blank=True
-    )
-    api_call = models.CharField("Api запрос", max_length=100, blank=True)
-    timestamp = models.DateTimeField(
-        "Время отправки запроса на сброс почты", auto_now=True
-    )
-
-    class Meta:
-        verbose_name = "Email - Send Control"
-        verbose_name_plural = "Email - Send Control"
-
-
 class UserQuota(models.Model):
+    """Модель для квоты дискового пространства пользователя."""
+
     user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
     total_cloud_size = models.PositiveIntegerField(default=0)
     total_server_size = models.PositiveIntegerField(default=0)
@@ -197,7 +194,7 @@ class UserQuota(models.Model):
 
 
 class UserAgreement(models.Model):
-    """Модель принятия оферты пользователем при регистрации"""
+    """Модель принятия оферты пользователем при регистрации."""
 
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(
