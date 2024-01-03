@@ -35,7 +35,6 @@ class OrderStateActivate(OrderState):
     """
 
     def execute(self) -> None:
-        self.answer_is_complete()
         if not self._is_draft():
             raise OrderInWrongStatus()
 

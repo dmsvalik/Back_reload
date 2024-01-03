@@ -32,7 +32,6 @@ from .models import (
     OrderFileData,
     OrderModel,
     OrderOffer,
-    STATE_CHOICES,
 )
 from .permissions import IsOrderOwner
 
@@ -556,8 +555,7 @@ class OrderStateActivateView(views.APIView):
     Активирует заказ меняя его статус на offer
     """
 
-    permission_classes = (AllowAny,)
-    UPDATE_DATA = {"state": STATE_CHOICES[1][0]}
+    permission_classes = (IsOrderOwner,)
 
     def get_object(self) -> OrderModel:
         instance = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
