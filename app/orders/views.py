@@ -555,7 +555,7 @@ class OrderStateActivateView(views.APIView):
     Активирует заказ меняя его статус на offer
     """
 
-    permission_classes = (IsOrderOwner,)
+    permission_classes = (IsAuthenticated, IsOrderOwner)
 
     def get_object(self) -> OrderModel:
         instance = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
