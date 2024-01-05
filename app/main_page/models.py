@@ -4,6 +4,8 @@ from app.users.models import UserAccount
 
 
 class ContractorData(models.Model):
+    """Модель информации об исполнителе."""
+
     user = models.OneToOneField(
         UserAccount, on_delete=models.CASCADE, primary_key=True
     )
@@ -26,6 +28,8 @@ class ContractorData(models.Model):
 
 
 class CooperationOffer(models.Model):
+    """Модель предложения о сотрудничестве."""
+
     id = models.AutoField(primary_key=True, unique=True)
     name = models.CharField(
         "Имя компании", max_length=100, blank=True, null=True
@@ -41,6 +45,8 @@ class CooperationOffer(models.Model):
 
 
 class ContactSupport(models.Model):
+    """Модель вопросов относящихся к поддержке."""
+
     user_account = models.ForeignKey(
         UserAccount, on_delete=models.SET_NULL, null=True
     )
@@ -59,6 +65,8 @@ class ContactSupport(models.Model):
 
 
 class ContractorAgreement(models.Model):
+    """Модель подтверждения договора о сотрудничестве."""
+
     user_account = models.OneToOneField(
         UserAccount, on_delete=models.CASCADE, primary_key=True
     )

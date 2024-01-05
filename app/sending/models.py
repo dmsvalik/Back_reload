@@ -4,6 +4,8 @@ from app.users.models import UserAccount
 
 
 class UserNotifications(models.Model):
+    """Модель уведомлений пользователя."""
+
     class NotificationTypes(models.TextChoices):
         EMAIL = "email", "Уведомление по Email"
         TEL = "tel", "Уведомление по номеру телефона"
@@ -29,6 +31,8 @@ class UserNotifications(models.Model):
 
 
 class SentNotification(models.Model):
+    """Модель отправленных уведомлений."""
+
     user = models.ForeignKey(
         UserAccount,
         on_delete=models.CASCADE,

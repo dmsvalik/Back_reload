@@ -2,21 +2,13 @@ from app.sending.signals import new_notification
 from app.sending.tasks import send_email_notification
 from app.users.models import UserAccount
 
-
-NOTIFICATION_CLASSES = {
-    "email": {
-        "ORDER_CREATE_CONFIRMATION": {
-            "type": "app.sending.email_sending.OrderEmail",
-            "theme": "Подтверждение отправки заказа исполнителям.",
-        }
-    },
-    "tel": {"ORDER_CREATE_CONFIRMATION": None},
-}
+from config.settings import NOTIFICATION_CLASSES
 
 
 def send_user_notifications(
     user: UserAccount, notification_class: str, context: dict, recipients: list
 ):
+    """Отправка уведомлений пользователям и создание записи об отправке."""
     notifications_types = [
         notification.notification_type
         for notification in user.usernotifications_set.all()

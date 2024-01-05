@@ -14,6 +14,7 @@ class OrderEmail(BaseEmailMessage):
     template_name = "order_created.html"
 
     def get_context_data(self):
+        """Получение данных для наполнения context для шаблона письма."""
         context = super().get_context_data()
 
         user_id = context.get("user_id")

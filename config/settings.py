@@ -362,3 +362,14 @@ SENDING = {
 }
 
 ORDER_COOKIE_KEY_NAME = "key"
+
+
+NOTIFICATION_CLASSES = {
+    "email": {
+        "ORDER_CREATE_CONFIRMATION": {
+            "type": "app.sending.email_sending.OrderEmail",
+            "theme": "Подтверждение отправки заказа исполнителям.",
+        }
+    },
+    "tel": {"ORDER_CREATE_CONFIRMATION": None},
+}

@@ -3,30 +3,12 @@ from django.db import models
 from app.orders.models import OrderModel
 from app.products.models import Category
 
-ANSWER_TYPES = {
-    ("text_field", "text_field"),
-    ("choice_field", "choice_field"),
-    ("answer_not_required", "answer_not_required"),
-}
-
-OPTION_TYPES = {("answer", "answer"), ("sub_questions", "sub_questions")}
-
-
-class QuestionnaireCategory(models.Model):
-    id = models.AutoField(primary_key=True, unique=True)
-    category = models.ForeignKey(
-        Category, on_delete=models.CASCADE, null=False
-    )
-
-    class Meta:
-        verbose_name = "Категория анкеты"
-        verbose_name_plural = "Категории анкеты"
-
-    def __str__(self):
-        return self.category.name
+from .constants import ModelChoice
 
 
 class QuestionnaireType(models.Model):
+    """Модель типа анкеты."""
+
     id = models.AutoField(primary_key=True, unique=True)
     category = models.ForeignKey(
         Category, on_delete=models.CASCADE, null=False
@@ -49,6 +31,8 @@ class QuestionnaireType(models.Model):
 
 
 class QuestionnaireChapter(models.Model):
+    """Модель раздела анкеты."""
+
     id = models.AutoField(primary_key=True, unique=True)
     name = models.CharField("Раздел опросника", max_length=200)
     type = models.ForeignKey(
@@ -65,6 +49,12 @@ class QuestionnaireChapter(models.Model):
 
 
 class Question(models.Model):
+    """
+    Модель вопроса анкеты.
+    Вопрос может быть подвопросом варианта ответов и тогда будет ссылаться
+    на этот вариант ответа.
+    """
+
     id = models.AutoField(primary_key=True, unique=True)
     text = models.CharField("Вопрос", max_length=200)
     position = models.IntegerField("Позиция в анкете", blank=True, null=True)
@@ -72,7 +62,7 @@ class Question(models.Model):
         QuestionnaireChapter, on_delete=models.CASCADE, null=False
     )
     answer_type = models.CharField(
-        "Тип ответа", max_length=200, choices=ANSWER_TYPES
+        "Тип ответа", max_length=200, choices=ModelChoice.ANSWER_TYPES
     )
     file_required = models.BooleanField(default=False)
     answer_required = models.BooleanField(default=False)
@@ -94,6 +84,12 @@ class Question(models.Model):
 
 
 class Option(models.Model):
+    """
+    Модель вариантов ответа на вопросы анкеты.
+    Вариант ответа может быть окончаельным ответом на вопрос или
+    может сообщать о подвопросе.
+    """
+
     id = models.AutoField(primary_key=True, unique=True)
     text = models.CharField("Вопрос", max_length=200)
     question = models.ForeignKey(
@@ -103,7 +99,7 @@ class Option(models.Model):
         related_name="question_parent",
     )
     option_type = models.CharField(
-        "Тип опции", max_length=200, choices=OPTION_TYPES
+        "Тип опции", max_length=200, choices=ModelChoice.OPTION_TYPES
     )
 
     class Meta:
@@ -115,6 +111,8 @@ class Option(models.Model):
 
 
 class QuestionResponse(models.Model):
+    """Модель ответов клиента на вопросы анкеты."""
+
     id = models.AutoField(primary_key=True, unique=True)
     order = models.ForeignKey(OrderModel, on_delete=models.CASCADE, null=False)
     question = models.ForeignKey(
