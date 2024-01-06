@@ -75,6 +75,7 @@ from app.questionnaire.serializers import (
 from app.sending.views import send_user_notifications
 from app.utils.file_work import FileWork
 from app.utils.permissions import IsContactor, IsFileOwner
+from app.users.signals import send_notify
 
 
 IMAGE_FILE_FORMATS = [
@@ -567,6 +568,11 @@ class OrderStateActivateView(views.APIView):
 
     def patch(self, request, *args, **kwargs):
         instance = self.get_object()
+
         OrderStateActivate(instance).execute()
+        send_notify.send(
+            sender=self.__class__, user=instance.user_account, order=instance
+        )
+
         data = self.serialize(instance)
         return Response(data=data, status=200)
