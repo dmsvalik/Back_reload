@@ -10,6 +10,7 @@ from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
     OrderFullSerializer,
 )
+from app.orders.serializers import OrderModelSerializer
 from config.settings import SWAGGER_TAGS, MAX_STORAGE_QUOTA
 
 
@@ -229,6 +230,18 @@ class AllOrdersClientGetList(BaseSwaggerSchema):
             "Authorization", in_=openapi.IN_HEADER, type=openapi.TYPE_STRING
         )
     ]
+
+
+class OrderStateActivateSwagger(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_summary = "Активация заказа"
+    request_body = OrderModelSerializer
+    responses = {
+        200: openapi.Response("Success response", schema=OrderModelSerializer),
+        401: DEFAULT_RESPONSES[401],
+        403: DEFAULT_RESPONSES[403],
+        500: DEFAULT_RESPONSES[500],
+    }
 
 
 class ArchiveOrdersClientGetList(BaseSwaggerSchema):
