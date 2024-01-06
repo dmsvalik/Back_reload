@@ -13,7 +13,7 @@ from app.questionnaire.models import QuestionnaireType
 from app.utils.models import GallerySlider, GalleryImages
 from app.utils.prepare_db.questionnaire_data import QuestionnaireKitchenData
 from app.utils.prepare_db.kitchen_long_questionnaire import questionnaire as kitchen_full_data
-from app.utils.swagger_documentation.utils import CreateAdmin, CreateAllData
+from app.utils.swagger_documentation import utils as swagger
 
 questionnaire = QuestionnaireKitchenData()
 
@@ -206,14 +206,7 @@ class InitialData(object):
 initial_db = InitialData()
 
 
-@swagger_auto_schema(
-    tags=CreateAdmin.tags,
-    operation_id=CreateAdmin.operation_id,
-    operation_summary=CreateAdmin.operation_summary,
-    operation_description=CreateAdmin.operation_description,
-    responses=CreateAdmin.responses,
-    method="post"
-)
+@swagger_auto_schema(**swagger.CreateAdmin.__dict__)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_admin(request):
@@ -222,14 +215,7 @@ def create_admin(request):
     return result
 
 
-@swagger_auto_schema(
-    tags=CreateAllData.tags,
-    operation_id=CreateAllData.operation_id,
-    operation_summary=CreateAllData.operation_summary,
-    operation_description=CreateAllData.operation_description,
-    responses=CreateAllData.responses,
-    method="post"
-)
+@swagger_auto_schema(**swagger.CreateAllData.__dict__)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_all_data(request):
