@@ -121,6 +121,7 @@ class OrderCreate(BaseSwaggerSchema):
         " В случае успешного создания заказа, пользователь получит на "
         "указанный ранее email письмо с параметрами заказа"
     )
+    method = "POST"
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=[
@@ -207,7 +208,7 @@ class OfferCreate(BaseSwaggerSchema):
 
 
 class AllOrdersClientGetList(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users")]
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users_service")]
     operation_summary = "Список активных заказов авторизованного пользователя"
     operation_description = (
         "Используйте этот метод для получения списка краткой информации обо "
@@ -232,7 +233,7 @@ class AllOrdersClientGetList(BaseSwaggerSchema):
 
 
 class ArchiveOrdersClientGetList(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users")]
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users_service")]
     operation_summary = (
         "Список завершенных заказов авторизованного " "пользователя"
     )
@@ -287,6 +288,7 @@ class FileOrderGet(BaseSwaggerSchema):
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
     }
+    method = "get"
 
 
 class UploadImageOrderPost(BaseSwaggerSchema):
@@ -302,6 +304,7 @@ class UploadImageOrderPost(BaseSwaggerSchema):
         '**Ограничение на формат файлов:**\n* "image/jpg"\n* "image/gif"'
         '\n* "image/jpeg"\n* "application/pdf"'
     )
+    method = "post"
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=["order_id", "upload_file"],
@@ -345,6 +348,7 @@ class FileOrderDelete(BaseSwaggerSchema):
         "\n\n**Ограничения:**\n\n1. Проверка пользователя(или):\n-- Владелец"
         "\n-- Файл без владельца"
     )
+    method = "DELETE"
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=[
@@ -386,6 +390,7 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
         "- В куках неавторизованного пользователя **содержится уникальный "
         "ключ**"
     )
+    method = "POST"
     request_body = QuestionnaireResponseSerializer(many=True)
     manual_parameters = [
         openapi.Parameter(
@@ -415,6 +420,7 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
         "- В куках неавторизованного пользователя **содержится уникальный "
         "ключ**"
     )
+    method = "GET"
     manual_parameters = [
         openapi.Parameter(
             type=openapi.TYPE_INTEGER,
@@ -451,6 +457,7 @@ class AttachFileAnswerPost(BaseSwaggerSchema):
         '--"image/jpg"\n--"image/gif"\n--"image/jpeg"\n--'
         '"application/pdf"'
     )
+    method = "POST"
     manual_parameters = [
         openapi.Parameter(
             "upload_file",
@@ -495,6 +502,7 @@ class FileOrderDownload(BaseSwaggerSchema):
         "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
         "-- Администратор\n-- Владелец\n-- Исполнитель"
     )
+    method = "POST"
     request_body = openapi.Schema(
         type=openapi.TYPE_OBJECT,
         required=[
