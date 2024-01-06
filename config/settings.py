@@ -373,3 +373,18 @@ NOTIFICATION_CLASSES = {
     },
     "tel": {"ORDER_CREATE_CONFIRMATION": None},
 }
+
+DJOSER_EMAIL_CLASSES = {
+    "ACTIVATION": {
+        "type": "app.users.email.Activation",
+        "theme": "Письмо активации аккаунта.",
+    },
+    "CONFIRMATION": {
+        "type": "app.users.email.Confirmation",
+        "theme": "Подтверждение активации аккаунта.",
+    },
+    "USERNAME_RESET": {
+        "type": "app.users.email.UsernameReset",
+        "theme": "Письмо на сброс почты.",
+    }
+}
