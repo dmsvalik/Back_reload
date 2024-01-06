@@ -54,6 +54,7 @@ from .swagger_documentation.orders import (
     QuestionnaireResponseGet,
     AttachFileAnswerPost,
     FileOrderDownload,
+    OrderStateActivateSwagger,
 )
 from .tasks import (
     celery_delete_file_task,
@@ -566,6 +567,7 @@ class OrderStateActivateView(views.APIView):
         serializer = OrderModelSerializer(instance=instance)
         return serializer.data
 
+    @swagger_auto_schema(**OrderStateActivateSwagger.__dict__)
     def patch(self, request, *args, **kwargs):
         instance = self.get_object()
 
