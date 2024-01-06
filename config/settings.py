@@ -303,6 +303,10 @@ DJOSER = {
         "current_user": "app.users.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
+    "PERMISSIONS": {
+        "user_list": ["djoser.permissions.CurrentUserOrAdmin"],
+        "set_email": ["djoser.permissions.CurrentUserOrAdmin"],
+    },
 }
 
 # Default primary key field type
@@ -323,9 +327,11 @@ SWAGGER_TAGS = {
     "files": "Работа с файлами",
     "order": "Работа с заказами",
     "offer": "Офферы",
-    "users": "Пользователи",
+    "users": "Аккаунт пользователя",
+    "users_service": "Методы авторизованного пользователя",
     "auth": "Авторизация",
     "service": "Сервисные функции",
+    "contractor": "Исполнитель"
 }
 
 MAX_SERVER_QUOTA = 5 * 1024 * 1024
