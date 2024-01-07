@@ -235,7 +235,7 @@ class AllOrdersClientGetList(BaseSwaggerSchema):
 class OrderStateActivateSwagger(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("order")]
     operation_summary = "Активация заказа"
-    request_body = OrderModelSerializer
+    request_body = None
     responses = {
         200: openapi.Response("Success response", schema=OrderModelSerializer),
         401: DEFAULT_RESPONSES[401],
