@@ -6,11 +6,14 @@ from datetime import datetime, timedelta, timezone
 from app.main_page.models import UserAccount, ContractorData
 from app.orders.models import OrderModel, STATE_CHOICES, OrderOffer
 
+from drf_yasg.utils import swagger_auto_schema
+
 from app.products.models import Category
 from app.questionnaire.models import QuestionnaireType
 from app.utils.models import GallerySlider, GalleryImages
 from app.utils.prepare_db.questionnaire_data import QuestionnaireKitchenData
 from app.utils.prepare_db.kitchen_long_questionnaire import questionnaire as kitchen_full_data
+from app.utils.swagger_documentation import utils as swagger
 
 questionnaire = QuestionnaireKitchenData()
 
@@ -203,6 +206,7 @@ class InitialData(object):
 initial_db = InitialData()
 
 
+@swagger_auto_schema(**swagger.CreateAdmin.__dict__)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_admin(request):
@@ -211,6 +215,7 @@ def create_admin(request):
     return result
 
 
+@swagger_auto_schema(**swagger.CreateAllData.__dict__)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_all_data(request):

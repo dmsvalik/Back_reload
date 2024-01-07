@@ -13,7 +13,6 @@ from app.utils import errorcode
 from app.utils.errorcode import FileNotFound
 from config.settings import TOKEN
 from config.settings import BASE_DIR
-from app.users.models import UserAccount
 from pathlib import Path
 
 
@@ -21,17 +20,18 @@ class ServerFileSystem:
     NUMBER_OF_CHARACTERS_IN_FILENAME = 7
 
     def __init__(self, file_name, user_id, order_id=None):
-
         # there may be documents without an order and user, in this case we save them in a special folder
         if order_id is None:
-            order_id = 'no_order'
+            order_id = "no_order"
 
         if user_id is None:
-            user_id = 'no_user'
+            user_id = "no_user"
 
         # self.user = UserAccount.objects.get(id=user_id)
-        self.file_format = file_name.split('.')[-1]
-        self.dir_path = os.path.join(BASE_DIR, "files", str(user_id), str(order_id))
+        self.file_format = file_name.split(".")[-1]
+        self.dir_path = os.path.join(
+            BASE_DIR, "files", str(user_id), str(order_id)
+        )
         self.filename = self.generate_new_filename()
 
     def _prepare_catalog_file_names(self, dir_path):
@@ -41,7 +41,7 @@ class ServerFileSystem:
             for path in os.listdir(dir_path):
                 # check if current path is a file
                 if os.path.isfile(os.path.join(dir_path, path)):
-                    filename = path.split('.')[0]
+                    filename = path.split(".")[0]
                     res.append(filename)
         else:
             os.makedirs(dir_path)
@@ -51,22 +51,26 @@ class ServerFileSystem:
         """File Name generation for differents documents (images, pdf ...)"""
 
         existed_names = self._prepare_catalog_file_names(self.dir_path)
-        generated_file_name = ''.join(random.choices(
-            string.ascii_letters + string.digits,
-            k=self.NUMBER_OF_CHARACTERS_IN_FILENAME
-        ))
-        while generated_file_name in existed_names:
-            generated_file_name = ''.join(random.choices(
+        generated_file_name = "".join(
+            random.choices(
                 string.ascii_letters + string.digits,
-                k=self.NUMBER_OF_CHARACTERS_IN_FILENAME
-            ))
+                k=self.NUMBER_OF_CHARACTERS_IN_FILENAME,
+            )
+        )
+        while generated_file_name in existed_names:
+            generated_file_name = "".join(
+                random.choices(
+                    string.ascii_letters + string.digits,
+                    k=self.NUMBER_OF_CHARACTERS_IN_FILENAME,
+                )
+            )
 
-        return f'{generated_file_name}.{self.file_format}'
+        return f"{generated_file_name}.{self.file_format}"
 
 
 class CloudStorage:
     def __init__(self):
-        self.token = TOKEN,
+        self.token = (TOKEN,)
         self.URL = "https://cloud-api.yandex.net/v1/disk/resources"
         self.headers = {
             "Content-Type": "application/json",
@@ -121,7 +125,9 @@ class CloudStorage:
         """
         full_path = f"{path}/{name}"
         params = {"path": full_path, "overwrite": self.overwrite}
-        res = requests.get(f"{self.URL}/upload", headers=self.headers, params=params)
+        res = requests.get(
+            f"{self.URL}/upload", headers=self.headers, params=params
+        )
         result = json.loads(res.content)
         try:
             return result["href"]
@@ -140,9 +146,9 @@ class CloudStorage:
             response = requests.put(upload_link, headers=self.headers, data=f)
 
         result = dict()
-        result['status_code'] = response.status_code
+        result["status_code"] = response.status_code
         if response.status_code == 201:
-            result['yandex_path'] = path + '/' + name
+            result["yandex_path"] = path + "/" + name
 
         return result
 
@@ -151,22 +157,23 @@ class CloudStorage:
         Метод для получения файла из YandexDisk.
         """
 
-        res = requests.get(f"{self.URL}/download/?path={yandex_path}",
-                           headers=self.headers)
+        res = requests.get(
+            f"{self.URL}/download/?path={yandex_path}", headers=self.headers
+        )
         download_url = res.json().get("href")
 
         if not download_url:
             raise FileNotFound()
 
-        result = {'status': res.status_code,
-                  'download_url': download_url}
+        result = {"status": res.status_code, "download_url": download_url}
         return result
 
     def cloud_delete_file(self, yandex_path):
-        """ Метод для удаления файла из YandexDisk."""
+        """Метод для удаления файла из YandexDisk."""
         res = requests.delete(
             f"{self.URL}?path={yandex_path}&permanently=True",
-            headers=self.headers)
+            headers=self.headers,
+        )
         print(res.status_code)
         # если файл на сервере удален или не найден возвращаем True
         if not res.status_code == 204 and not res.status_code == 404:

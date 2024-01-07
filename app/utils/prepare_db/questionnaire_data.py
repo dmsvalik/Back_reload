@@ -1,6 +1,7 @@
 from app.products.models import Category
-from app.questionnaire.models import QuestionnaireCategory, QuestionnaireType, QuestionnaireChapter, Question, \
-    Option
+from app.questionnaire.models import (
+    Question, QuestionnaireType, QuestionnaireChapter, Option
+)
 from .questionnaire_kitchen_full import main_information_chapter, main_facade_chapter
 
 

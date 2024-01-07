@@ -8,22 +8,26 @@ repos:
     - id: check-added-large-files
     - id: no-commit-to-branch
       args: ['--branch', 'main']
-
 - repo: local
   hooks:
-
-    - id: isort
-      name: isort
-      entry: isort
-      files: ^(config/|main_page/|orders/|products/)
-      language: system
-      types: [python]
-      args: ["--profile", "black", --line-length=120]
 
     - id: flake8
       name: flake8
       entry: flake8
-      files: ^(config/|main_page/|orders/|products/)
       language: system
       types: [python]
+      exclude: prepare_db|tests|migrations|apps.py|settings.py
       args: [--config, setup.cfg]
+
+    - id: black
+      name: black
+      entry: black
+      language: system
+      types: [python]
+      exclude: prepare_db|tests|migrations|settings.py
+      args: ["--line-length=79"]
+
+        # It is recommended to specify the latest version of Python
+        # supported by your project here, or alternatively use
+        # pre-commit's default_language_version, see
+        # https://pre-commit.com/#top_level-default_language_version

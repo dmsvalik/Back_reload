@@ -8,6 +8,7 @@ User = get_user_model()
 
 
 class CooperationOfferSerializer(ModelSerializer):
+    """Сериализатор предложений о сотрудничестве."""
 
     class Meta:
         model = CooperationOffer
@@ -15,6 +16,8 @@ class CooperationOfferSerializer(ModelSerializer):
 
 
 class ContactSupportSerializer(ModelSerializer):
+    """Сериализатор вопросов относящихся к поддержке."""
+
     user_account = HiddenField(default=CurrentUserDefault())
 
     class Meta:
@@ -24,11 +27,13 @@ class ContactSupportSerializer(ModelSerializer):
             "user_account",
             "user_question",
             "admin_response",
-            "resolved"
+            "resolved",
         ]
 
 
 class ContractorAgreementSerializer(serializers.ModelSerializer):
+    """Сериализатор подтверждения договора о сотрудничестве."""
+
     class Meta:
         model = ContractorAgreement
-        fields = ['user_account', 'created_date']
+        fields = ["user_account", "created_date"]

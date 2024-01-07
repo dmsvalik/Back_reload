@@ -1,29 +1,52 @@
-from django.contrib.sites.shortcuts import get_current_site
 from djoser.views import UserViewSet
 from djoser import signals as djoser_signals
-from djoser.compat import get_user_email
 from djoser.conf import settings as djoser_settings
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.decorators import action, permission_classes
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
+from django.utils.decorators import method_decorator
 
 
 from app.sending.serializers import DisableNotificationsSerializer
-from app.sending.signals import new_notification
-from app.sending.views import send_user_notifications
 from app.users.tasks import send_django_users_emails
 from app.users import signals
 from app.orders.models import OrderModel
-from config import settings
+from config.settings import DJOSER_EMAIL_CLASSES, ORDER_COOKIE_KEY_NAME
+
+from .swagger_documentation import users as swagger
+from .utils.helpers import site_data_from_request
 
 
+@method_decorator(
+    name="set_username",
+    decorator=swagger_auto_schema(**swagger.SetUsernameDocs.__dict__),
+)
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(**swagger.UsersListDocs.__dict__),
+)
+@method_decorator(
+    name="resend_activation",
+    decorator=swagger_auto_schema(**swagger.ResendActivationDocs.__dict__),
+)
+@method_decorator(
+    name="reset_password",
+    decorator=swagger_auto_schema(**swagger.ResetPasswordDocs.__dict__),
+)
+@method_decorator(
+    name="set_password",
+    decorator=swagger_auto_schema(**swagger.SetPasswordDocs.__dict__),
+)
+@method_decorator(
+    name="reset_password_confirm",
+    decorator=swagger_auto_schema(**swagger.ResetPasswordConfirmDocs.__dict__),
+)
 class CustomUserViewSet(UserViewSet):
-
     def perform_create(self, serializer, *args, **kwargs):
         """
         Сохранение пользователя после регистрации и отправка сообщения на почту
@@ -34,51 +57,57 @@ class CustomUserViewSet(UserViewSet):
         djoser_signals.user_registered.send(
             sender=self.__class__, user=user, request=self.request
         )
-        # context = {"user": user}
         context = site_data_from_request(self.request)
-        to = [get_user_email(user)]
         if djoser_settings.SEND_ACTIVATION_EMAIL:
-            # djoser_settings.EMAIL.activation(self.request, context).send(to)
             send_django_users_emails.delay(
-                "EMAIL.activation",
+                DJOSER_EMAIL_CLASSES["ACTIVATION"],
                 context,
                 user.id,
-                to)
-            new_notification.send(sender=self.__class__, user=user, theme="Письмо активации аккаунта",
-                                  type="email")
+                [
+                    user.email,
+                ],
+            )
         elif djoser_settings.SEND_CONFIRMATION_EMAIL:
-            # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
             send_django_users_emails.delay(
-                "EMAIL.confirmation",
+                DJOSER_EMAIL_CLASSES["CONFIRMATION"],
                 context,
                 user.id,
-                to)
-            new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
-                                  type="email")
+                [
+                    user.email,
+                ],
+            )
 
+    @swagger_auto_schema(**swagger.UsersCreateDocs.__dict__)
     def create(self, request, *args, **kwargs):
         """
         Формирование ответа
         Проверка на наличие ключа заказа в куки
-        Пересчет, выделеного для файлов, размера диска пользователя
+        Пересчет, выделенного для файлов, размера диска пользователя
         при наличии ключа в куки
         """
         response = super().create(request, *args, **kwargs)
-        cookie_key = request.COOKIES.get("key")
+        cookie_key = request.COOKIES.get(ORDER_COOKIE_KEY_NAME)
 
         if cookie_key:
-            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            order: OrderModel = OrderModel.objects.filter(
+                key=cookie_key, user_account__isnull=True
+            ).first()
             signals.quota_recalculate.send(
-                sender=self.__class__,
-                user=self.user_instance,
-                order=order
-                )
-            response.delete_cookie("key")
+                sender=self.__class__, user=self.user_instance, order=order
+            )
+            response.delete_cookie(ORDER_COOKIE_KEY_NAME)
 
         return response
 
+    @swagger_auto_schema(**swagger.UserActivationDocs.__dict__)
     @action(["post"], detail=False)
     def activation(self, request, *args, **kwargs):
+        """
+        Активация аккаунта
+        Проверка на наличие ключа заказа в куки
+        Активация заказа при наличии у пользователя заказа в статусе draft.
+        Отправка уведомления об активации заказа
+        """
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.user
@@ -90,38 +119,36 @@ class CustomUserViewSet(UserViewSet):
         )
 
         if djoser_settings.SEND_CONFIRMATION_EMAIL:
-            # context = {"user": user}
-            to = [get_user_email(user)]
-            # djoser_settings.EMAIL.confirmation(self.request, context).send(to)
             context = site_data_from_request(request)
             send_django_users_emails.delay(
-                "EMAIL.confirmation",
+                DJOSER_EMAIL_CLASSES["CONFIRMATION"],
                 context,
                 user.id,
-                to)
-            new_notification.send(sender=self.__class__, user=user, theme="Подтверждение активации аккаунта",
-                                  type="email")
+                [
+                    user.email,
+                ],
+            )
 
         order = user.ordermodel_set.filter(state="draft").first()
         if order:
             order.state = "offer"
             order.save()
             signals.send_notify.send(
-                sender=self.__class__,
-                user=user,
-                order=order
+                sender=self.__class__, user=user, order=order
             )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @swagger_auto_schema(
-        request_body=DisableNotificationsSerializer(),
-        method="POST"
-    )
+    @swagger_auto_schema(**swagger.DisableNotificationsDocs.__dict__)
     @action(["post"], detail=False, permission_classes=[AllowAny])
     def disable_notifications(self, request, *args, **kwargs):
+        """
+        Отключение всех типов уведомлений пользователя.
+        """
         context = self.get_serializer_context()
-        serializer = DisableNotificationsSerializer(data=request.data, context=context)
+        serializer = DisableNotificationsSerializer(
+            data=request.data, context=context
+        )
         serializer.is_valid(raise_exception=True)
         user = serializer.user
         user.notifications = False
@@ -129,14 +156,23 @@ class CustomUserViewSet(UserViewSet):
         user.usernotifications_set.all().delete()
         return Response(status=204)
 
+    @swagger_auto_schema(**swagger.UserMeReadDocs.__dict__)
+    @swagger_auto_schema(**swagger.UserMeUpdateDocs.__dict__)
+    @swagger_auto_schema(**swagger.UserMePartialUpdateDocs.__dict__)
+    @swagger_auto_schema(**swagger.UserMeDeleteDocs.__dict__)
+    @action(["get", "put", "patch", "delete"], detail=False)
+    def me(self, request, *args, **kwargs):
+        return super().me(request, *args, **kwargs)
+
 
 class CustomTokenViewBase(TokenViewBase):
+    @swagger_auto_schema(**swagger.TokenJWTCreateDocs.__dict__)
     def post(self, request, *args, **kwargs):
         """
         Создание токена
         Проверка на наличие ключа заказа в куки
-        Пересчет, выделеного для файлов, размера диска пользователя
-        при наличии ключа в куки
+        Пересчет, выделенного для файлов, размера диска пользователя и
+        отправка уведомления об активации заказа при наличии ключа в куки.
         """
         serializer = self.get_serializer(data=request.data)
 
@@ -146,41 +182,28 @@ class CustomTokenViewBase(TokenViewBase):
             raise InvalidToken(e.args[0])
 
         user = serializer.user
-        cookie_key = request.COOKIES.get("key")
-        response = Response(serializer.validated_data, status=status.HTTP_200_OK)
+        cookie_key = request.COOKIES.get(ORDER_COOKIE_KEY_NAME)
+        response = Response(
+            serializer.validated_data, status=status.HTTP_200_OK
+        )
 
         if cookie_key:
-            order: OrderModel = OrderModel.objects.filter(key=cookie_key, user_account__isnull=True).first()
+            order: OrderModel = OrderModel.objects.filter(
+                key=cookie_key, user_account__isnull=True
+            ).first()
             signals.quota_recalculate.send(
                 sender=self.__class__,
                 user=user,
                 order=order,
-                change_order_state=True
-                )
-            signals.send_notify.send(
-                sender=self.__class__,
-                user=user,
-                order=order
+                change_order_state=True,
             )
-            response.delete_cookie("key")
+            signals.send_notify.send(
+                sender=self.__class__, user=user, order=order
+            )
+            response.delete_cookie(ORDER_COOKIE_KEY_NAME)
 
         return response
 
 
 class CustomTokenObtainPairView(CustomTokenViewBase):
-
     _serializer_class = api_settings.TOKEN_OBTAIN_SERIALIZER
-
-
-def site_data_from_request(request):
-    context = {}
-    site = get_current_site(request)
-    domain = getattr(settings, 'DOMAIN', '') or site.domain
-    protocol = 'https' if request.is_secure() else 'http'
-    site_name = getattr(settings, 'SITE_NAME', '') or site.name
-    context.update({
-        'domain': domain,
-        'protocol': protocol,
-        'site_name': site_name,
-    })
-    return context

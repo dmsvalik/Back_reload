@@ -5,8 +5,20 @@ from .models import FileData, OrderFileData, OrderModel, OrderOffer
 
 @admin.register(OrderModel)
 class OrderModelAdmin(admin.ModelAdmin):
-    list_display = ["id", "name", "state", "user_account", "order_time", ]
-    fields = ["name", "state", "user_account", "order_time", "key", ]
+    list_display = [
+        "id",
+        "name",
+        "state",
+        "user_account",
+        "order_time",
+    ]
+    fields = [
+        "name",
+        "state",
+        "user_account",
+        "order_time",
+        "key",
+    ]
     readonly_fields = ("order_time", "key")
 
 
@@ -22,4 +34,10 @@ class FileDataAdmin(admin.ModelAdmin):
 
 @admin.register(OrderFileData)
 class OrderFileDataAdmin(admin.ModelAdmin):
-    list_display = ["id", "original_name", "order_id", "question_id", "date_upload"]
+    list_display = [
+        "id",
+        "original_name",
+        "order_id",
+        "question_id",
+        "date_upload",
+    ]

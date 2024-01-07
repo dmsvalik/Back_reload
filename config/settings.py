@@ -9,6 +9,11 @@ from celery.schedules import crontab
 env = environ.Env()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+FONT_DIR = os.path.join(BASE_DIR, 'fonts')
+ttf_file = os.path.join(FONT_DIR, 'Montserrat-Medium.ttf')
+PDF_DIR = os.path.join(BASE_DIR, 'media/pdf_storage')
+design_pdf = os.path.join(PDF_DIR, 'designpdf.pdf')
+
 environ.Env.read_env()
 # environ.Env.read_env(os.path.join(BASE_DIR, '.env'))
 
@@ -298,6 +303,10 @@ DJOSER = {
         "current_user": "app.users.serializers.UserAccountSerializer",
         "user_delete": "djoser.serializers.UserDeleteSerializer",
     },
+    "PERMISSIONS": {
+        "user_list": ["djoser.permissions.CurrentUserOrAdmin"],
+        "set_email": ["djoser.permissions.CurrentUserOrAdmin"],
+    },
 }
 
 # Default primary key field type
@@ -312,6 +321,17 @@ SWAGGER_SETTINGS = {
         "Bearer": {"type": "apiKey", "name": "Authorization", "in": "header"}
     },
     "DEFAULT_AUTO_SCHEMA_CLASS": "drf_yasg.inspectors.SwaggerAutoSchema",
+}
+
+SWAGGER_TAGS = {
+    "files": "Работа с файлами",
+    "order": "Работа с заказами",
+    "offer": "Офферы",
+    "users": "Аккаунт пользователя",
+    "users_service": "Методы авторизованного пользователя",
+    "auth": "Авторизация",
+    "service": "Сервисные функции",
+    "contractor": "Исполнитель"
 }
 
 MAX_SERVER_QUOTA = 5 * 1024 * 1024
@@ -345,4 +365,32 @@ DRF_API_LOGGER_SLOW_API_ABOVE = 200
 
 SENDING = {
     "DISABLE_URL": "disable_notifications/{uid}/{token}/"
+}
+
+ORDER_COOKIE_KEY_NAME = "key"
+
+
+NOTIFICATION_CLASSES = {
+    "email": {
+        "ORDER_CREATE_CONFIRMATION": {
+            "type": "app.sending.email_sending.OrderEmail",
+            "theme": "Подтверждение отправки заказа исполнителям.",
+        }
+    },
+    "tel": {"ORDER_CREATE_CONFIRMATION": None},
+}
+
+DJOSER_EMAIL_CLASSES = {
+    "ACTIVATION": {
+        "type": "app.users.email.Activation",
+        "theme": "Письмо активации аккаунта.",
+    },
+    "CONFIRMATION": {
+        "type": "app.users.email.Confirmation",
+        "theme": "Подтверждение активации аккаунта.",
+    },
+    "USERNAME_RESET": {
+        "type": "app.users.email.UsernameReset",
+        "theme": "Письмо на сброс почты.",
+    }
 }

@@ -8,26 +8,27 @@ from drf_yasg.utils import swagger_auto_schema
 
 from .models import Category
 from .serializers import CategorySerializer, QuestionnaireShortTypeSerializer
-from .swagger_documentation.products import QuestionnaireTypeGetList
+from .swagger_documentation import products as swagger
 from app.questionnaire.models import QuestionnaireType
 
 
-class CategoryViewSet(mixins.ListModelMixin,
-                      GenericViewSet):
+class CategoryViewSet(mixins.ListModelMixin, GenericViewSet):
+    """Вьюсет категорий. Получение списка категорий"""
+
     permission_classes = [AllowAny]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
-    @swagger_auto_schema(
-        operation_description=QuestionnaireTypeGetList.operation_description,
-        request_body=QuestionnaireTypeGetList.request_body,
-        responses=QuestionnaireTypeGetList.responses,
-        method="GET"
+    @swagger_auto_schema(**swagger.QuestionnaireTypeGetList.__dict__)
+    @action(
+        detail=True,
+        methods=[
+            "get",
+        ],
     )
-    @action(detail=True,
-            methods=['get', ])
     def questionnaires(self, request, pk):
+        """Получение списка типов анкет к определенной категории."""
         queryset = QuestionnaireType.objects.filter(category=pk)
         serializer = QuestionnaireShortTypeSerializer(queryset, many=True)
         return Response(serializer.data)
