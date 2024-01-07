@@ -16,7 +16,7 @@ from app.utils.storage import CloudStorage, ServerFileSystem
 from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
 
-from rest_framework import status, viewsets
+from rest_framework import status, viewsets, views
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -35,8 +35,17 @@ from .models import (
 )
 from .permissions import IsOrderOwner
 
-from .serializers import AllOrdersClientSerializer, OrderOfferSerializer
+
 from .swagger_documentation import orders as swagger
+
+from .serializers import (
+    AllOrdersClientSerializer,
+    OrderOfferSerializer,
+    OrderModelSerializer,
+)
+from .utils.order_state import OrderStateActivate
+
+
 from .tasks import (
     celery_delete_file_task,
     celery_delete_image_task,
@@ -57,6 +66,7 @@ from app.questionnaire.serializers import (
 from app.sending.views import send_user_notifications
 from app.utils.file_work import FileWork
 from app.utils.permissions import IsContactor, IsFileOwner
+from app.users.signals import send_notify
 
 
 IMAGE_FILE_FORMATS = [
@@ -438,3 +448,31 @@ def get_download_file_link(request) -> Any:
         return Response(str(e), status=status.HTTP_404_NOT_FOUND)
 
     return Response(file_link, status=status.HTTP_200_OK)
+
+
+class OrderStateActivateView(views.APIView):
+    """
+    Активирует заказ меняя его статус на offer
+    """
+
+    permission_classes = (IsAuthenticated, IsOrderOwner)
+
+    def get_object(self) -> OrderModel:
+        instance = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
+        return instance
+
+    def serialize(self, instance: OrderModel):
+        serializer = OrderModelSerializer(instance=instance)
+        return serializer.data
+
+    @swagger_auto_schema(**swagger.OrderStateActivateSwagger.__dict__)
+    def patch(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        OrderStateActivate(instance).execute()
+        send_notify.send(
+            sender=self.__class__, user=instance.user_account, order=instance
+        )
+
+        data = self.serialize(instance)
+        return Response(data=data, status=200)
