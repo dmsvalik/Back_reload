@@ -85,6 +85,7 @@ class AllDelete(BaseSwaggerSchema):
         "**Ограничения**\n\n- Администратор\n**Использование метода крайне "
         "опасно, так как полностью очищает базу данных**"
     )
+    method = "delete"
     request_body = None
     responses = {
         202: openapi.Response("Success response"),
@@ -103,6 +104,7 @@ class DocsView(BaseSwaggerSchema):
         "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
         "-- Администратор\n-- Владелец\n-- Исполнитель"
     )
+    method = "get"
     manual_parameters = [
         openapi.Parameter(
             "path",
@@ -127,6 +129,7 @@ class CreateAdmin(BaseSwaggerSchema):
         "Используйте этот метод для создания "
         "пользователя с правами администратора"
     )
+    method = "post"
     request_body = None
     responses = {
         202: openapi.Response("Success response"),
@@ -142,9 +145,19 @@ class CreateAllData(BaseSwaggerSchema):
     operation_description = (
         "Используйте этот метод для тестового наполнения базы данных"
     )
+    method = "post"
     request_body = None
     responses = {
         202: openapi.Response("Success response"),
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
     }
+
+
+class CheckExpAuctionOrdersDocs(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("contractor")]
+    operation_summary = "Проверка заказов в статусе аукциона"
+    operation_description = (
+        "Используйте этот метод для проверки заказов в статусе аукциона"
+    )
+    method = "get"

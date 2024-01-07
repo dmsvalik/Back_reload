@@ -78,6 +78,7 @@ class BaseSwaggerSchema:
 class QuestionnaireTypeGetList(BaseSwaggerSchema):
     operation_description = "Получение всех анкет категории."
     request_body = None
+    method = "GET"
     responses = {
         200: openapi.Response(
             "Success response", QuestionnaireShortTypeSerializer()

@@ -6,18 +6,11 @@ from rest_framework.permissions import AllowAny
 
 from app.questionnaire.models import QuestionnaireType
 from app.questionnaire.serializers import QuestionnaireTypeSerializer
-from app.questionnaire.swagger_documentation.questionnaire import (
-    QuestionnaireGetList,
-)
+from app.questionnaire.swagger_documentation import questionnaire as swagger
 from app.utils import errorcode
 
 
-@swagger_auto_schema(
-    operation_description=QuestionnaireGetList.operation_description,
-    request_body=QuestionnaireGetList.request_body,
-    responses=QuestionnaireGetList.responses,
-    method="GET",
-)
+@swagger_auto_schema(**swagger.QuestionnaireGetList.__dict__)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_questionnaire(request, questionnaire_id: int):

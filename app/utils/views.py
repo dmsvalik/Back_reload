@@ -22,7 +22,7 @@ from drf_yasg.utils import swagger_auto_schema
 from app.users.models import UserAccount, UserQuota
 from app.orders.models import OrderModel, OrderOffer
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
-from app.utils.swagger_documentation.utils import AllDelete, DocsView
+from app.utils.swagger_documentation import utils as swagger
 from config.settings import ttf_file, design_pdf, PDF_DIR
 
 
@@ -85,15 +85,7 @@ def get_task_status(request, task_id):
     return Response(result, status=200)
 
 
-@swagger_auto_schema(
-    tags=DocsView.tags,
-    operation_id=DocsView.operation_id,
-    operation_summary=DocsView.operation_summary,
-    operation_description=DocsView.operation_description,
-    manual_parameters=DocsView.manual_parameters,
-    responses=DocsView.responses,
-    method="get",
-)
+@swagger_auto_schema(**swagger.DocsView.__dict__)
 @api_view(("GET",))
 @permission_classes(
     [
@@ -108,6 +100,7 @@ def document_view(request, path):
     return res
 
 
+@swagger_auto_schema(**swagger.CheckExpAuctionOrdersDocs.__dict__)
 @api_view(("GET",))
 def check_expired_auction_orders(request):
     """
@@ -135,15 +128,7 @@ def check_expired_auction_orders(request):
 class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
     # class AllDeleteAPIView(APIView):
     @permission_classes([IsAdminUser])
-    @swagger_auto_schema(
-        tags=AllDelete.tags,
-        operation_id=AllDelete.operation_id,
-        operation_summary=AllDelete.operation_summary,
-        operation_description=AllDelete.operation_description,
-        responses=AllDelete.responses,
-        request_body=AllDelete.request_body,
-        method="delete",
-    )
+    @swagger_auto_schema(**swagger.AllDelete.__dict__)
     @action(detail=False, methods=["delete"])
     def delete_all_view(self, request):
         """
