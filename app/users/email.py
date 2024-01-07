@@ -1,6 +1,8 @@
 from djoser import email
 from django.contrib.auth.tokens import default_token_generator
-from .constants import ErrorMessages, EmailThemes
+
+from config.settings import DJOSER_EMAIL_CLASSES
+from .constants import ErrorMessages
 
 from djoser import utils
 from djoser.conf import settings
@@ -33,7 +35,7 @@ class UsernameReset(email.UsernameResetEmail):
 
         # проверяем наличие писем на сброс от пользователя
         check_user = SentNotification.objects.filter(
-            user=user, theme=EmailThemes.RESET_EMAIL
+            user=user, theme=DJOSER_EMAIL_CLASSES["USERNAME_RESET"]["theme"]
         ).order_by("id")
         time_now = datetime.now(tz=timezone.utc)
         score = list()
@@ -54,6 +56,8 @@ class UsernameReset(email.UsernameResetEmail):
         context["url"] = settings.USERNAME_RESET_CONFIRM_URL.format(**context)
 
         SentNotification.objects.create(
-            user=user, theme=EmailThemes.RESET_EMAIL, type="email"
+            user=user,
+            theme=DJOSER_EMAIL_CLASSES["USERNAME_RESET"]["theme"],
+            type="email",
         )
         return context

@@ -10,9 +10,3 @@ class ErrorMessages:
 
 class ModelChoices:
     ROLES_CHOICES = [("contractor", "Исполнитель"), ("client", "Заказчик")]
-
-
-class EmailThemes:
-    ACTIVATION_CONFIRMATION = "Подтверждение активации аккаунта."
-    ACTIVATION = "Письмо активации аккаунта."
-    RESET_EMAIL = "Письмо на сброс почты."

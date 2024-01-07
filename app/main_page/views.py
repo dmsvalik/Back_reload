@@ -196,6 +196,8 @@ class SupportViewSet(viewsets.ModelViewSet):
     ),
 )
 class ContractorAgreementViewSet(viewsets.ModelViewSet):
+    """Вьюсет для создания соглашения с исполнителем."""
+
     queryset = ContractorAgreement.objects.all()
     serializer_class = ContractorAgreementSerializer
     permission_classes = [IsContractor]

@@ -13,13 +13,11 @@ from django.utils.decorators import method_decorator
 
 
 from app.sending.serializers import DisableNotificationsSerializer
-from app.sending.signals import new_notification
 from app.users.tasks import send_django_users_emails
 from app.users import signals
 from app.orders.models import OrderModel
-from config.settings import DJOSER, ORDER_COOKIE_KEY_NAME
+from config.settings import DJOSER_EMAIL_CLASSES, ORDER_COOKIE_KEY_NAME
 
-from .constants import EmailThemes
 from .swagger_documentation import users as swagger
 from .utils.helpers import site_data_from_request
 
@@ -62,33 +60,21 @@ class CustomUserViewSet(UserViewSet):
         context = site_data_from_request(self.request)
         if djoser_settings.SEND_ACTIVATION_EMAIL:
             send_django_users_emails.delay(
-                DJOSER.get("EMAIL").get("activation"),
+                DJOSER_EMAIL_CLASSES["ACTIVATION"],
                 context,
                 user.id,
                 [
                     user.email,
                 ],
-            )
-            new_notification.send(
-                sender=self.__class__,
-                user=user,
-                theme=EmailThemes.ACTIVATION,
-                type="email",
             )
         elif djoser_settings.SEND_CONFIRMATION_EMAIL:
             send_django_users_emails.delay(
-                DJOSER.get("EMAIL").get("confirmation"),
+                DJOSER_EMAIL_CLASSES["CONFIRMATION"],
                 context,
                 user.id,
                 [
                     user.email,
                 ],
-            )
-            new_notification.send(
-                sender=self.__class__,
-                user=user,
-                theme=EmailThemes.ACTIVATION_CONFIRMATION,
-                type="email",
             )
 
     @swagger_auto_schema(**swagger.UsersCreateDocs.__dict__)
@@ -135,18 +121,12 @@ class CustomUserViewSet(UserViewSet):
         if djoser_settings.SEND_CONFIRMATION_EMAIL:
             context = site_data_from_request(request)
             send_django_users_emails.delay(
-                DJOSER.get("EMAIL").get("confirmation"),
+                DJOSER_EMAIL_CLASSES["CONFIRMATION"],
                 context,
                 user.id,
                 [
                     user.email,
                 ],
-            )
-            new_notification.send(
-                sender=self.__class__,
-                user=user,
-                theme=EmailThemes.ACTIVATION_CONFIRMATION,
-                type="email",
             )
 
         order = user.ordermodel_set.filter(state="draft").first()

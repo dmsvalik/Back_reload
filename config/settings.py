@@ -368,3 +368,29 @@ SENDING = {
 }
 
 ORDER_COOKIE_KEY_NAME = "key"
+
+
+NOTIFICATION_CLASSES = {
+    "email": {
+        "ORDER_CREATE_CONFIRMATION": {
+            "type": "app.sending.email_sending.OrderEmail",
+            "theme": "Подтверждение отправки заказа исполнителям.",
+        }
+    },
+    "tel": {"ORDER_CREATE_CONFIRMATION": None},
+}
+
+DJOSER_EMAIL_CLASSES = {
+    "ACTIVATION": {
+        "type": "app.users.email.Activation",
+        "theme": "Письмо активации аккаунта.",
+    },
+    "CONFIRMATION": {
+        "type": "app.users.email.Confirmation",
+        "theme": "Подтверждение активации аккаунта.",
+    },
+    "USERNAME_RESET": {
+        "type": "app.users.email.UsernameReset",
+        "theme": "Письмо на сброс почты.",
+    }
+}

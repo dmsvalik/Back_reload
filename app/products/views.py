@@ -13,6 +13,8 @@ from app.questionnaire.models import QuestionnaireType
 
 
 class CategoryViewSet(mixins.ListModelMixin, GenericViewSet):
+    """Вьюсет категорий. Получение списка категорий"""
+
     permission_classes = [AllowAny]
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
@@ -26,6 +28,7 @@ class CategoryViewSet(mixins.ListModelMixin, GenericViewSet):
         ],
     )
     def questionnaires(self, request, pk):
+        """Получение списка типов анкет к определенной категории."""
         queryset = QuestionnaireType.objects.filter(category=pk)
         serializer = QuestionnaireShortTypeSerializer(queryset, many=True)
         return Response(serializer.data)
