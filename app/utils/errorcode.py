@@ -130,6 +130,14 @@ class OrderInWrongStatus(HttpValidationException):
     }
 
 
+class OrderAnswersNotComplete(HttpValidationException):
+    status_code = 400
+    detail = {
+        "errors": "OrderAnswersNotComplete",
+        "message": "У этого заказа имеються обязательные вопросы на которые нету ответа",
+    }
+
+
 class DocumentPermission(HttpValidationException):
     status_code = 403
     detail = {
