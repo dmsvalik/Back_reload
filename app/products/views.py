@@ -8,7 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from .models import Category
 from .serializers import CategorySerializer, QuestionnaireShortTypeSerializer
-from .swagger_documentation.products import QuestionnaireTypeGetList
+from .swagger_documentation import products as swagger
 from app.questionnaire.models import QuestionnaireType
 
 
@@ -18,12 +18,7 @@ class CategoryViewSet(mixins.ListModelMixin, GenericViewSet):
     serializer_class = CategorySerializer
     throttle_classes = [AnonRateThrottle, UserRateThrottle]
 
-    @swagger_auto_schema(
-        operation_description=QuestionnaireTypeGetList.operation_description,
-        request_body=QuestionnaireTypeGetList.request_body,
-        responses=QuestionnaireTypeGetList.responses,
-        method="GET",
-    )
+    @swagger_auto_schema(**swagger.QuestionnaireTypeGetList.__dict__)
     @action(
         detail=True,
         methods=[

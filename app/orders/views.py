@@ -35,27 +35,17 @@ from .models import (
 )
 from .permissions import IsOrderOwner
 
+
+from .swagger_documentation import orders as swagger
+
 from .serializers import (
     AllOrdersClientSerializer,
     OrderOfferSerializer,
     OrderModelSerializer,
 )
 from .utils.order_state import OrderStateActivate
-from .swagger_documentation.orders import (
-    AllOrdersClientGetList,
-    ArchiveOrdersClientGetList,
-    FileOrderGet,
-    OfferCreate,
-    OfferGetList,
-    UploadImageOrderPost,
-    FileOrderDelete,
-    OrderCreate,
-    QuestionnaireResponsePost,
-    QuestionnaireResponseGet,
-    AttachFileAnswerPost,
-    FileOrderDownload,
-    OrderStateActivateSwagger,
-)
+
+
 from .tasks import (
     celery_delete_file_task,
     celery_delete_image_task,
@@ -86,15 +76,7 @@ IMAGE_FILE_FORMATS = [
 ]
 
 
-@swagger_auto_schema(
-    tags=OrderCreate.tags,
-    operation_id=OrderCreate.operation_id,
-    operation_summary=OrderCreate.operation_summary,
-    operation_description=OrderCreate.operation_description,
-    request_body=OrderCreate.request_body,
-    responses=OrderCreate.responses,
-    method="POST",
-)
+@swagger_auto_schema(**swagger.OrderCreate.__dict__)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_order(request):
@@ -176,13 +158,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
                 return OrderOffer.objects.filter(order_id=order_id).all()
         return []
 
-    @swagger_auto_schema(
-        tags=OfferGetList.tags,
-        operation_summary=OfferGetList.operation_summary,
-        operation_description=OfferGetList.operation_description,
-        manual_parameters=OfferGetList.manual_parameters,
-        responses=OfferGetList.responses,
-    )
+    @swagger_auto_schema(**swagger.OfferGetList.__dict__)
     def list(self, request, *args, **kwargs):
         order_id = self.kwargs["pk"]
         if not OrderModel.objects.filter(id=order_id).exists():
@@ -191,14 +167,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(
-        tags=OfferCreate.tags,
-        operation_summary=OfferCreate.operation_summary,
-        operation_description=OfferCreate.operation_description,
-        manual_parameters=OfferCreate.manual_parameters,
-        request_body=OfferCreate.request_body,
-        responses=OfferCreate.responses,
-    )
+    @swagger_auto_schema(**swagger.OfferCreate.__dict__)
     def create(self, request, *args, **kwargs):
         return super().create(request)
 
@@ -221,14 +190,7 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
             state="completed"
         )
 
-    @swagger_auto_schema(
-        tags=AllOrdersClientGetList.tags,
-        operation_summary=AllOrdersClientGetList.operation_summary,
-        operation_description=AllOrdersClientGetList.operation_description,
-        request_body=AllOrdersClientGetList.request_body,
-        responses=AllOrdersClientGetList.responses,
-        manual_parameters=AllOrdersClientGetList.manual_parameters,
-    )
+    @swagger_auto_schema(**swagger.AllOrdersClientGetList.__dict__)
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
@@ -245,29 +207,14 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return OrderModel.objects.filter(user_account=user, state="completed")
 
-    @swagger_auto_schema(
-        tags=ArchiveOrdersClientGetList.tags,
-        operation_summary=ArchiveOrdersClientGetList.operation_summary,
-        operation_description=ArchiveOrdersClientGetList.operation_description,
-        request_body=ArchiveOrdersClientGetList.request_body,
-        responses=ArchiveOrdersClientGetList.responses,
-        manual_parameters=ArchiveOrdersClientGetList.manual_parameters,
-    )
+    @swagger_auto_schema(**swagger.ArchiveOrdersClientGetList.__dict__)
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
 
-@swagger_auto_schema(
-    tags=UploadImageOrderPost.tags,
-    operation_id=UploadImageOrderPost.operation_id,
-    operation_summary=UploadImageOrderPost.operation_summary,
-    operation_description=UploadImageOrderPost.operation_description,
-    request_body=UploadImageOrderPost.request_body,
-    responses=UploadImageOrderPost.responses,
-    method="post",
-)
+@swagger_auto_schema(**swagger.UploadImageOrderPost.__dict__)
 @api_view(["POST"])
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
@@ -308,15 +255,7 @@ def upload_image_order(request):
     return Response({"task_id": task.id}, status=202)
 
 
-@swagger_auto_schema(
-    tags=FileOrderGet.tags,
-    operation_id=FileOrderGet.operation_id,
-    operation_summary=FileOrderGet.operation_summary,
-    operation_description=FileOrderGet.operation_description,
-    responses=FileOrderGet.responses,
-    manual_parameters=FileOrderGet.manual_parameters,
-    method="get",
-)
+@swagger_auto_schema(**swagger.FileOrderGet.__dict__)
 @api_view(["GET"])
 def get_file_order(request, file_id):
     """
@@ -342,16 +281,7 @@ def get_file_order(request, file_id):
     return Response(image_data)
 
 
-@swagger_auto_schema(
-    tags=QuestionnaireResponsePost.tags,
-    operation_id=QuestionnaireResponsePost.operation_id,
-    operation_summary=QuestionnaireResponsePost.operation_summary,
-    manual_parameters=QuestionnaireResponsePost.manual_parameters,
-    operation_description=QuestionnaireResponsePost.operation_description,
-    request_body=QuestionnaireResponsePost.request_body,
-    responses=QuestionnaireResponsePost.responses,
-    method="POST",
-)
+@swagger_auto_schema(**swagger.QuestionnaireResponsePost.__dict__)
 @api_view(["POST"])
 @permission_classes([IsOrderOwner])
 def create_answers_to_order(request, pk):
@@ -405,15 +335,7 @@ def create_answers_to_order(request, pk):
     return Response(serializer.data)
 
 
-@swagger_auto_schema(
-    tags=QuestionnaireResponseGet.tags,
-    operation_id=QuestionnaireResponseGet.operation_id,
-    operation_summary=QuestionnaireResponseGet.operation_summary,
-    manual_parameters=QuestionnaireResponseGet.manual_parameters,
-    operation_description=QuestionnaireResponseGet.operation_description,
-    responses=QuestionnaireResponseGet.responses,
-    method="GET",
-)
+@swagger_auto_schema(**swagger.QuestionnaireResponseGet.__dict__)
 @api_view(["GET"])
 @permission_classes([IsOrderOwner])
 def get_answers_to_order(request, pk):
@@ -425,15 +347,7 @@ def get_answers_to_order(request, pk):
     return Response(serializer.data)
 
 
-@swagger_auto_schema(
-    tags=FileOrderDelete.tags,
-    operation_id=FileOrderDelete.operation_id,
-    operation_summary=FileOrderDelete.operation_summary,
-    operation_description=FileOrderDelete.operation_description,
-    responses=FileOrderDelete.responses,
-    request_body=FileOrderDelete.request_body,
-    method="DELETE",
-)
+@swagger_auto_schema(**swagger.FileOrderDelete.__dict__)
 @api_view(["DELETE"])
 @permission_classes([IsOrderFileDataOwnerWithoutUser])
 def delete_file_order(request):
@@ -460,15 +374,7 @@ def delete_file_order(request):
         )
 
 
-@swagger_auto_schema(
-    tags=AttachFileAnswerPost.tags,
-    operation_id=AttachFileAnswerPost.operation_id,
-    operation_summary=AttachFileAnswerPost.operation_summary,
-    operation_description=AttachFileAnswerPost.operation_description,
-    responses=AttachFileAnswerPost.responses,
-    manual_parameters=AttachFileAnswerPost.manual_parameters,
-    method="POST",
-)
+@swagger_auto_schema(**swagger.AttachFileAnswerPost.__dict__)
 @api_view(["POST"])
 @permission_classes([IsOrderOwner])
 @parser_classes([MultiPartParser])
@@ -527,15 +433,7 @@ def attach_file(request, pk: int):
     return Response({"task_id": task.id}, status=202)
 
 
-@swagger_auto_schema(
-    tags=FileOrderDownload.tags,
-    operation_id=FileOrderDownload.operation_id,
-    operation_summary=FileOrderDownload.operation_summary,
-    operation_description=FileOrderDownload.operation_description,
-    responses=FileOrderDownload.responses,
-    request_body=FileOrderDownload.request_body,
-    method="POST",
-)
+@swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
 @api_view(["POST"])
 @permission_classes([IsFileExistById, IsAdminUser | IsContactor | IsFileOwner])
 def get_download_file_link(request) -> Any:
@@ -567,7 +465,7 @@ class OrderStateActivateView(views.APIView):
         serializer = OrderModelSerializer(instance=instance)
         return serializer.data
 
-    @swagger_auto_schema(**OrderStateActivateSwagger.__dict__)
+    @swagger_auto_schema(**swagger.OrderStateActivateSwagger.__dict__)
     def patch(self, request, *args, **kwargs):
         instance = self.get_object()
 

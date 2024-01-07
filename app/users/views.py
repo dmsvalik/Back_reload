@@ -9,6 +9,7 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.views import TokenViewBase
 from rest_framework_simplejwt.settings import api_settings
+from django.utils.decorators import method_decorator
 
 
 from app.sending.serializers import DisableNotificationsSerializer
@@ -19,9 +20,34 @@ from app.orders.models import OrderModel
 from config.settings import DJOSER, ORDER_COOKIE_KEY_NAME
 
 from .constants import EmailThemes
+from .swagger_documentation import users as swagger
 from .utils.helpers import site_data_from_request
 
 
+@method_decorator(
+    name="set_username",
+    decorator=swagger_auto_schema(**swagger.SetUsernameDocs.__dict__),
+)
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(**swagger.UsersListDocs.__dict__),
+)
+@method_decorator(
+    name="resend_activation",
+    decorator=swagger_auto_schema(**swagger.ResendActivationDocs.__dict__),
+)
+@method_decorator(
+    name="reset_password",
+    decorator=swagger_auto_schema(**swagger.ResetPasswordDocs.__dict__),
+)
+@method_decorator(
+    name="set_password",
+    decorator=swagger_auto_schema(**swagger.SetPasswordDocs.__dict__),
+)
+@method_decorator(
+    name="reset_password_confirm",
+    decorator=swagger_auto_schema(**swagger.ResetPasswordConfirmDocs.__dict__),
+)
 class CustomUserViewSet(UserViewSet):
     def perform_create(self, serializer, *args, **kwargs):
         """
@@ -65,11 +91,12 @@ class CustomUserViewSet(UserViewSet):
                 type="email",
             )
 
+    @swagger_auto_schema(**swagger.UsersCreateDocs.__dict__)
     def create(self, request, *args, **kwargs):
         """
         Формирование ответа
         Проверка на наличие ключа заказа в куки
-        Пересчет, выделеного для файлов, размера диска пользователя
+        Пересчет, выделенного для файлов, размера диска пользователя
         при наличии ключа в куки
         """
         response = super().create(request, *args, **kwargs)
@@ -86,6 +113,7 @@ class CustomUserViewSet(UserViewSet):
 
         return response
 
+    @swagger_auto_schema(**swagger.UserActivationDocs.__dict__)
     @action(["post"], detail=False)
     def activation(self, request, *args, **kwargs):
         """
@@ -131,9 +159,7 @@ class CustomUserViewSet(UserViewSet):
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @swagger_auto_schema(
-        request_body=DisableNotificationsSerializer(), method="POST"
-    )
+    @swagger_auto_schema(**swagger.DisableNotificationsDocs.__dict__)
     @action(["post"], detail=False, permission_classes=[AllowAny])
     def disable_notifications(self, request, *args, **kwargs):
         """
@@ -150,13 +176,22 @@ class CustomUserViewSet(UserViewSet):
         user.usernotifications_set.all().delete()
         return Response(status=204)
 
+    @swagger_auto_schema(**swagger.UserMeReadDocs.__dict__)
+    @swagger_auto_schema(**swagger.UserMeUpdateDocs.__dict__)
+    @swagger_auto_schema(**swagger.UserMePartialUpdateDocs.__dict__)
+    @swagger_auto_schema(**swagger.UserMeDeleteDocs.__dict__)
+    @action(["get", "put", "patch", "delete"], detail=False)
+    def me(self, request, *args, **kwargs):
+        return super().me(request, *args, **kwargs)
+
 
 class CustomTokenViewBase(TokenViewBase):
+    @swagger_auto_schema(**swagger.TokenJWTCreateDocs.__dict__)
     def post(self, request, *args, **kwargs):
         """
         Создание токена
         Проверка на наличие ключа заказа в куки
-        Пересчет, выделеного для файлов, размера диска пользователя и
+        Пересчет, выделенного для файлов, размера диска пользователя и
         отправка уведомления об активации заказа при наличии ключа в куки.
         """
         serializer = self.get_serializer(data=request.data)
