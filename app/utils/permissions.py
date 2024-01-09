@@ -3,6 +3,7 @@ from rest_framework import permissions
 
 from app.orders.models import OrderFileData
 from app.utils import errorcode
+from config.settings import ORDER_COOKIE_KEY_NAME
 
 
 class IsContactor(permissions.BasePermission):
@@ -53,7 +54,7 @@ class IsFileOwner(permissions.BasePermission):
             filter_query = Q(order_id__user_account=current_user)
         else:
             # search order cookie key
-            cookie_key = request.COOKIES.get("key")
+            cookie_key = request.COOKIES.get(ORDER_COOKIE_KEY_NAME)
             filter_query = Q(order_id__key=cookie_key) & Q(
                 order_id__user_account__isnull=True
             )

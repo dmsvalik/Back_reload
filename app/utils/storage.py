@@ -11,16 +11,21 @@ import string
 
 from app.utils import errorcode
 from app.utils.errorcode import FileNotFound
-from config.settings import TOKEN
+from config.settings import TOKEN, FILE_SETTINGS
 from config.settings import BASE_DIR
 from pathlib import Path
 
 
 class ServerFileSystem:
-    NUMBER_OF_CHARACTERS_IN_FILENAME = 7
+    """Предварительная подготовка файла."""
+
+    NUMBER_OF_CHARACTERS_IN_FILENAME = FILE_SETTINGS[
+        "NUMBER_OF_CHARACTERS_IN_FILENAME"
+    ]
 
     def __init__(self, file_name, user_id, order_id=None):
-        # there may be documents without an order and user, in this case we save them in a special folder
+        # there may be documents without an order and user, in this case we
+        # save them in a special folder
         if order_id is None:
             order_id = "no_order"
 
@@ -69,6 +74,8 @@ class ServerFileSystem:
 
 
 class CloudStorage:
+    """Класс для работы с Яндекс.Диском."""
+
     def __init__(self):
         self.token = (TOKEN,)
         self.URL = "https://cloud-api.yandex.net/v1/disk/resources"

@@ -7,6 +7,8 @@ from .models import GalleryImages
 
 
 class GalleryImagesSerializer(ModelSerializer):
+    """Сериализатор для вывода картинок слайдера."""
+
     # Поменяны местами вывод slider_number и position. Ошибка на стороне фронта
     position = serializers.CharField(source="slider.name")
     image_url = serializers.SerializerMethodField()

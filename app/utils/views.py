@@ -73,6 +73,12 @@ def recalculate_quota(user_account, cloud_size, server_size):
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_task_status(request, task_id):
+    """
+    Получение статуса таски CELERY. task_id - идентификатор таски.
+    Статусы: SUCCESS, FAILURE
+    Для отображения статуса необходимо отправить в result
+    "task_id"и "task_status"
+    """
     task_result = AsyncResult(task_id)
     result = {
         "task_id": task_id,
@@ -94,7 +100,8 @@ def get_task_status(request, task_id):
     ]
 )
 def document_view(request, path):
-    """Возврат ссылки на превью картинки"""
+    """Возврат ссылки на превью картинки. Проверяет доступ и редиректит
+    на превью."""
     res = Response()
     res["X-Accel-Redirect"] = "/files/" + path
     return res
@@ -121,7 +128,8 @@ def check_expired_auction_orders(request):
                 item.state = "auction_expired"
             item.save()
 
-    # надо логи добавить сюда, что таска была запущена и завершилась или сделать отправку на почту
+    # надо логи добавить сюда, что таска была запущена и завершилась или
+    # сделать отправку на почту
     return Response({"success": "all orders auctions were checked"})
 
 
