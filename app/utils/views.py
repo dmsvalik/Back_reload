@@ -16,6 +16,7 @@ from rest_framework.generics import GenericAPIView
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from app.products.models import Category
+from django.utils.decorators import method_decorator
 
 from drf_yasg.utils import swagger_auto_schema
 
@@ -30,6 +31,10 @@ from .serializers import GalleryImagesSerializer
 from .models import GalleryImages
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(**swagger.GalleryImagesList.__dict__),
+)
 class GalleryImagesViewSet(viewsets.ModelViewSet):
     """
     Отображение картинок на главной странице в слайдерах
@@ -70,6 +75,7 @@ def recalculate_quota(user_account, cloud_size, server_size):
     )
 
 
+@swagger_auto_schema(**swagger.GetTaskStatus.__dict__)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_task_status(request, task_id):
