@@ -412,3 +412,9 @@ FILE_SETTINGS = {
     "ANIMATION_COEFFICIENT_OF_SIZE_CHANGING": 0.7,
     "NUMBER_OF_CHARACTERS_IN_FILENAME": 7
 }
+
+IMAGE_FILE_FORMATS = [
+    "jpg",
+    "gif",
+    "jpeg",
+]

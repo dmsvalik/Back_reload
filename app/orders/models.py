@@ -5,16 +5,12 @@ from django.db import models
 from app.main_page.models import ContractorData
 from app.users.models import UserAccount
 
-
-STATE_CHOICES = (
-    ("draft", "Черновик"),
-    ("offer", "Создание предложений"),
-    ("selected", "Исполнитель выбран"),
-    ("completed", "Заказ выполнен"),
-)
+from .constants import ORDER_STATE_CHOICES
 
 
 class OrderModel(models.Model):
+    """Модель для создания заказа."""
+
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(
         UserAccount, on_delete=models.SET_NULL, null=True, blank=True
@@ -31,7 +27,7 @@ class OrderModel(models.Model):
     )
     state = models.CharField(
         verbose_name="Статус",
-        choices=STATE_CHOICES,
+        choices=ORDER_STATE_CHOICES,
         max_length=50,
         default="draft",
     )
@@ -52,6 +48,8 @@ class OrderModel(models.Model):
 
 
 class FileData(models.Model):
+    """Модель для файлов пользователя."""
+
     user_account = models.ForeignKey(
         UserAccount, on_delete=models.CASCADE, null=True
     )
@@ -72,6 +70,8 @@ class FileData(models.Model):
 
 
 class OrderFileData(models.Model):
+    """Модель для файлов заказа пользователя."""
+
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE)
     question_id = models.ForeignKey(
         "questionnaire.Question", on_delete=models.SET_NULL, null=True
@@ -87,6 +87,8 @@ class OrderFileData(models.Model):
 
 
 class OrderOffer(models.Model):
+    """Модель для оферов."""
+
     id = models.AutoField(primary_key=True, unique=True)
     user_account = models.ForeignKey(
         UserAccount, on_delete=models.SET_NULL, null=True

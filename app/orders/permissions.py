@@ -1,37 +1,15 @@
-from datetime import datetime, timedelta
-
 from rest_framework import permissions
-from rest_framework.exceptions import ValidationError
 
 from app.orders.models import OrderFileData, OrderModel
 from app.utils.errorcode import FileNotFound
-
-
-class ChangePriceInOrder(permissions.BasePermission):
-    def has_permission(self, request, view):
-        if request.data.get("offer_price") and request.method in "POST":
-            raise ValidationError(
-                "Цену можно указать только через день после размещения заказа"
-            )
-        return True
-
-    def has_object_permission(self, request, view, obj):
-        if request.data.get("offer_price"):
-            if request.method in ("PATH", "PUT"):
-                if datetime.now().replace(
-                    tzinfo=None
-                ) < obj.offer_create_at.replace(tzinfo=None) + timedelta(
-                    days=1
-                ):
-                    raise ValidationError(
-                        "Цену можно указать только через день после размещения заказа"
-                    )
-        return True
+from config.settings import ORDER_COOKIE_KEY_NAME
 
 
 class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
+    """Проверка что пользователь является владельцем файла."""
+
     def has_permission(self, request, view):
-        key = request.COOKIES.get("key")
+        key = request.COOKIES.get(ORDER_COOKIE_KEY_NAME)
         file_id = request.data.get("file_id")
         if not OrderFileData.objects.filter(id=file_id).exists():
             raise FileNotFound()
@@ -50,6 +28,8 @@ class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
 
 
 class IsOrderOwner(permissions.BasePermission):
+    """Проверка что пользователь является владельцем заказа."""
+
     def has_permission(self, request, view):
         key = request.COOKIES.get("key")
         order_id = view.kwargs.get("pk")

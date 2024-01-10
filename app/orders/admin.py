@@ -5,6 +5,8 @@ from .models import FileData, OrderFileData, OrderModel, OrderOffer
 
 @admin.register(OrderModel)
 class OrderModelAdmin(admin.ModelAdmin):
+    """Админка заказа."""
+
     list_display = [
         "id",
         "name",
@@ -24,16 +26,22 @@ class OrderModelAdmin(admin.ModelAdmin):
 
 @admin.register(OrderOffer)
 class OrderOfferAdmin(admin.ModelAdmin):
+    """Админка предложения."""
+
     list_display = ["offer_create_at", "id", "user_account", "order_id"]
 
 
 @admin.register(FileData)
 class FileDataAdmin(admin.ModelAdmin):
+    """Админка для файлов пользователя."""
+
     list_display = ["id", "user_account", "order_id", "date_upload"]
 
 
 @admin.register(OrderFileData)
 class OrderFileDataAdmin(admin.ModelAdmin):
+    """Админка для файлов заказа пользователя."""
+
     list_display = [
         "id",
         "original_name",

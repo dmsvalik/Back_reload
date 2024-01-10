@@ -19,7 +19,7 @@ from app.products.models import Category
 
 from drf_yasg.utils import swagger_auto_schema
 
-from app.users.models import UserAccount, UserQuota
+from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderOffer
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
 from app.utils.swagger_documentation import utils as swagger
@@ -44,30 +44,6 @@ class GalleryImagesViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
-
-
-def recalculate_quota(user_account, cloud_size, server_size):
-    """
-    Пересчитываем квоту пользователя
-
-    """
-
-    user_quota = UserQuota.objects.get_or_create(user=user_account)[0]
-    current_cloud_size = user_quota.total_cloud_size
-    current_server_size = user_quota.total_server_size
-
-    new_total_cloud_size = current_cloud_size + cloud_size
-    new_total_server_size = current_server_size + server_size
-
-    if new_total_cloud_size < 0:
-        new_total_cloud_size = 0
-    if new_total_server_size < 0:
-        new_total_server_size = 0
-
-    return UserQuota.objects.filter(user=user_account).update(
-        total_cloud_size=new_total_cloud_size,
-        total_server_size=new_total_server_size,
-    )
 
 
 @api_view(["GET"])
