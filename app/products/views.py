@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.viewsets import GenericViewSet
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
+from django.utils.decorators import method_decorator
 
 from .models import Category
 from .serializers import CategorySerializer, QuestionnaireShortTypeSerializer
@@ -12,6 +13,9 @@ from .swagger_documentation import products as swagger
 from app.questionnaire.models import QuestionnaireType
 
 
+@method_decorator(
+    name="list", decorator=swagger_auto_schema(**swagger.CategoryList.__dict__)
+)
 class CategoryViewSet(mixins.ListModelMixin, GenericViewSet):
     """Вьюсет категорий. Получение списка категорий"""
 

@@ -3,6 +3,7 @@ from typing import List, Optional
 from drf_yasg import openapi
 
 from app.products.serializers import QuestionnaireShortTypeSerializer
+from config.settings import SWAGGER_TAGS
 
 
 def generate_400_response(fields: List[str]):
@@ -76,6 +77,8 @@ class BaseSwaggerSchema:
 
 
 class QuestionnaireTypeGetList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("questionnaire")]
+    operation_summary = "Получение всех анкет категории"
     operation_description = "Получение всех анкет категории."
     request_body = None
     method = "GET"
@@ -85,3 +88,9 @@ class QuestionnaireTypeGetList(BaseSwaggerSchema):
         ),
         404: DEFAULT_RESPONSES[404],
     }
+
+
+class CategoryList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("questionnaire")]
+    operation_summary = "Получение списка категорий"
+    operation_description = "Получение списка категорий"
