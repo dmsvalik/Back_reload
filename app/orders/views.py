@@ -37,6 +37,7 @@ from .permissions import IsOrderOwner
 
 
 from .swagger_documentation import orders as swagger
+from django.utils.decorators import method_decorator
 
 from .serializers import (
     AllOrdersClientSerializer,
@@ -128,6 +129,18 @@ def create_order(request):
     return response
 
 
+@method_decorator(
+    name="retrieve",
+    decorator=swagger_auto_schema(**swagger.OrderOfferRetrieve.__dict__),
+)
+@method_decorator(
+    name="destroy",
+    decorator=swagger_auto_schema(**swagger.OrderOfferDelete.__dict__),
+)
+@method_decorator(
+    name="update",
+    decorator=swagger_auto_schema(**swagger.OrderOfferUpdate.__dict__),
+)
 class OrderOfferViewSet(viewsets.ModelViewSet):
     """Поведение Оффера"""
 

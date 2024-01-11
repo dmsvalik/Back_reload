@@ -248,7 +248,7 @@ class OrderStateActivateSwagger(BaseSwaggerSchema):
 class ArchiveOrdersClientGetList(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users_service")]
     operation_summary = (
-        "Список завершенных заказов авторизованного " "пользователя"
+        "Список завершенных заказов авторизованного пользователя"
     )
     operation_description = (
         "Используйте этот метод для получения списка завершенных заказов "
@@ -393,7 +393,7 @@ class FileOrderDelete(BaseSwaggerSchema):
 
 
 class QuestionnaireResponsePost(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("order")]
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("questionnaire")]
     operation_id = "post-order-answers"
     operation_summary = "Отправка ответов на анкету к заказу"
     operation_description = (
@@ -423,7 +423,7 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
 
 
 class QuestionnaireResponseGet(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("order")]
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("questionnaire")]
     operation_id = "get-order-answers"
     operation_summary = "Получение вопросов анкеты к заказу"
     operation_description = (
@@ -536,3 +536,23 @@ class FileOrderDownload(BaseSwaggerSchema):
         401: openapi.Response("Unauthorized"),
         404: openapi.Response("FileNotFound"),
     }
+
+
+class OrderOfferRetrieve(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = (
+        "Получение информации о отдельном оффере " "**в разработке**"
+    )
+    deprecated = True
+
+
+class OrderOfferDelete(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Удаление отдельного оффера **в разработке**"
+    deprecated = True
+
+
+class OrderOfferUpdate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Изменение отдельного оффера **в разработке"
+    deprecated = True
