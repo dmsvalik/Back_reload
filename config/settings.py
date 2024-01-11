@@ -396,3 +396,27 @@ DJOSER_EMAIL_CLASSES = {
         "theme": "Письмо на сброс почты.",
     }
 }
+
+ALLOWED_TYPES_EXTENSIONS = {
+    "image/jpg": [".jpg", ".jpeg"],
+    "image/jpeg": [".jpg", ".jpeg"],
+    "image/gif": [".gif"],
+    "application/pdf": [".pdf"],
+    "image/png": [".png"],
+}
+
+FILE_SETTINGS = {
+    "IMAGE_FILE_FORMAT": "jpg",
+    "ANIMATION_FILE_FORMAT": "gif",
+    "MAX_IMAGE_SIZE_IN_B": 1024 * 1024,
+    "MAXIMUM_DIMENSIONS_OF_SIDES": (300, 300),
+    "IMAGE_COEFFICIENT_OF_SIZE_CHANGING": 0.9,
+    "ANIMATION_COEFFICIENT_OF_SIZE_CHANGING": 0.7,
+    "NUMBER_OF_CHARACTERS_IN_FILENAME": 7
+}
+
+IMAGE_FILE_FORMATS = [
+    "jpg",
+    "gif",
+    "jpeg",
+]

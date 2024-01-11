@@ -1,22 +1,23 @@
-from functools import wraps
-from django.http import HttpResponse
-from app.users.models import UserQuota
-from app.orders.models import OrderModel
-from config.settings import MAX_SERVER_QUOTA, MAX_STORAGE_QUOTA, MAX_ORDERS
-import magic
 import os
+from functools import wraps
 
+import magic
+from django.http import HttpResponse
 
-ALLOWED_TYPES_EXTENSIONS = {
-    "image/jpg": [".jpg", ".jpeg"],
-    "image/jpeg": [".jpg", ".jpeg"],
-    "image/gif": [".gif"],
-    "application/pdf": [".pdf"],
-    "image/png": [".png"],
-}
+from app.orders.models import OrderModel
+from app.users.models import UserQuota
+from config.settings import (
+    ALLOWED_TYPES_EXTENSIONS,
+    MAX_ORDERS,
+    MAX_SERVER_QUOTA,
+    MAX_STORAGE_QUOTA,
+)
+from .constants import ErrorMessages
 
 
 def check_user_quota(func):
+    """Проверка доступной квоты пользователя."""
+
     @wraps(func)
     def wrapped(request, *args, **kwargs):
         if not request.user.is_authenticated:
@@ -25,25 +26,23 @@ def check_user_quota(func):
         try:
             user_quota = UserQuota.objects.get(user_id=user_id)
         except UserQuota.DoesNotExist:
-            return HttpResponse(
-                "The user with the specified ID was not found", status=404
-            )
+            return HttpResponse(ErrorMessages.USER_NOT_FOUNDED, status=404)
 
         if user_quota.total_cloud_size >= MAX_STORAGE_QUOTA:
             return HttpResponse(
-                "Please free up space by deleting unnecessary files.",
+                ErrorMessages.MAX_QUOTA_ERROR,
                 status=403,
             )
 
         if user_quota.total_server_size >= MAX_SERVER_QUOTA:
             return HttpResponse(
-                "Please free up space by deleting unnecessary files.",
+                ErrorMessages.MAX_QUOTA_ERROR,
                 status=403,
             )
 
         if user_quota.total_traffic < 0:
             return HttpResponse(
-                "The allowed traffic has been exceeded. Wait until next month or contact the administrators.",
+                ErrorMessages.TOTAL_TRAFFIC_ERROR,
                 status=403,
             )
 
@@ -53,15 +52,15 @@ def check_user_quota(func):
 
 
 def check_file_type(allowed_mime_types):
+    """Проверка соответствия типов файлов допустимым."""
+
     def decorator(func):
         @wraps(func)
         def wrapped(request, *args, **kwargs):
             uploaded_file = request.FILES.get("upload_file")
             if "upload_file" not in request.FILES:
                 return HttpResponse(
-                    {
-                        'The "upload_file" key is missing in the uploaded files.'
-                    },
+                    ErrorMessages.UPLOADED_FILE_FIELD_ERROR,
                     status=400,
                 )
 
@@ -71,14 +70,15 @@ def check_file_type(allowed_mime_types):
             # Check the MIME type against the list of allowed types
             if file_type not in allowed_mime_types:
                 return HttpResponse(
-                    f"Unsupported file type: {file_type}", status=400
+                    ErrorMessages.UNSUPPORTED_FILE.format(f"{file_type}"),
+                    status=400,
                 )
 
             # Check the file extension is not the expected one
             extension = os.path.splitext(uploaded_file.name)[1]
             if extension.lower() not in ALLOWED_TYPES_EXTENSIONS[file_type]:
                 return HttpResponse(
-                    f"File extension doesn't match file type: {file_type}",
+                    ErrorMessages.UNSUPPORTED_FILE.format(f"{file_type}"),
                     status=400,
                 )
 
@@ -90,6 +90,8 @@ def check_file_type(allowed_mime_types):
 
 
 def check_order_limit(func):
+    """Проверка максимального количества заказов у пользователя."""
+
     @wraps(func)
     def wrapped(request, *args, **kwargs):
         user_id = request.user.id
@@ -98,9 +100,7 @@ def check_order_limit(func):
         ).count()
         if user_order_count >= MAX_ORDERS:
             return HttpResponse(
-                "The order limit has been exceeded. Maximum number of orders: {}".format(
-                    MAX_ORDERS
-                ),
+                ErrorMessages.ORDER_LIMIT_ERROR.format(MAX_ORDERS),
                 status=403,
             )
 

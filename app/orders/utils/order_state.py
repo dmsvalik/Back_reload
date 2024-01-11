@@ -1,6 +1,8 @@
-from app.orders.models import OrderModel, STATE_CHOICES
+from app.orders.models import OrderModel
 from app.questionnaire.models import QuestionResponse, Question
 from app.utils.errorcode import OrderInWrongStatus, OrderAnswersNotComplete
+
+from ..constants import ORDER_STATE_CHOICES
 
 from django.db.models import QuerySet, Prefetch
 
@@ -12,7 +14,7 @@ class OrderState(ABC):
     Базовый класс для манипуляций со статусом заказа
     """
 
-    DEFAULT_STATE: str = STATE_CHOICES[0][0]
+    DEFAULT_STATE: str = ORDER_STATE_CHOICES[0][0]
 
     def __init__(self, instance: OrderModel):
         self.instance = instance
@@ -43,7 +45,7 @@ class OrderStateActivate(OrderState):
         if not self.answer_is_complete():
             raise OrderAnswersNotComplete()
 
-        self.instance.state = STATE_CHOICES[1][0]
+        self.instance.state = ORDER_STATE_CHOICES[1][0]
         self.instance.save()
 
     def answer_is_complete(self) -> bool:
@@ -59,8 +61,9 @@ class OrderStateActivate(OrderState):
 
     def _get_questions_by_order(self) -> QuerySet[Question]:
         """
-        Возвращает все вопросы связанные с этим заказом, ответ на которые обязателен
-        А так же подтягивает ответы связанные с этим заказом и ответами
+        Возвращает все вопросы связанные с этим заказом, ответ на которые
+        обязателен, а так же подтягивает ответы связанные с этим заказом и
+        ответами
         """
         question = (
             Question.objects.filter(

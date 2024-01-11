@@ -9,6 +9,9 @@ from app.users.serializers import UserAccountSerializer
 
 
 class FilePreviewSerializer(serializers.ModelSerializer):
+    """Сериализатор для файлов"""
+
+    # Необходимо исправить модель
     preview_path = SerializerMethodField()
 
     class Meta:
@@ -28,6 +31,8 @@ class FilePreviewSerializer(serializers.ModelSerializer):
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
+    """Сериализатор для создания заказа."""
+
     class Meta:
         model = OrderModel
         fields = [
@@ -47,7 +52,9 @@ class OrderModelSerializer(serializers.ModelSerializer):
 
 
 class AllOrdersClientSerializer(serializers.ModelSerializer):
-    """Сериализатор для вывода краткой информации по всем заказам пользователя."""
+    """
+    Сериализатор для вывода краткой информации по всем заказам пользователя.
+    """
 
     contractor = SerializerMethodField()
     files = SerializerMethodField()
@@ -123,20 +130,3 @@ class OrderOfferSerializer(serializers.ModelSerializer):
             raise errorcode.UniqueOrderOffer()
 
         return data
-
-    # def create(self, validated_data):
-    #     user = self.context["request"].user
-    #     contractor_data = ContractorData.objects.get(user=user)
-    #     # try:
-    #     #     contractor_data = ContractorData.objects.get(user_account_id=user)
-    #     # except TypeError:
-    #     #     raise serializers.ValidationError("Вы не являетесь продавцом")
-    #     """проверяем если продавец активен, не заблокирован"""
-    #     if not contractor_data.is_active:
-    #         raise serializers.ValidationError("Вы не можете сделать оффер")
-    #     # """ставим заглушку на цену, тк ее можно указать только через 24 часа после оффера"""
-    #     # validated_data["offer_price"] = " "
-    #     validated_data.pop(
-    #         "user_account", None
-    #     )  # Ensure 'user_account' is not in validated_data
-    #     return OrderOffer.objects.create(**validated_data, user_account=user)

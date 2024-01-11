@@ -2,6 +2,7 @@ from django.db import models
 
 
 def image_gallery_path(instance, filename):
+    """Создание пути сохранения изображения для слайдера."""
     return "/".join(
         [
             "main_page_images",
@@ -12,6 +13,8 @@ def image_gallery_path(instance, filename):
 
 
 class GallerySlider(models.Model):
+    """Модель слайдера."""
+
     SLIDER_NAME = [
         ("1", "первый слайдер"),
         ("2", "второй слайдер"),
@@ -35,6 +38,8 @@ class GallerySlider(models.Model):
 
 
 class GalleryImages(models.Model):
+    """Модель изображения для слайдера с указанием позиции."""
+
     IMAGE_PLACE = [
         ("1", "первое маленькое изображение"),
         ("2", "второе маленькое изображение"),

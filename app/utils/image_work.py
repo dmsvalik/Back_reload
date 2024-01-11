@@ -6,15 +6,18 @@
 import os
 from PIL import Image, ImageSequence
 
-from config.settings import BASE_DIR
+from config.settings import BASE_DIR, FILE_SETTINGS
 
 
 class ImageWork(object):
-    FILE_FORMAT = "jpg"
-    MAX_IMAGE_SIZE_IN_B = 1024 * 1024
-    MAXIMUM_DIMENSIONS_OF_SIDES = (300, 300)
-    COEFFICIENT_OF_SIZE_CHANGING = 0.9
-    NUMBER_OF_CHARACTERS_IN_FILENAME = 7
+    """Класс для работы с изображениями."""
+
+    FILE_FORMAT = FILE_SETTINGS["IMAGE_FILE_FORMAT"]
+    MAX_IMAGE_SIZE_IN_B = FILE_SETTINGS["MAX_IMAGE_SIZE_IN_B"]
+    MAXIMUM_DIMENSIONS_OF_SIDES = FILE_SETTINGS["MAXIMUM_DIMENSIONS_OF_SIDES"]
+    COEFFICIENT_OF_SIZE_CHANGING = FILE_SETTINGS[
+        "IMAGE_COEFFICIENT_OF_SIZE_CHANGING"
+    ]
 
     def __init__(self, temp_file, user_id, order_id=None):
         # there are may be without an order and user
@@ -63,8 +66,12 @@ class ImageWork(object):
 
 
 class GifWork(ImageWork):
-    FILE_FORMAT = "gif"
-    COEFFICIENT_OF_SIZE_CHANGING = 0.7
+    """Класс для работы с анимацией."""
+
+    FILE_FORMAT = FILE_SETTINGS["ANIMATION_FILE_FORMAT"]
+    COEFFICIENT_OF_SIZE_CHANGING = FILE_SETTINGS[
+        "ANIMATION_COEFFICIENT_OF_SIZE_CHANGING"
+    ]
 
     def _prepare_and_save_preview(self):
         """Reducing the size of the animation image and saving it as a preview.
