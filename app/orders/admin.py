@@ -20,6 +20,7 @@ class OrderModelAdmin(admin.ModelAdmin):
         "user_account",
         "order_time",
         "key",
+        "questionnaire_type",
     ]
     readonly_fields = ("order_time", "key")
 
