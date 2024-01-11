@@ -51,11 +51,18 @@ from .serializers import (
     OrderModelSerializer,
 )
 from .swagger_documentation import orders as swagger
-from .tasks import (
-    celery_delete_file_task,
-    celery_delete_image_task,
-    celery_upload_file_task_to_answer,
-    celery_upload_image_task_to_answer,
+
+# from .tasks import (
+#     celery_delete_file_task,
+#     celery_delete_image_task,
+#     celery_upload_file_task_to_answer,
+#     celery_upload_image_task_to_answer,
+# )
+from .utils.files import (
+    delete_file,
+    delete_image,
+    upload_file_to_answer,
+    upload_image_to_answer,
 )
 from .utils.order_state import OrderStateActivate
 
@@ -326,10 +333,12 @@ def delete_file_order(request):
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
         if file_to_delete.original_name.split(".")[-1] in IMAGE_FILE_FORMATS:
-            task = celery_delete_image_task.delay(file_id)
+            # task = celery_delete_image_task.delay(file_id)
+            response = delete_image(file_id)
         else:
-            task = celery_delete_file_task.delay(file_id)
-        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+            # task = celery_delete_file_task.delay(file_id)
+            response = delete_file(file_id)
+        return response
     except OrderFileData.DoesNotExist:
         return Response(
             {"detail": ErrorMessages.FILE_NOT_FOUNDED},
@@ -390,15 +399,21 @@ def attach_file(request, pk: int):
             file.write(chunk)
     temp_file = f"tmp/{new_name}"
     if temp_file.split(".")[-1] in IMAGE_FILE_FORMATS:
-        task = celery_upload_image_task_to_answer.delay(
+        # task = celery_upload_image_task_to_answer.delay(
+        #     temp_file, order_id, user_id, question_id, original_name
+        # )
+        response = upload_image_to_answer(
             temp_file, order_id, user_id, question_id, original_name
         )
     else:
-        task = celery_upload_file_task_to_answer.delay(
+        # task = celery_upload_file_task_to_answer.delay(
+        #     temp_file, order.id, user_id, question_id, original_name
+        # )
+        response = upload_file_to_answer(
             temp_file, order.id, user_id, question_id, original_name
         )
 
-    return Response({"task_id": task.id}, status=202)
+    return response
 
 
 @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
