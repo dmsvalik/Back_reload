@@ -92,6 +92,9 @@ class CustomUserViewSet(UserViewSet):
             order: OrderModel = OrderModel.objects.filter(
                 key=cookie_key, user_account__isnull=True
             ).first()
+            if order:
+                order.user_account = self.user_instance
+                order.save()
             signals.quota_recalculate.send(
                 sender=self.__class__, user=self.user_instance, order=order
             )
@@ -191,6 +194,9 @@ class CustomTokenViewBase(TokenViewBase):
             order: OrderModel = OrderModel.objects.filter(
                 key=cookie_key, user_account__isnull=True
             ).first()
+            if order:
+                order.user_account = user
+                order.save()
             signals.quota_recalculate.send(
                 sender=self.__class__,
                 user=user,

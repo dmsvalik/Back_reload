@@ -93,6 +93,14 @@ class IncorrectFileDeleting(HttpValidationException):
     }
 
 
+class IncorrectFileUploading(HttpValidationException):
+    status_code = 400
+    detail = {
+        "errors": "IncorrectFileDeleting",
+        "message": "Возникла ошибка при загрузке файла.",
+    }
+
+
 class OrderIdNotFound(HttpValidationException):
     status_code = 404
     detail = {"errors": "OrderIdNotFound", "message": "Заказ не найдет."}
