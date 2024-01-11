@@ -31,6 +31,7 @@ from app.questionnaire.serializers import (
 )
 from app.sending.views import send_user_notifications
 from app.users.signals import send_notify
+from app.users.utils.quota_manager import UserQuotaManager
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
 from app.utils.errorcode import QuestionnaireTypeIdNotFound
@@ -332,12 +333,13 @@ def delete_file_order(request):
     file_id = request.data.get("file_id")
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
+        quota_manager = UserQuotaManager(request.user)
         if file_to_delete.original_name.split(".")[-1] in IMAGE_FILE_FORMATS:
             # task = celery_delete_image_task.delay(file_id)
-            response = delete_image(file_id)
+            response = delete_image(file_id, quota_manager)
         else:
             # task = celery_delete_file_task.delay(file_id)
-            response = delete_file(file_id)
+            response = delete_file(file_id, quota_manager)
         return response
     except OrderFileData.DoesNotExist:
         return Response(
@@ -398,19 +400,30 @@ def attach_file(request, pk: int):
         for chunk in upload_file.chunks():
             file.write(chunk)
     temp_file = f"tmp/{new_name}"
+    quota_manager = UserQuotaManager(request.user)
     if temp_file.split(".")[-1] in IMAGE_FILE_FORMATS:
         # task = celery_upload_image_task_to_answer.delay(
         #     temp_file, order_id, user_id, question_id, original_name
         # )
         response = upload_image_to_answer(
-            temp_file, order_id, user_id, question_id, original_name
+            temp_file,
+            order_id,
+            question_id,
+            original_name,
+            quota_manager,
+            user_id=user_id,
         )
     else:
         # task = celery_upload_file_task_to_answer.delay(
         #     temp_file, order.id, user_id, question_id, original_name
         # )
         response = upload_file_to_answer(
-            temp_file, order.id, user_id, question_id, original_name
+            temp_file,
+            order.id,
+            question_id,
+            original_name,
+            quota_manager,
+            user_id=user_id,
         )
 
     return response
