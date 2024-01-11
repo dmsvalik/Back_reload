@@ -16,10 +16,11 @@ from rest_framework.generics import GenericAPIView
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from app.products.models import Category
+from django.utils.decorators import method_decorator
 
 from drf_yasg.utils import swagger_auto_schema
 
-from app.users.models import UserAccount, UserQuota
+from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderOffer
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
 from app.utils.swagger_documentation import utils as swagger
@@ -30,6 +31,10 @@ from .serializers import GalleryImagesSerializer
 from .models import GalleryImages
 
 
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(**swagger.GalleryImagesList.__dict__),
+)
 class GalleryImagesViewSet(viewsets.ModelViewSet):
     """
     Отображение картинок на главной странице в слайдерах
@@ -46,33 +51,16 @@ class GalleryImagesViewSet(viewsets.ModelViewSet):
         return super().retrieve(request, *args, **kwargs)
 
 
-def recalculate_quota(user_account, cloud_size, server_size):
-    """
-    Пересчитываем квоту пользователя
-
-    """
-
-    user_quota = UserQuota.objects.get_or_create(user=user_account)[0]
-    current_cloud_size = user_quota.total_cloud_size
-    current_server_size = user_quota.total_server_size
-
-    new_total_cloud_size = current_cloud_size + cloud_size
-    new_total_server_size = current_server_size + server_size
-
-    if new_total_cloud_size < 0:
-        new_total_cloud_size = 0
-    if new_total_server_size < 0:
-        new_total_server_size = 0
-
-    return UserQuota.objects.filter(user=user_account).update(
-        total_cloud_size=new_total_cloud_size,
-        total_server_size=new_total_server_size,
-    )
-
-
+@swagger_auto_schema(**swagger.GetTaskStatus.__dict__)
 @api_view(["GET"])
 @permission_classes([AllowAny])
 def get_task_status(request, task_id):
+    """
+    Получение статуса таски CELERY. task_id - идентификатор таски.
+    Статусы: SUCCESS, FAILURE
+    Для отображения статуса необходимо отправить в result
+    "task_id"и "task_status"
+    """
     task_result = AsyncResult(task_id)
     result = {
         "task_id": task_id,
@@ -94,7 +82,8 @@ def get_task_status(request, task_id):
     ]
 )
 def document_view(request, path):
-    """Возврат ссылки на превью картинки"""
+    """Возврат ссылки на превью картинки. Проверяет доступ и редиректит
+    на превью."""
     res = Response()
     res["X-Accel-Redirect"] = "/files/" + path
     return res
@@ -121,7 +110,8 @@ def check_expired_auction_orders(request):
                 item.state = "auction_expired"
             item.save()
 
-    # надо логи добавить сюда, что таска была запущена и завершилась или сделать отправку на почту
+    # надо логи добавить сюда, что таска была запущена и завершилась или
+    # сделать отправку на почту
     return Response({"success": "all orders auctions were checked"})
 
 

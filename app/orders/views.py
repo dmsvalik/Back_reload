@@ -1,60 +1,26 @@
 import os
 from datetime import datetime, timedelta, timezone
-from djoser.compat import get_user_email
 from typing import Any
 
-from app.orders.permissions import (
-    IsOrderFileDataOwnerWithoutUser,
-    IsFileExistById,
-)
-
-from app.utils import errorcode
-from app.utils.decorators import check_file_type, check_user_quota
-from app.utils.errorcode import NotAllowedUser, QuestionnaireTypeIdNotFound
-from app.utils.storage import CloudStorage, ServerFileSystem
-
-from django.shortcuts import get_object_or_404
 from drf_yasg.utils import swagger_auto_schema
-
 from rest_framework import status, viewsets, views
 from rest_framework.decorators import (
     api_view,
     permission_classes,
     parser_classes,
 )
-from rest_framework.parsers import MultiPartParser
 from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 
-from .models import (
-    FileData,
-    OrderFileData,
-    OrderModel,
-    OrderOffer,
-)
-from .permissions import IsOrderOwner
+from django.utils.decorators import method_decorator
 
-
-from .swagger_documentation import orders as swagger
-
-from .serializers import (
-    AllOrdersClientSerializer,
-    OrderOfferSerializer,
-    OrderModelSerializer,
-)
-from .utils.order_state import OrderStateActivate
-
-
-from .tasks import (
-    celery_delete_file_task,
-    celery_delete_image_task,
-    celery_upload_file_task,
-    celery_upload_image_task,
-    celery_upload_file_task_to_answer,
-    celery_upload_image_task_to_answer,
-)
 from app.main_page.permissions import IsContractor
+from app.orders.permissions import (
+    IsOrderFileDataOwnerWithoutUser,
+    IsFileExistById,
+)
 from app.questionnaire.models import (
     QuestionnaireType,
     Question,
@@ -64,27 +30,62 @@ from app.questionnaire.serializers import (
     OrderFullSerializer,
 )
 from app.sending.views import send_user_notifications
+from app.users.signals import send_notify
+from app.utils import errorcode
+from app.utils.decorators import check_file_type, check_user_quota
+from app.utils.errorcode import QuestionnaireTypeIdNotFound
 from app.utils.file_work import FileWork
 from app.utils.permissions import IsContactor, IsFileOwner
-from app.users.signals import send_notify
+from app.utils.storage import ServerFileSystem
+from config.settings import IMAGE_FILE_FORMATS, ORDER_COOKIE_KEY_NAME
+from .constants import ErrorMessages
+from .models import (
+    OrderFileData,
+    OrderModel,
+    OrderOffer,
+)
+from .permissions import IsOrderOwner
+from .serializers import (
+    AllOrdersClientSerializer,
+    OrderOfferSerializer,
+    OrderModelSerializer,
+)
+from .swagger_documentation import orders as swagger
 
-
-IMAGE_FILE_FORMATS = [
-    "jpg",
-    "gif",
-    "jpeg",
-]
+# from .tasks import (
+#     celery_delete_file_task,
+#     celery_delete_image_task,
+#     celery_upload_file_task_to_answer,
+#     celery_upload_image_task_to_answer,
+# )
+from .utils.files import (
+    delete_file,
+    delete_image,
+    upload_file_to_answer,
+    upload_image_to_answer,
+)
+from .utils.order_state import OrderStateActivate
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
 @api_view(["POST"])
 @permission_classes([AllowAny])
 def create_order(request):
-    """Создание заказа клиента"""
+    """
+    Создание заказа клиента.
+    URL: http://localhost/order/create/
+    METHOD - "POST"
+    order_name:str (необязательное) - имя заказа,
+    order_description:str (необязательное) - описание заказа,
+    questionnaire_type_id:int (обязательное) - id типа анкеты
+    """
     if "order_name" in request.data:
         order_name = request.data.get("order_name")
     else:
-        order_name = f"Заказ №{1 if not OrderModel.objects.last() else OrderModel.objects.last().id + 1}"
+        order_number = 1
+        if OrderModel.objects.last():
+            order_number = OrderModel.objects.last().id + 1
+        order_name = f"Заказ №{order_number}"
     order_description = request.data.get("order_description")
     order_questionnaire_type = request.data.get("questionnaire_type_id")
 
@@ -115,7 +116,9 @@ def create_order(request):
         status=201,
     )
     if not user:
-        response.set_cookie("key", order.key, samesite="None", secure=True)
+        response.set_cookie(
+            ORDER_COOKIE_KEY_NAME, order.key, samesite="None", secure=True
+        )
     else:
         context = {"order_id": order.id, "user_id": user.id}
         if user.notifications:
@@ -123,11 +126,25 @@ def create_order(request):
                 user,
                 "ORDER_CREATE_CONFIRMATION",
                 context,
-                [get_user_email(user)],
+                [
+                    user.email,
+                ],
             )
     return response
 
 
+@method_decorator(
+    name="retrieve",
+    decorator=swagger_auto_schema(**swagger.OrderOfferRetrieve.__dict__),
+)
+@method_decorator(
+    name="destroy",
+    decorator=swagger_auto_schema(**swagger.OrderOfferDelete.__dict__),
+)
+@method_decorator(
+    name="update",
+    decorator=swagger_auto_schema(**swagger.OrderOfferUpdate.__dict__),
+)
 class OrderOfferViewSet(viewsets.ModelViewSet):
     """Поведение Оффера"""
 
@@ -214,77 +231,19 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@swagger_auto_schema(**swagger.UploadImageOrderPost.__dict__)
-@api_view(["POST"])
-@check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
-@check_user_quota
-def upload_image_order(request):
-    """
-    Процесс приема изображения и последующего сохранения
-
-    """
-    order_id = request.data.get("order_id")
-    upload_file = request.FILES["upload_file"]
-    user_id = request.user.id
-    name = upload_file.name
-    # create new name for file
-    new_name = ServerFileSystem(
-        name, user_id, order_id
-    ).generate_new_filename()
-
-    if order_id is None:
-        raise errorcode.IncorrectImageOrderUpload()
-    if (
-        order_id == ""
-        or not order_id.isdigit()
-        or not OrderModel.objects.filter(id=order_id).exists()
-    ):
-        raise errorcode.IncorrectImageOrderUpload()
-
-    # temporary save file
-    if not os.path.exists("tmp"):
-        os.mkdir("tmp")
-    with open(f"tmp/{new_name}", "wb+") as file:
-        for chunk in upload_file.chunks():
-            file.write(chunk)
-    temp_file = f"tmp/{new_name}"
-    if temp_file.split(".")[-1] in IMAGE_FILE_FORMATS:
-        task = celery_upload_image_task.delay(temp_file, user_id, order_id)
-    else:
-        task = celery_upload_file_task.delay(temp_file, user_id, order_id)
-    return Response({"task_id": task.id}, status=202)
-
-
-@swagger_auto_schema(**swagger.FileOrderGet.__dict__)
-@api_view(["GET"])
-def get_file_order(request, file_id):
-    """
-    Получение изображения из Yandex и передача ссылки на его получение для фронта
-    """
-    image_data = get_object_or_404(FileData, id=file_id)
-    if request.user.id != image_data.user_account.id:
-        raise NotAllowedUser
-
-    yandex_path = image_data.yandex_path
-
-    # get download_url from Yandex
-    yandex = CloudStorage()
-    try:
-        image_data = yandex.cloud_get_file(yandex_path)
-    except Exception as e:
-        return Response(
-            {
-                "status": "failed",
-                "message": f"Failed to get image from Yandex.Disk: {str(e)}",
-            },
-        )
-    return Response(image_data)
-
-
 @swagger_auto_schema(**swagger.QuestionnaireResponsePost.__dict__)
 @api_view(["POST"])
 @permission_classes([IsOrderOwner])
 def create_answers_to_order(request, pk):
+    """
+    Создание ответов на вопросы к заказу.
+    URL: http://localhost/order/<int:pk>/answers/
+    METHOD - "POST"
+    param pk:int (обязательное) - id заказа,
+    question_id:int (обязательное) - id вопроса,
+    response:str (обязательное) - ответ на вопрос
+    """
+
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -319,7 +278,11 @@ def create_answers_to_order(request, pk):
             in request.data
         ):
             raise ValidationError(
-                {"question_id": f"Вопрос '{question.id}' требует ответа."}
+                {
+                    "question_id": ErrorMessages.QUESTION_ANSWER_REQUIRED.format(
+                        {question.id}
+                    )
+                }
             )
     for question in questions_with_answers:
         if (
@@ -328,7 +291,9 @@ def create_answers_to_order(request, pk):
         ):
             raise ValidationError(
                 {
-                    "question_id": f"Вопрос '{question.option.question.id}' требует ответа."
+                    "question_id": ErrorMessages.QUESTION_ANSWER_REQUIRED.format(
+                        question.option.question.id
+                    )
                 }
             )
     serializer.save(order=order)
@@ -339,6 +304,12 @@ def create_answers_to_order(request, pk):
 @api_view(["GET"])
 @permission_classes([IsOrderOwner])
 def get_answers_to_order(request, pk):
+    """
+    Получение ответов на вопросы к заказу.
+    URL: http://localhost/order/<int:pk>/
+    METHOD - "GET"
+    param pk:int (обязательное) - id заказа,
+    """
     try:
         order = OrderModel.objects.get(id=pk)
     except Exception:
@@ -353,19 +324,25 @@ def get_answers_to_order(request, pk):
 def delete_file_order(request):
     """
     Удаление файла из Yandex и превью с сервера
-    file_id: int - id файла (модели OrderFileData) привязанного к вопросу анкеты
+    URL: http://localhost/order/file_order/
+    METHOD - "DELETE"
+    file_id: int - id файла (модели OrderFileData) привязанного к вопросу
+    анкеты
     """
     file_id = request.data.get("file_id")
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
         if file_to_delete.original_name.split(".")[-1] in IMAGE_FILE_FORMATS:
-            task = celery_delete_image_task.delay(file_id)
+            # task = celery_delete_image_task.delay(file_id)
+            response = delete_image(file_id)
         else:
-            task = celery_delete_file_task.delay(file_id)
-        return Response({"task_id": task.id}, status=status.HTTP_202_ACCEPTED)
+            # task = celery_delete_file_task.delay(file_id)
+            response = delete_file(file_id)
+        return response
     except OrderFileData.DoesNotExist:
         return Response(
-            {"detail": "Файл не найден."}, status=status.HTTP_404_NOT_FOUND
+            {"detail": ErrorMessages.FILE_NOT_FOUNDED},
+            status=status.HTTP_404_NOT_FOUND,
         )
     except Exception as e:
         return Response(
@@ -404,7 +381,7 @@ def attach_file(request, pk: int):
     except Question.DoesNotExist:
         raise errorcode.QuestionIdNotFound()
     if "upload_file" not in request.FILES:
-        raise ValidationError({"detail": "Файл не добавлен."})
+        raise ValidationError({"detail": ErrorMessages.FILE_NOT_FOUNDED})
     upload_file = request.FILES["upload_file"]
     original_name = upload_file.name
 
@@ -422,15 +399,21 @@ def attach_file(request, pk: int):
             file.write(chunk)
     temp_file = f"tmp/{new_name}"
     if temp_file.split(".")[-1] in IMAGE_FILE_FORMATS:
-        task = celery_upload_image_task_to_answer.delay(
+        # task = celery_upload_image_task_to_answer.delay(
+        #     temp_file, order_id, user_id, question_id, original_name
+        # )
+        response = upload_image_to_answer(
             temp_file, order_id, user_id, question_id, original_name
         )
     else:
-        task = celery_upload_file_task_to_answer.delay(
+        # task = celery_upload_file_task_to_answer.delay(
+        #     temp_file, order.id, user_id, question_id, original_name
+        # )
+        response = upload_file_to_answer(
             temp_file, order.id, user_id, question_id, original_name
         )
 
-    return Response({"task_id": task.id}, status=202)
+    return response
 
 
 @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
@@ -439,6 +422,9 @@ def attach_file(request, pk: int):
 def get_download_file_link(request) -> Any:
     """
     Получение и передача на фронт ссылки на скачивание файла
+    URL: http://localhost/download/
+    METHOD - "POST"
+    file_id:int (обязательное) - id файла модели OrderFileData,
     """
     try:
         file_link = FileWork.get_download_file_link(

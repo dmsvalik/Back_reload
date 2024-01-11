@@ -1,26 +1,30 @@
 import os
 
+from rest_framework.response import Response
+
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
-from celery.utils.log import get_task_logger
 from app.utils.storage import CloudStorage
+from app.utils.errorcode import (
+    FileNotFound,
+    IncorrectFileDeleting,
+    IncorrectFileUploading,
+    QuestionIdNotFound,
+)
 
-from celery import shared_task
+# from celery import shared_task
 from rest_framework import status
 
 from app.orders.models import OrderFileData, OrderModel
 from config.settings import BASE_DIR
 
-logger = get_task_logger(__name__)
-
 
 # celery -A config.celery worker
 
 
-@shared_task
-def celery_delete_file_task(file_id: int):
+def delete_file(file_id: int):
     """
     Удаление файла с ЯД.
     file_id: int - id модели OrderFileData
@@ -33,25 +37,15 @@ def celery_delete_file_task(file_id: int):
 
         file_to_delete.delete()
 
-        logger.info(f"Файл с id {file_id} успешно удален.")
-        return {"status": "SUCCESS", "response": "Файл удален"}
+        return Response({"response": "Файл удален"}, status=status.HTTP_200_OK)
     except OrderFileData.DoesNotExist:
-        logger.error(f"Файл с id {file_id} не найден.")
-        return {
-            "status": "FAILURE",
-            "response": f"Файл с id {file_id} не найден.",
-        }
+        raise FileNotFound()
 
-    except Exception as e:
-        logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
-        return {
-            "status": "FAILURE",
-            "response": f"Ошибка при удалении файла с id {file_id}",
-        }
+    except Exception:
+        raise IncorrectFileDeleting()
 
 
-@shared_task
-def celery_delete_image_task(file_id: int):
+def delete_image(file_id: int):
     """
     Удаление изображения с сервера и ЯД.
     file_id: int - id модели OrderFileData
@@ -67,25 +61,15 @@ def celery_delete_image_task(file_id: int):
             if os.path.exists(full_preview_path):
                 os.remove(full_preview_path)
         file_to_delete.delete()
-        logger.info(f"Файл с id {file_id} успешно удален.")
-        return {"status": "SUCCESS", "response": "Файл удален"}
+        return Response({"response": "Файл удален"}, status=status.HTTP_200_OK)
     except OrderFileData.DoesNotExist:
-        logger.error(f"Файл с id {file_id} не найден.")
-        return {
-            "status": "FAILURE",
-            "response": f"Файл с id {file_id} не найден.",
-        }
+        raise FileNotFound()
 
-    except Exception as e:
-        logger.error(f"Ошибка при удалении файла с id {file_id}: {e}")
-        return {
-            "status": "FAILURE",
-            "response": f"Ошибка при удалении файла с id {file_id}",
-        }
+    except Exception:
+        raise IncorrectFileDeleting()
 
 
-@shared_task()
-def celery_upload_image_task_to_answer(
+def upload_image_to_answer(
     temp_file: str,
     order_id: int,
     user_id: int | None,
@@ -129,25 +113,21 @@ def celery_upload_image_task_to_answer(
             )
             os.remove(image.temp_file)
             serializer = FileSerializer(instance=created_file)
-            return {"status": "SUCCESS", "response": serializer.data}
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             if os.path.exists(image.preview_path):
                 os.remove(image.preview_path)
             os.remove(image.temp_file)
-            return {
-                "status": "FAILURE",
-                "response": f"Ошибка при загрузке файла: {result}",
-            }
+            raise IncorrectFileUploading()
     except OrderModel.DoesNotExist:
-        return {"status": "FAILURE", "response": "Заказ не найден."}
+        raise FileNotFound()
     except Question.DoesNotExist:
-        return {"status": "FAILURE", "response": "Вопрос не найден."}
-    except Exception as e:
-        return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}
+        raise QuestionIdNotFound()
+    except Exception:
+        raise IncorrectFileUploading()
 
 
-@shared_task()
-def celery_upload_file_task_to_answer(
+def upload_file_to_answer(
     temp_file: str,
     order_id: int,
     user_id: int | None,
@@ -184,16 +164,13 @@ def celery_upload_file_task_to_answer(
             )
             os.remove(file.temp_file)
             serializer = FileSerializer(instance=created_file)
-            return {"status": "SUCCESS", "response": serializer.data}
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             os.remove(file.temp_file)
-            return {
-                "status": "FAILURE",
-                "response": f"Ошибка при загрузке файла: {result}",
-            }
+            raise IncorrectFileUploading()
     except OrderModel.DoesNotExist:
-        return {"status": "FAILURE", "response": "Заказ не найден."}
+        raise FileNotFound()
     except Question.DoesNotExist:
-        return {"status": "FAILURE", "response": "Вопрос не найден."}
-    except Exception as e:
-        return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}
+        raise QuestionIdNotFound()
+    except Exception:
+        raise IncorrectFileUploading()

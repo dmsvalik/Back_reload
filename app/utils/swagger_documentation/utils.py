@@ -69,6 +69,8 @@ DEFAULT_RESPONSES = {
 
 
 class BaseSwaggerSchema:
+    tags: List[str]
+    operation_summary: str
     operation_description: str
     request_body: Optional[openapi.Schema]
     manual_parameters: Optional[List[openapi.Parameter]]
@@ -159,5 +161,24 @@ class CheckExpAuctionOrdersDocs(BaseSwaggerSchema):
     operation_summary = "Проверка заказов в статусе аукциона"
     operation_description = (
         "Используйте этот метод для проверки заказов в статусе аукциона"
+    )
+    method = "get"
+
+
+class GalleryImagesList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("service")]
+    operation_summary = " Отображение картинок на главной странице"
+    operation_description = (
+        "Отображение картинок на главной странице в слайдерах"
+    )
+
+
+class GetTaskStatus(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("service")]
+    operation_summary = "Получение результата отложенной задачи"
+    operation_description = (
+        "Используйте этот метод для получения статуса выполнения отложенной "
+        "задачи. В случае успешного выполнения задачи, в ответе так-же "
+        "вернется и сам результат выполнения."
     )
     method = "get"

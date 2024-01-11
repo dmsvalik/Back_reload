@@ -2,7 +2,8 @@ from django.dispatch import Signal
 from django.db.models import QuerySet
 
 from app.users.models import UserAccount
-from app.orders.models import OrderModel, OrderFileData, STATE_CHOICES
+from app.orders.constants import ORDER_STATE_CHOICES as STATE_CHOICES
+from app.orders.models import OrderModel, OrderFileData
 from app.users.utils.quota_manager import UserQuotaManager
 from app.sending.views import send_user_notifications
 

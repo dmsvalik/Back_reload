@@ -29,16 +29,6 @@ urlpatterns = [
     ),
     path("order/create/", views.create_order, name="order-create"),
     path(
-        "order/image_upload_order/",
-        views.upload_image_order,
-        name="upload-image-order",
-    ),
-    path(
-        "order/image_get_order/<int:file_id>/",
-        views.get_file_order,
-        name="get-image-order",
-    ),
-    path(
         "order/client/all_orders/",
         AllOrdersClientViewSet.as_view({"get": "list"}),
     ),

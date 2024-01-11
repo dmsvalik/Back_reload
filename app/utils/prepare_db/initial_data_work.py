@@ -4,7 +4,8 @@ from rest_framework.response import Response
 from datetime import datetime, timedelta, timezone
 
 from app.main_page.models import UserAccount, ContractorData
-from app.orders.models import OrderModel, STATE_CHOICES, OrderOffer
+from app.orders.constants import ORDER_STATE_CHOICES as STATE_CHOICES
+from app.orders.models import OrderModel, OrderOffer
 
 from drf_yasg.utils import swagger_auto_schema
 

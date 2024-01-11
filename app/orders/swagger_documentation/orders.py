@@ -248,7 +248,7 @@ class OrderStateActivateSwagger(BaseSwaggerSchema):
 class ArchiveOrdersClientGetList(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("users_service")]
     operation_summary = (
-        "Список завершенных заказов авторизованного " "пользователя"
+        "Список завершенных заказов авторизованного пользователя"
     )
     operation_description = (
         "Используйте этот метод для получения списка завершенных заказов "
@@ -270,84 +270,6 @@ class ArchiveOrdersClientGetList(BaseSwaggerSchema):
             "Authorization", in_=openapi.IN_HEADER, type=openapi.TYPE_STRING
         )
     ]
-
-
-class FileOrderGet(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("files")]
-    operation_id = "get-image-order"
-    operation_summary = "Получение прямой ссылки на скачивание изображения"
-    operation_description = (
-        "Получение прямой ссылки на скачивание изображения.\nДанный эндпоинт "
-        "аналогичен /download/, но выполняется с помощью get-запроса с "
-        "указанием ID файла в адресной строке.\n"
-        "**В случае успешной обработки возвращается прямая ссылка на "
-        "изображение**\n"
-    )
-    manual_parameters = [
-        openapi.Parameter(
-            "file_id",
-            openapi.IN_PATH,
-            description="ID записи файла в БД",
-            type=openapi.TYPE_INTEGER,
-            required=True,
-        ),
-    ]
-    responses = {
-        200: openapi.Response(
-            "Success response",
-            openapi.Schema(type=openapi.TYPE_STRING, title="image url"),
-        ),
-        403: DEFAULT_RESPONSES[403],
-        404: DEFAULT_RESPONSES[404],
-        500: DEFAULT_RESPONSES[500],
-    }
-    method = "get"
-
-
-class UploadImageOrderPost(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("files")]
-    operation_id = "upload-image-order"
-    operation_summary = "Прием изображения для сохранения на сервере"
-    operation_description = (
-        "Эндпоинт предназначен для загрузки изображения заказа на сервер."
-        " При обращении необходимо передать ID заказа и изображение.\n"
-        "**В случае успешной обработки возвращается ID CeleryTask**\n"
-        "\n**(Общий объем данных пользователя не должен превышать установле"
-        f"нную квоту в размере {MAX_STORAGE_QUOTA / 1024 / 1024} mb.)**\n\n"
-        '**Ограничение на формат файлов:**\n* "image/jpg"\n* "image/gif"'
-        '\n* "image/jpeg"\n* "application/pdf"'
-    )
-    method = "post"
-    request_body = openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        required=["order_id", "upload_file"],
-        properties={
-            "order_id": openapi.Schema(
-                type=openapi.TYPE_STRING, description="ID заказа"
-            ),
-            "upload_file": openapi.Schema(
-                type=openapi.TYPE_FILE,
-                description="Файл изображения для загрузки",
-            ),
-        },
-    )
-    responses = {
-        202: openapi.Response(
-            description="Accepted",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "task_id": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="ID задачи обработки изображения",
-                    )
-                },
-            ),
-        ),
-        400: generate_400_response(["order_id", "upload_file"]),
-        403: DEFAULT_RESPONSES[403],
-        413: DEFAULT_RESPONSES[413],
-    }
 
 
 class FileOrderDelete(BaseSwaggerSchema):
@@ -393,7 +315,7 @@ class FileOrderDelete(BaseSwaggerSchema):
 
 
 class QuestionnaireResponsePost(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("order")]
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("questionnaire")]
     operation_id = "post-order-answers"
     operation_summary = "Отправка ответов на анкету к заказу"
     operation_description = (
@@ -423,7 +345,7 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
 
 
 class QuestionnaireResponseGet(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("order")]
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("questionnaire")]
     operation_id = "get-order-answers"
     operation_summary = "Получение вопросов анкеты к заказу"
     operation_description = (
@@ -536,3 +458,23 @@ class FileOrderDownload(BaseSwaggerSchema):
         401: openapi.Response("Unauthorized"),
         404: openapi.Response("FileNotFound"),
     }
+
+
+class OrderOfferRetrieve(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = (
+        "Получение информации о отдельном оффере " "**в разработке**"
+    )
+    deprecated = True
+
+
+class OrderOfferDelete(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Удаление отдельного оффера **в разработке**"
+    deprecated = True
+
+
+class OrderOfferUpdate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Изменение отдельного оффера **в разработке"
+    deprecated = True
