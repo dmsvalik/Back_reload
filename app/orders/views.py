@@ -14,6 +14,8 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
 
+from django.utils.decorators import method_decorator
+
 from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
     IsOrderFileDataOwnerWithoutUser,
@@ -124,6 +126,18 @@ def create_order(request):
     return response
 
 
+@method_decorator(
+    name="retrieve",
+    decorator=swagger_auto_schema(**swagger.OrderOfferRetrieve.__dict__),
+)
+@method_decorator(
+    name="destroy",
+    decorator=swagger_auto_schema(**swagger.OrderOfferDelete.__dict__),
+)
+@method_decorator(
+    name="update",
+    decorator=swagger_auto_schema(**swagger.OrderOfferUpdate.__dict__),
+)
 class OrderOfferViewSet(viewsets.ModelViewSet):
     """Поведение Оффера"""
 

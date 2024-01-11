@@ -1,11 +1,10 @@
 from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, viewsets
+from rest_framework import viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 
-from .error_message import error_responses
 from .models import (
     ContactSupport,
     ContractorAgreement,
@@ -18,58 +17,20 @@ from .serializers import (
     ContractorAgreementSerializer,
     CooperationOfferSerializer,
 )
+from .swagger_documentation import main_page as swagger
 
 
 @method_decorator(
     name="create",
-    decorator=swagger_auto_schema(
-        operation_description="Создание запроса на сотрудничество",
-        responses={
-            status.HTTP_400_BAD_REQUEST: error_responses[
-                status.HTTP_400_BAD_REQUEST
-            ],
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    ),
+    decorator=swagger_auto_schema(**swagger.CooperationCreate.__dict__),
 )
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        operation_description="Получить список запросов на сотрудничество",
-        responses={
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    ),
+    decorator=swagger_auto_schema(**swagger.CooperationList.__dict__),
 )
 @method_decorator(
     name="destroy",
-    decorator=swagger_auto_schema(
-        operation_description="Удаление запроса на сотрудничество",
-        responses={
-            status.HTTP_204_NO_CONTENT: error_responses[
-                status.HTTP_204_NO_CONTENT
-            ],
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_404_NOT_FOUND: error_responses[
-                status.HTTP_404_NOT_FOUND
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    ),
+    decorator=swagger_auto_schema(**swagger.CooperationDelete.__dict__),
 )
 class CooperationViewSet(viewsets.ModelViewSet):
     """
@@ -82,74 +43,22 @@ class CooperationViewSet(viewsets.ModelViewSet):
     serializer_class = CooperationOfferSerializer
     http_method_names = ["post"]
 
-    @swagger_auto_schema(
-        operation_description="Получить запрос на сотрудничество",
-        responses={
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_404_NOT_FOUND: error_responses[
-                status.HTTP_404_NOT_FOUND
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    )
+    @swagger_auto_schema(**swagger.CooperationDetail.__dict__)
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
 
 @method_decorator(
     name="create",
-    decorator=swagger_auto_schema(
-        operation_description="Создание вопроса в поддержку",
-        responses={
-            status.HTTP_400_BAD_REQUEST: error_responses[
-                status.HTTP_400_BAD_REQUEST
-            ],
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    ),
+    decorator=swagger_auto_schema(**swagger.SupportCreate.__dict__),
 )
 @method_decorator(
     name="list",
-    decorator=swagger_auto_schema(
-        operation_description="Получить список созданных вопросов и ответов",
-        responses={
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    ),
+    decorator=swagger_auto_schema(**swagger.SupportList.__dict__),
 )
 @method_decorator(
     name="destroy",
-    decorator=swagger_auto_schema(
-        operation_description="Удаление конкретного вопроса",
-        responses={
-            status.HTTP_204_NO_CONTENT: error_responses[
-                status.HTTP_204_NO_CONTENT
-            ],
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_404_NOT_FOUND: error_responses[
-                status.HTTP_404_NOT_FOUND
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    ),
+    decorator=swagger_auto_schema(**swagger.SupportDelete.__dict__),
 )
 class SupportViewSet(viewsets.ModelViewSet):
     """
@@ -160,20 +69,7 @@ class SupportViewSet(viewsets.ModelViewSet):
     serializer_class = ContactSupportSerializer
     http_method_names = ["get", "post", "delete"]
 
-    @swagger_auto_schema(
-        operation_description="Задать вопрос в поддержку",
-        responses={
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_404_NOT_FOUND: error_responses[
-                status.HTTP_404_NOT_FOUND
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
-    )
+    @swagger_auto_schema(**swagger.SupportRetrieve.__dict__)
     def retrieve(self, request, *args, **kwargs):
         return super().retrieve(request, *args, **kwargs)
 
@@ -181,18 +77,7 @@ class SupportViewSet(viewsets.ModelViewSet):
 @method_decorator(
     name="create",
     decorator=swagger_auto_schema(
-        operation_description="Создание соглашения с исполнителем.",
-        responses={
-            status.HTTP_400_BAD_REQUEST: error_responses[
-                status.HTTP_400_BAD_REQUEST
-            ],
-            status.HTTP_401_UNAUTHORIZED: error_responses[
-                status.HTTP_401_UNAUTHORIZED
-            ],
-            status.HTTP_500_INTERNAL_SERVER_ERROR: error_responses[
-                status.HTTP_500_INTERNAL_SERVER_ERROR
-            ],
-        },
+        **swagger.ContractorAgreementCreate.__dict__
     ),
 )
 class ContractorAgreementViewSet(viewsets.ModelViewSet):

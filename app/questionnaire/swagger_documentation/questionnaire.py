@@ -5,6 +5,7 @@ from drf_yasg import openapi
 from app.questionnaire.serializers import (
     QuestionnaireTypeSerializer,
 )
+from config.settings import SWAGGER_TAGS
 
 
 def generate_400_response(fields: List[str]):
@@ -78,7 +79,11 @@ class BaseSwaggerSchema:
 
 
 class QuestionnaireGetList(BaseSwaggerSchema):
-    operation_description = "Получение всех вопросов анкеты."
+    tags = [SWAGGER_TAGS.get("questionnaire"), SWAGGER_TAGS.get("order")]
+    operation_summary = "Получение всех вопросов анкеты."
+    operation_description = (
+        "Получение всех разделов, вопросов и вариантов ответов анкеты"
+    )
     request_body = None
     method = "get"
     responses = {

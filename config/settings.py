@@ -331,7 +331,9 @@ SWAGGER_TAGS = {
     "users_service": "Методы авторизованного пользователя",
     "auth": "Авторизация",
     "service": "Сервисные функции",
-    "contractor": "Исполнитель"
+    "contractor": "Исполнитель",
+    "support": "Контакты и поддержка",
+    "questionnaire": "Анкета",
 }
 
 MAX_SERVER_QUOTA = 5 * 1024 * 1024
