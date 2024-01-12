@@ -20,6 +20,7 @@ from config.settings import DJOSER_EMAIL_CLASSES, ORDER_COOKIE_KEY_NAME
 
 from .swagger_documentation import users as swagger
 from .utils.helpers import site_data_from_request
+from ..sending.models import UserNotifications
 
 
 @method_decorator(
@@ -101,6 +102,22 @@ class CustomUserViewSet(UserViewSet):
             response.delete_cookie(ORDER_COOKIE_KEY_NAME)
 
         return response
+
+    def perform_update(self, serializer, *args, **kwargs):
+        user = serializer.instance
+        if "notifications" in serializer.validated_data:
+            notification_types = serializer.validated_data["notifications"]
+            UserNotifications.objects.filter(user=user).delete()
+            if not notification_types:
+                serializer.validated_data["notifications"] = False
+            else:
+                for notification_type in notification_types:
+                    UserNotifications.objects.get_or_create(
+                        user=user, notification_type=notification_type
+                    )
+                serializer.validated_data["notifications"] = True
+
+        super().perform_update(serializer, *args, **kwargs)
 
     @swagger_auto_schema(**swagger.UserActivationDocs.__dict__)
     @action(["post"], detail=False)
