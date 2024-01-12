@@ -29,6 +29,7 @@ def delete_file(file_id: int, quota_manager: UserQuotaManager):
     """
     Удаление файла с ЯД.
     file_id: int - id модели OrderFileData
+    quota_manager: UserQuotaManager - обьект для пересчета квоты пользователя
     """
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
@@ -50,6 +51,7 @@ def delete_image(file_id: int, quota_manager: UserQuotaManager):
     """
     Удаление изображения с сервера и ЯД.
     file_id: int - id модели OrderFileData
+    quota_manager: UserQuotaManager - обьект для пересчета квоты пользователя
     """
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
