@@ -96,7 +96,7 @@ class IncorrectFileDeleting(HttpValidationException):
 class IncorrectFileUploading(HttpValidationException):
     status_code = 400
     detail = {
-        "errors": "IncorrectFileDeleting",
+        "errors": "IncorrectFileUpload",
         "message": "Возникла ошибка при загрузке файла.",
     }
 

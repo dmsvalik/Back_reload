@@ -3,6 +3,7 @@ import string
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
+from config.settings import NOTIFICATION_CLASSES
 from .constants import ErrorMessages
 
 
@@ -25,12 +26,49 @@ class UserCreateSerializer(serializers.ModelSerializer):
         extra_kwargs = {"password": {"write_only": True}}
 
 
-class UserAccountSerializer(serializers.ModelSerializer):
+class UserAccountSerializerRead(serializers.ModelSerializer):
     """Сериализатор вывода и обновления данных о пользователе."""
+
+    notifications = serializers.SerializerMethodField()
 
     class Meta:
         model = User
-        fields = ("id", "email", "name", "person_telephone", "surname", "role")
+        fields = (
+            "id",
+            "email",
+            "name",
+            "person_telephone",
+            "surname",
+            "role",
+            "notifications",
+        )
+        read_only_fields = ("id", "role", "notifications")
+
+    def get_notifications(self, obj):
+        return obj.usernotifications_set.values_list(
+            "notification_type", flat=True
+        )
+
+
+class UserAccountSerializer(serializers.ModelSerializer):
+    """Сериализатор вывода и обновления данных о пользователе."""
+
+    notifications = serializers.MultipleChoiceField(
+        choices=[*NOTIFICATION_CLASSES], allow_null=True
+    )
+
+    class Meta:
+        model = User
+        fields = (
+            "id",
+            "email",
+            "name",
+            "person_telephone",
+            "surname",
+            "role",
+            "notifications",
+        )
+        read_only_fields = ("id", "role", "notifications")
 
     def validate_name(self, value):
         if any(x for x in string.punctuation if x in value):
@@ -52,3 +90,6 @@ class UserAccountSerializer(serializers.ModelSerializer):
                 ErrorMessages.PHONE_FIELD_VALIDATION_ERROR
             )
         return value
+
+    def to_representation(self, instance):
+        return UserAccountSerializerRead(instance).data

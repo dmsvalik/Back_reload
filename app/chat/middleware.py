@@ -30,8 +30,9 @@ class JWTAuthMiddleware:
         close_old_connections()
         try:
             headers = await map_headers(dict(scope["headers"]))
-            if headers.get("authorization"):
-                jwt_token = headers.get("authorization").split(" ")[1]
+            # это костыль для JavaScript, который не умеет в заголовки
+            if headers.get("sec-websocket-protocol"):
+                jwt_token = headers.get("sec-websocket-protocol")
                 jwt_payload = self.get_payload(jwt_token)
                 user_credentials = self.get_user_credentials(jwt_payload)
                 user = await self.get_logged_in_user(user_credentials)
