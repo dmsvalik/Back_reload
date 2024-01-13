@@ -13,13 +13,10 @@
     <script>
         const roomName = JSON.parse(document.getElementById('room-name').textContent);
 
-        const chatSocket = new WebSocket(
-            'ws://'
-            + window.location.host
-            + '/ws/chat/'
-            + roomName
-            + '/'
-        );
+        // ниже в конструкторе вторым параметром указывается jwt access_token, то, что там сейчас
+        // - не реальный токен, а пример того как надо
+
+        const chatSocket = new WebSocket('ws://127.0.0.1:8001/ws/chat/30/', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzA1MTcwNzQ0LCJpYXQiOjE3MDUxNjcxNDQsImp0aSI6IjRiNDZlN2M2OWVhNzQ1MmM4NWJkYmY4NDQ3MTk0YTE0IiwidXNlcl9pZCI6MTB9.aW7qDJNuH-adBk-GlDiNIytiybIIBAO0QztGFml_M0U');
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
@@ -41,6 +38,7 @@
             const messageInputDom = document.querySelector('#chat-message-input');
             const message = messageInputDom.value;
             chatSocket.send(JSON.stringify({
+                'command': 'new_message',
                 'message': message
             }));
             messageInputDom.value = '';
