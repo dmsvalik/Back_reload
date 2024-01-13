@@ -3,8 +3,7 @@ from typing import List, Optional
 from drf_yasg import openapi
 
 from app.sending.serializers import DisableNotificationsSerializer
-from config.settings import SWAGGER_TAGS
-
+from config.settings import SWAGGER_TAGS, NOTIFICATION_CLASSES
 
 DEFAULT_TAG = SWAGGER_TAGS.get("users")
 
@@ -142,27 +141,6 @@ class UserMeReadDocs(BaseSwaggerSchema):
     method = "get"
 
 
-class UserMeUpdateDocs(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("users_service")]
-    operation_summary = "Полное редактирование авторизованного пользователя"
-    operation_description = (
-        "Используйте этот метод для полное редактирование авторизованного "
-        "пользователя"
-    )
-    method = "put"
-
-
-class UserMePartialUpdateDocs(BaseSwaggerSchema):
-    tags = [SWAGGER_TAGS.get("users_service")]
-    operation_summary = (
-        "Частичное редактирование авторизованного " "пользователя"
-    )
-    operation_description = (
-        "Частичное редактирование авторизованного " "пользователя"
-    )
-    method = "patch"
-
-
 class UserMeDeleteDocs(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("users_service")]
     operation_summary = "Удаление авторизованного пользователя"
@@ -214,3 +192,75 @@ class ResetPasswordConfirmDocs(BaseSwaggerSchema):
         "HTTP_400_BAD_REQUEST будет поднято, если пользователь вошел в "
         "систему или сменил пароль с момента создания токена."
     )
+
+
+user_update_request_body = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    required=[
+        "email",
+        "name",
+        "person_telephone",
+    ],
+    properties={
+        "email": openapi.Schema(
+            title="Email",
+            maxLength=50,
+            minLength=5,
+            type=openapi.TYPE_STRING,
+        ),
+        "name": openapi.Schema(
+            title="Имя",
+            maxLength=20,
+            minLength=5,
+            type=openapi.TYPE_STRING,
+        ),
+        "surname": openapi.Schema(
+            title="Фамилия",
+            maxLength=20,
+            minLength=5,
+            nullable=True,
+            type=openapi.TYPE_STRING,
+        ),
+        "person_telephone": openapi.Schema(
+            title="Номер телефона",
+            maxLength=12,
+            minLength=12,
+            example="+71112223344",
+            type=openapi.TYPE_STRING,
+        ),
+        "notifications": openapi.Schema(
+            title="Уведомления",
+            nullable=True,
+            type=openapi.TYPE_ARRAY,
+            items=openapi.Items(
+                type=openapi.TYPE_STRING, enum=[*NOTIFICATION_CLASSES]
+            ),
+        ),
+    },
+)
+
+
+class UserMePartialUpdateDocs(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("users_service")]
+    operation_summary = (
+        "Частичное редактирование авторизованного " "пользователя"
+    )
+    operation_description = (
+        "Используйте этот метод для полное редактирование авторизованного "
+        "пользователя.\n\n"
+        f"Доступные варианты notifications - {', '.join(NOTIFICATION_CLASSES)}"
+    )
+    request_body = user_update_request_body
+    method = "patch"
+
+
+class UserMeUpdateDocs(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("users_service")]
+    operation_summary = "Полное редактирование авторизованного пользователя"
+    operation_description = (
+        "Используйте этот метод для полное редактирование авторизованного "
+        "пользователя.\n\n"
+        f"Доступные варианты notifications - {', '.join(NOTIFICATION_CLASSES)}"
+    )
+    request_body = user_update_request_body
+    method = "put"
