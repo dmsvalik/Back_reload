@@ -6,7 +6,7 @@ from app.utils.views import (
     check_expired_auction_orders,
     GalleryImagesViewSet,
     AllDeleteAPIView,
-    # get_order_pdf,
+    get_order_pdf,
 )
 from app.utils.prepare_db.initial_data_work import (
     create_admin,
@@ -21,7 +21,7 @@ urlpatterns = [
     path("documents/<path:path>", document_view, name="document-view"),
     path("check_expired_auction_orders/", check_expired_auction_orders),
     path("utils/gallery/", GalleryImagesViewSet.as_view({"get": "list"})),
-    # path("order/<int:order_id>/get_order_pdf/", get_order_pdf),
+    path("order/<int:pk>/get_order_pdf/", get_order_pdf, name="get-order-pdf"),
     path(
         "delete_all/", AllDeleteAPIView.as_view({"delete": "delete_all_view"})
     ),

@@ -22,6 +22,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderOffer
+from app.orders.permissions import IsOrderOwner
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
 from app.utils.swagger_documentation import utils as swagger
 from config.settings import ttf_file, design_pdf, PDF_DIR
@@ -167,10 +168,6 @@ def draw_order_pdf(items, order_id) -> str:
     pdfmetrics.registerFont(TTFont("Montserrat-Medium", ttf_file))
     title = Paragraph("Ваш заказ", styles["Title"])
     flow_obj.append(title)
-    name = Paragraph(
-        f'{items[0]["user_account__ordermodel__name"]}', styles["Heading1"]
-    )
-    flow_obj.append(name)
     description = Paragraph(
         f'{items[1]["order_description"]}', styles["Heading2"]
     )
@@ -188,13 +185,16 @@ def draw_order_pdf(items, order_id) -> str:
                 style=styles["Normal"],
             )
         )
-        flow_obj.append(
-            Paragraph(
-                f""" <a href={item["orderfiledata__server_path"]}> -
+        filedata = Paragraph(
+            f""" <a href={item["orderfiledata__server_path"]}> -
                         <u>{item["orderfiledata__original_name"]}</u></a> """,
-                style=styles["Normal"],
-            )
+            style=styles["Normal"],
         )
+        if item["orderfiledata__server_path"] is not None and (
+            item["orderfiledata__question_id"]
+            == item["questionresponse__question_id"]
+        ):
+            flow_obj.append(filedata)
     pdf.build(flow_obj)
     new_pdf = PdfReader(output_pdf)
     existing_pdf = PdfReader(open(design_pdf, "rb"))
@@ -208,22 +208,24 @@ def draw_order_pdf(items, order_id) -> str:
     return output_pdf
 
 
+@permission_classes([IsContactor | IsOrderOwner])
 @api_view(["GET"])
-def get_order_pdf(request, order_id) -> Response | FileResponse:
+def get_order_pdf(request, pk) -> Response | FileResponse:
     """Return pdf file"""
     user = request.user
     if not OrderModel.objects.filter(user_account=user).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    items = OrderModel.objects.filter(id=order_id)
+    items = OrderModel.objects.filter(id=pk)
     items = items.values(
-        "user_account__ordermodel__name",
         "order_description",
         "questionresponse__response",
         "questionresponse__question__text",
         "orderfiledata__server_path",
         "orderfiledata__original_name",
+        "orderfiledata__question_id",
+        "questionresponse__question_id",
     )
     return FileResponse(
-        open(draw_order_pdf(items, order_id), "rb"),
+        open(draw_order_pdf(items, pk), "rb"),
         content_type="application/pdf",
     )
