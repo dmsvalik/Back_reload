@@ -22,6 +22,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderOffer
+from app.questionnaire.models import Question
 from app.orders.permissions import IsOrderOwner
 from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
 from app.utils.swagger_documentation import utils as swagger
@@ -168,33 +169,33 @@ def draw_order_pdf(items, order_id) -> str:
     pdfmetrics.registerFont(TTFont("Montserrat-Medium", ttf_file))
     title = Paragraph("Ваш заказ", styles["Title"])
     flow_obj.append(title)
-    description = Paragraph(
-        f'{items[1]["order_description"]}', styles["Heading2"]
-    )
+    order = items["order"]
+    description = Paragraph(f"{order.order_description}", styles["Heading2"])
     flow_obj.append(description)
-    for i, item in enumerate(items, 1):
+    for i, question in enumerate(items["questions"], 1):
         flow_obj.append(
             Paragraph(
-                f'{i}) {item["questionresponse__question__text"]}',
+                f"{i}) {question.text}",
                 style=styles["Normal"],
             )
         )
-        flow_obj.append(
-            Paragraph(
-                f'- {item["questionresponse__response"]}',
-                style=styles["Normal"],
+        response = question.questionresponse_set.filter(order=order).first()
+        if response:
+            flow_obj.append(
+                Paragraph(
+                    f"- {response.response}",
+                    style=styles["Normal"],
+                )
             )
-        )
-        filedata = Paragraph(
-            f""" <a href={item["orderfiledata__server_path"]}> -
-                        <u>{item["orderfiledata__original_name"]}</u></a> """,
-            style=styles["Normal"],
-        )
-        if item["orderfiledata__server_path"] is not None and (
-            item["orderfiledata__question_id"]
-            == item["questionresponse__question_id"]
-        ):
-            flow_obj.append(filedata)
+        files = question.orderfiledata_set.filter(order_id=order)
+        if files:
+            for file in files:
+                filedata = Paragraph(
+                    f""" <a href={file.server_path}> -
+                                <u>{file.original_name}</u></a> """,
+                    style=styles["Normal"],
+                )
+                flow_obj.append(filedata)
     pdf.build(flow_obj)
     new_pdf = PdfReader(output_pdf)
     existing_pdf = PdfReader(open(design_pdf, "rb"))
@@ -215,16 +216,20 @@ def get_order_pdf(request, pk) -> Response | FileResponse:
     user = request.user
     if not OrderModel.objects.filter(user_account=user).exists():
         return Response(status=status.HTTP_400_BAD_REQUEST)
-    items = OrderModel.objects.filter(id=pk)
-    items = items.values(
-        "order_description",
-        "questionresponse__response",
-        "questionresponse__question__text",
-        "orderfiledata__server_path",
-        "orderfiledata__original_name",
-        "orderfiledata__question_id",
-        "questionresponse__question_id",
+    item = OrderModel.objects.filter(id=pk).first()
+    question_id_with_answer = list(
+        item.questionresponse_set.values_list("question_id", flat=True)
     )
+    question_id_with_files = list(
+        item.orderfiledata_set.values_list("question_id_id", flat=True)
+    )
+    all_questions = Question.objects.filter(
+        chapter__type=item.questionnaire_type
+    )
+    queryset = all_questions.filter(
+        id__in=set(question_id_with_answer + question_id_with_files)
+    )
+    items = {"order": item, "questions": queryset}
     return FileResponse(
         open(draw_order_pdf(items, pk), "rb"),
         content_type="application/pdf",
