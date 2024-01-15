@@ -9,6 +9,7 @@ from app.orders.serializers import (
 from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
     OrderFullSerializer,
+    FileSerializer,
 )
 from app.orders.serializers import OrderModelSerializer
 from config.settings import SWAGGER_TAGS, MAX_STORAGE_QUOTA
@@ -297,17 +298,8 @@ class FileOrderDelete(BaseSwaggerSchema):
         },
     )
     responses = {
-        202: openapi.Response(
+        204: openapi.Response(
             "Success response",
-            openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                description="ID Task",
-                properties={
-                    "task_id": openapi.Schema(
-                        title="ID Task", type=openapi.TYPE_STRING
-                    )
-                },
-            ),
         ),
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
@@ -410,18 +402,7 @@ class AttachFileAnswerPost(BaseSwaggerSchema):
         ),
     ]
     responses = {
-        202: openapi.Response(
-            description="Accepted",
-            schema=openapi.Schema(
-                type=openapi.TYPE_OBJECT,
-                properties={
-                    "task_id": openapi.Schema(
-                        type=openapi.TYPE_STRING,
-                        description="ID задачи обработки документа",
-                    )
-                },
-            ),
-        ),
+        201: FileSerializer(),
         400: generate_400_response(["question_id", "upload_file"]),
         403: DEFAULT_RESPONSES[403],
     }

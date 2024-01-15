@@ -58,18 +58,26 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
     """Сериализвтор ответов на вопросы."""
 
     files = serializers.SerializerMethodField(required=False)
-    question_id = serializers.IntegerField(
-        source="question.id", read_only=True
-    )
+    question_id = serializers.IntegerField(source="id", read_only=True)
+    response = serializers.SerializerMethodField()
 
     class Meta:
-        model = QuestionResponse
+        model = Question
         fields = ["id", "question_id", "response", "files"]
 
-    def get_files(self, question_response: QuestionResponse):
+    def get_response(self, question: Question):
+        question_response = QuestionResponse.objects.filter(
+            order=self.context.get("order"),
+            question=question,
+        ).first()
+        if not question_response:
+            return None
+        return question_response.response
+
+    def get_files(self, question: Question):
         files = OrderFileData.objects.filter(
-            order_id=question_response.order,
-            question_id=question_response.question,
+            order_id=self.context.get("order"),
+            question_id=question,
         )
         return FileSerializer(instance=files, many=True).data
 
@@ -240,10 +248,30 @@ class OrderFullSerializer(serializers.ModelSerializer):
     questionnaire_type_id = serializers.PrimaryKeyRelatedField(
         source="questionnaire_type", read_only=True
     )
-    answers = QuestionResponseSerializer(
-        source="questionresponse_set", many=True
-    )
+    # answers = QuestionResponseSerializer(
+    #     source="questionresponse_set", many=True
+    # )
+    answers = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderModel
         fields = ["name", "questionnaire_type_id", "answers"]
+
+    def get_answers(self, obj):
+        """Метод для получения всех ответов на анкету."""
+        question_id_with_answer = list(
+            obj.questionresponse_set.values_list("question_id", flat=True)
+        )
+        question_id_with_files = list(
+            obj.orderfiledata_set.values_list("question_id_id", flat=True)
+        )
+        all_questions = Question.objects.filter(
+            chapter__type=obj.questionnaire_type
+        )
+        queryset = all_questions.filter(
+            id__in=set(question_id_with_answer + question_id_with_files)
+        )
+        serializer = QuestionResponseSerializer(
+            queryset, many=True, context={"order": obj}
+        )
+        return serializer.data
