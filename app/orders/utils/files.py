@@ -25,7 +25,10 @@ from config.settings import BASE_DIR
 # celery -A config.celery worker
 
 
-def delete_file(file_id: int, quota_manager: UserQuotaManager):
+def delete_file(
+    file_id: int,
+    quota_manager: UserQuotaManager | None = None,
+):
     """
     Удаление файла с ЯД.
     file_id: int - id модели OrderFileData
@@ -37,7 +40,8 @@ def delete_file(file_id: int, quota_manager: UserQuotaManager):
         if file_to_delete.yandex_path:
             yandex.cloud_delete_file(file_to_delete.yandex_path)
         file_to_delete.delete()
-        quota_manager.subtract(file_to_delete)
+        if quota_manager:
+            quota_manager.subtract(file_to_delete)
 
         return Response({"response": "Файл удален"}, status=status.HTTP_200_OK)
     except OrderFileData.DoesNotExist:
@@ -47,7 +51,10 @@ def delete_file(file_id: int, quota_manager: UserQuotaManager):
         raise IncorrectFileDeleting()
 
 
-def delete_image(file_id: int, quota_manager: UserQuotaManager):
+def delete_image(
+    file_id: int,
+    quota_manager: UserQuotaManager | None = None,
+):
     """
     Удаление изображения с сервера и ЯД.
     file_id: int - id модели OrderFileData
@@ -64,7 +71,8 @@ def delete_image(file_id: int, quota_manager: UserQuotaManager):
             if os.path.exists(full_preview_path):
                 os.remove(full_preview_path)
         file_to_delete.delete()
-        quota_manager.subtract(file_to_delete)
+        if quota_manager:
+            quota_manager.subtract(file_to_delete)
 
         return Response({"response": "Файл удален"}, status=status.HTTP_200_OK)
     except OrderFileData.DoesNotExist:
@@ -79,7 +87,7 @@ def upload_image_to_answer(
     order_id: int,
     question_id: int,
     original_name: str,
-    quota_manager: UserQuotaManager,
+    quota_manager: UserQuotaManager | None = None,
     user_id: int | None = None,
 ):
     """
@@ -119,7 +127,8 @@ def upload_image_to_answer(
                 server_size=image.preview_file_size,
             )
             os.remove(image.temp_file)
-            quota_manager.add(created_file)
+            if quota_manager:
+                quota_manager.add(created_file)
 
             serializer = FileSerializer(instance=created_file)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -141,7 +150,7 @@ def upload_file_to_answer(
     order_id: int,
     question_id: int,
     original_name: str,
-    quota_manager: UserQuotaManager,
+    quota_manager: UserQuotaManager | None = None,
     user_id: int | None = None,
 ):
     """
@@ -174,7 +183,8 @@ def upload_file_to_answer(
                 server_size=0,
             )
             os.remove(file.temp_file)
-            quota_manager.add(created_file)
+            if quota_manager:
+                quota_manager.add(created_file)
 
             serializer = FileSerializer(instance=created_file)
             return Response(serializer.data, status=status.HTTP_201_CREATED)

@@ -333,7 +333,10 @@ def delete_file_order(request):
     file_id = request.data.get("file_id")
     try:
         file_to_delete = OrderFileData.objects.get(id=file_id)
-        quota_manager = UserQuotaManager(request.user)
+        if request.user.is_authenticated:
+            quota_manager = UserQuotaManager(request.user)
+        else:
+            quota_manager = None
         if file_to_delete.original_name.split(".")[-1] in IMAGE_FILE_FORMATS:
             # task = celery_delete_image_task.delay(file_id)
             response = delete_image(file_id, quota_manager)
@@ -400,7 +403,10 @@ def attach_file(request, pk: int):
         for chunk in upload_file.chunks():
             file.write(chunk)
     temp_file = f"tmp/{new_name}"
-    quota_manager = UserQuotaManager(request.user)
+    if request.user.is_authenticated:
+        quota_manager = UserQuotaManager(request.user)
+    else:
+        quota_manager = None
     if temp_file.split(".")[-1] in IMAGE_FILE_FORMATS:
         # task = celery_upload_image_task_to_answer.delay(
         #     temp_file, order_id, user_id, question_id, original_name
