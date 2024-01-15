@@ -36,7 +36,7 @@ class Conversation(models.Model):
         default=False,
     )
 
-    # метод для поиска подходящий дефолтный значений
+    # метод для поиска подходящих дефолтных значений
     # для экземпляров старых чатов
     def get_proper_default(self):
         client_orders_ids = OrderModel.objects.filter(
