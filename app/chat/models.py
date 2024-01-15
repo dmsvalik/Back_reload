@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from app.orders.models import OrderModel, OrderOffer
 
 User = get_user_model()
 
@@ -33,6 +34,28 @@ class Conversation(models.Model):
     is_blocked = models.BooleanField(
         verbose_name="заблокирован ли чат",
         default=False,
+    )
+
+    # метод для поиска подходящий дефолтный значений
+    # для экземпляров старых чатов
+    def get_proper_default(self):
+        client_orders_ids = OrderModel.objects.filter(
+            user_account=self.client,
+        )
+        order = OrderOffer.objects.filter(
+            user_account=self.contractor,
+            order_id__in=client_orders_ids,
+        ).first()
+        if not order:
+            return OrderOffer.objects.first()
+
+    offer = models.ForeignKey(
+        OrderOffer,
+        on_delete=models.CASCADE,
+        verbose_name="оффер",
+        related_name="chats",
+        # есть сомнения в том, что это бестпрактис
+        default=get_proper_default,
     )
 
     class Meta:

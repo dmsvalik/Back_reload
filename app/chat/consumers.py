@@ -38,8 +38,10 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             self.user = self.scope["user"]
             if self.user is None:
                 await self.close()
+                return
         else:
             await self.close()
+            return
 
         self.chat_id = self.scope["url_route"]["kwargs"].get("chat_id")
 
@@ -49,14 +51,17 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             )
             if self.conversation.is_blocked:
                 await self.close()
+                return
         else:
             await self.close()
+            return
 
         if (
             self.user.role == "contractor"
             and self.conversation.is_match is False
         ):
             await self.close()
+            return
 
         self.chat_group_name = f"chat_{self.chat_id}"
 
