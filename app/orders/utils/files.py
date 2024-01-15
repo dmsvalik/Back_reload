@@ -43,7 +43,9 @@ def delete_file(
         if quota_manager:
             quota_manager.subtract(file_to_delete)
 
-        return Response({"response": "Файл удален"}, status=status.HTTP_200_OK)
+        return Response(
+            {"response": "Файл удален"}, status=status.HTTP_204_NO_CONTENT
+        )
     except OrderFileData.DoesNotExist:
         raise FileNotFound()
 
@@ -74,7 +76,9 @@ def delete_image(
         if quota_manager:
             quota_manager.subtract(file_to_delete)
 
-        return Response({"response": "Файл удален"}, status=status.HTTP_200_OK)
+        return Response(
+            {"response": "Файл удален"}, status=status.HTTP_204_NO_CONTENT
+        )
     except OrderFileData.DoesNotExist:
         raise FileNotFound()
 
