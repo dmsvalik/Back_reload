@@ -46,4 +46,5 @@ urlpatterns = [
         views.OrderStateActivateView.as_view(),
         name="order-activate",
     ),
+    path("order/clone/", views.CloneOrderView.as_view(), name="order_clone"),
 ]

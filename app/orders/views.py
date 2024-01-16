@@ -13,6 +13,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
 from rest_framework.response import Response
+from rest_framework.generics import CreateAPIView
 
 from django.utils.decorators import method_decorator
 
@@ -481,3 +482,24 @@ class OrderStateActivateView(views.APIView):
 
         data = self.serialize(instance)
         return Response(data=data, status=200)
+
+
+class CloneOrderView(CreateAPIView):
+    serializer_class = None
+    permission_classes = (IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        old_order = OrderModel.objects.values(
+            "name", "order_description", "questionnaire_type"
+        ).get(pk=request.data.get("order_id"))
+        old_order["questionnaire_type"] = QuestionnaireType.objects.get(
+            pk=old_order["questionnaire_type"]
+        )
+
+        new_order = OrderModel.objects.create(
+            user_account=self.request.user, **old_order
+        )
+        new_order.save()
+        return Response(
+            {"order_id": new_order.id}, status=status.HTTP_201_CREATED
+        )
