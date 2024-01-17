@@ -65,7 +65,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             self.channel_name,
         )
 
-        await self.accept()
+        await self.accept(self.scope["custom_subprotocol"])
 
     async def disconnect(self, code):
         """

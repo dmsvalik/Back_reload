@@ -37,6 +37,7 @@ class JWTAuthMiddleware:
                 user_credentials = self.get_user_credentials(jwt_payload)
                 user = await self.get_logged_in_user(user_credentials)
                 scope["user"] = user
+                scope["custom_subprotocol"] = jwt_token
             else:
                 scope["user"] = AnonymousUser()
         except (
