@@ -5,6 +5,7 @@ from rest_framework.fields import SerializerMethodField
 
 from django.http import HttpRequest
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from .models import OrderModel, OrderOffer, OrderFileData
 from app.main_page.models import ContractorData
@@ -68,7 +69,11 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         return OrderOffer.objects.filter(order_id=obj.id).count()
 
     def get_images(self, obj):
-        queryset = OrderFileData.objects.filter(order_id=obj)
+        queryset = [
+            file
+            for file in OrderFileData.objects.filter(order_id=obj)
+            if file.server_path.split(".")[-1] in settings.IMAGE_FILE_FORMATS
+        ]
         serializer = FileSerializer(instance=queryset, many=True)
         return serializer.data
 
