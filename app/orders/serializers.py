@@ -1,33 +1,19 @@
-from app.utils import errorcode
+from datetime import timedelta, datetime
 
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
-from .models import FileData, OrderModel, OrderOffer
+from django.http import HttpRequest
+from django.contrib.auth import get_user_model
+
+from .models import OrderModel, OrderOffer, OrderFileData
 from app.main_page.models import ContractorData
 from app.users.serializers import UserAccountSerializer
+from app.questionnaire.serializers import FileSerializer
+from app.utils import errorcode
 
 
-class FilePreviewSerializer(serializers.ModelSerializer):
-    """Сериализатор для файлов"""
-
-    # Необходимо исправить модель
-    preview_path = SerializerMethodField()
-
-    class Meta:
-        model = FileData
-        fields = [
-            "id",
-            "preview_path",
-        ]
-        read_only_fields = [
-            "id",
-            "preview_path",
-        ]
-
-    def get_preview_path(self, obj):
-        server_path = obj.server_path
-        return "/documents/" + server_path.split("files/")[-1]
+User = get_user_model()
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -57,7 +43,9 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
     """
 
     contractor = SerializerMethodField()
-    files = SerializerMethodField()
+    worksheet = serializers.Field(default=None)
+    images = SerializerMethodField()
+    offers = SerializerMethodField()
 
     class Meta:
         model = OrderModel
@@ -67,7 +55,9 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             "order_time",
             "state",
             "contractor",
-            "files",
+            "worksheet",
+            "images",
+            "offers",
         ]
         read_only_fields = [
             "id",
@@ -77,16 +67,52 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         """Метод для подсчета оферов на конкретный заказ."""
         return OrderOffer.objects.filter(order_id=obj.id).count()
 
-    def get_files(self, obj):
-        queryset = FileData.objects.filter(order_id=obj.id)
-        serializer = FilePreviewSerializer(
-            queryset,
+    def get_images(self, obj):
+        queryset = OrderFileData.objects.filter(order_id=obj)
+        serializer = FileSerializer(instance=queryset, many=True)
+        return serializer.data
+
+    def get_offers(self, obj):
+        """
+        Получение офферов по ИД заказа
+        и текущему пользователю
+        только офферы берутся только
+        если заказ был создан
+        более hours(24) часов назад
+        """
+        current_user = self._get_current_user()
+        hours = timedelta(hours=24)
+        today = datetime.now()
+        range_filter = today - hours
+
+        queryset = OrderOffer.objects.filter(
+            order_id=obj,
+            user_account=current_user,
+            order_id__order_time__lt=range_filter,
+        ).values("id")
+        serializer = OfferSerializer(
+            instance=queryset,
             many=True,
         )
         return serializer.data
 
+    def _get_current_user(self) -> User:
+        request: HttpRequest = self.context["request"]
+        return request.user
 
-class OrderOfferSerializer(serializers.ModelSerializer):
+
+class OfferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderOffer
+        fields = [
+            "id",
+            "offer_price",
+            "offer_execution_time",
+            "offer_description",
+        ]
+
+
+class OrderOfferSerializer(OfferSerializer):
     user_account = UserAccountSerializer(
         read_only=True, default=serializers.CurrentUserDefault()
     )
@@ -94,14 +120,6 @@ class OrderOfferSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderOffer
-        fields = [
-            "id",
-            "user_account",
-            "order_id",
-            "offer_price",
-            "offer_execution_time",
-            "offer_description",
-        ]
         read_only_fields = (
             "id",
             "user_account",
