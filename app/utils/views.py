@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from PyPDF2 import PdfWriter, PdfReader
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import SimpleDocTemplate, Paragraph
-from django.http import FileResponse
+from django.http import FileResponse, HttpResponseNotFound
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAdminUser, AllowAny
@@ -209,28 +209,29 @@ def draw_order_pdf(items, order_id) -> str:
     return output_pdf
 
 
-@permission_classes([IsContactor | IsOrderOwner])
+@swagger_auto_schema(**swagger.GetOrderPdf.__dict__)
 @api_view(["GET"])
-def get_order_pdf(request, pk) -> Response | FileResponse:
+@permission_classes([IsContactor | IsOrderOwner])
+def get_order_pdf(request, pk) -> HttpResponseNotFound | FileResponse:
     """Return pdf file"""
-    user = request.user
-    if not OrderModel.objects.filter(user_account=user).exists():
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    item = OrderModel.objects.filter(id=pk).first()
-    question_id_with_answer = list(
-        item.questionresponse_set.values_list("question_id", flat=True)
-    )
-    question_id_with_files = list(
-        item.orderfiledata_set.values_list("question_id_id", flat=True)
-    )
-    all_questions = Question.objects.filter(
-        chapter__type=item.questionnaire_type
-    )
-    queryset = all_questions.filter(
-        id__in=set(question_id_with_answer + question_id_with_files)
-    )
-    items = {"order": item, "questions": queryset}
-    return FileResponse(
-        open(draw_order_pdf(items, pk), "rb"),
-        content_type="application/pdf",
-    )
+    try:
+        item = OrderModel.objects.filter(id=pk).first()
+        question_id_with_answer = list(
+            item.questionresponse_set.values_list("question_id", flat=True)
+        )
+        question_id_with_files = list(
+            item.orderfiledata_set.values_list("question_id_id", flat=True)
+        )
+        all_questions = Question.objects.filter(
+            chapter__type=item.questionnaire_type
+        )
+        queryset = all_questions.filter(
+            id__in=set(question_id_with_answer + question_id_with_files)
+        )
+        items = {"order": item, "questions": queryset}
+        return FileResponse(
+            open(draw_order_pdf(items, pk), "rb"),
+            content_type="application/pdf",
+        )
+    except AttributeError:
+        return HttpResponseNotFound("Такого заказа не существует")
