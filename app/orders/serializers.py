@@ -85,18 +85,16 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         """
         Получение офферов по ИД заказа
         и текущему пользователю
-        только офферы берутся только
+        офферы берутся только
         если заказ был создан
         более hours(24) часов назад
         """
-        current_user = self._get_current_user()
         hours = timedelta(hours=24)
         today = datetime.now()
         range_filter = today - hours
 
         queryset = OrderOffer.objects.filter(
             order_id=obj,
-            user_account=current_user,
             order_id__order_time__lt=range_filter,
         ).values("id")
         serializer = OfferSerializer(
@@ -111,7 +109,6 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         ИД заказа через оффер
         """
         queryset = Conversation.objects.filter(
-            offer__user_account=self._get_current_user(),
             offer__order_id=obj.pk,
         ).values("id")
         serializer = ChatIDSerializer(
