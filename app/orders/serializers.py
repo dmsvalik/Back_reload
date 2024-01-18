@@ -12,6 +12,8 @@ from app.main_page.models import ContractorData
 from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
 from app.utils import errorcode
+from app.chat.models import Conversation
+from app.chat.serializers import ChatIDSerializer
 
 
 User = get_user_model()
@@ -47,6 +49,7 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
     worksheet = serializers.Field(default=None)
     images = SerializerMethodField()
     offers = SerializerMethodField()
+    chats = SerializerMethodField()
 
     class Meta:
         model = OrderModel
@@ -59,6 +62,7 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             "worksheet",
             "images",
             "offers",
+            "chats",
         ]
         read_only_fields = [
             "id",
@@ -101,6 +105,21 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         )
         return serializer.data
 
+    def get_chats(self, obj):
+        """
+        Получение чатов по ИД пользователя
+        ИД заказа через оффер
+        """
+        queryset = Conversation.objects.filter(
+            offer__user_account=self._get_current_user(),
+            offer__order_id=obj.pk,
+        ).values("id")
+        serializer = ChatIDSerializer(
+            instance=queryset,
+            many=True,
+        )
+        return serializer.data
+
     def _get_current_user(self) -> User:
         request: HttpRequest = self.context["request"]
         return request.user
@@ -109,12 +128,12 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
 class OfferSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderOffer
-        fields = [
+        fields = (
             "id",
             "offer_price",
             "offer_execution_time",
             "offer_description",
-        ]
+        )
 
 
 class OrderOfferSerializer(OfferSerializer):
@@ -123,8 +142,11 @@ class OrderOfferSerializer(OfferSerializer):
     )
     order_id = serializers.SerializerMethodField(read_only=True)
 
-    class Meta:
-        model = OrderOffer
+    class Meta(OfferSerializer.Meta):
+        fields = OfferSerializer.Meta.fields + (
+            "user_account",
+            "order_id",
+        )
         read_only_fields = (
             "id",
             "user_account",
