@@ -3,7 +3,6 @@ from datetime import timedelta, datetime
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
-from django.http import HttpRequest
 from django.contrib.auth import get_user_model
 from django.conf import settings
 
@@ -12,8 +11,6 @@ from app.main_page.models import ContractorData
 from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
 from app.utils import errorcode
-from app.chat.models import Conversation
-from app.chat.serializers import ChatIDSerializer
 
 
 User = get_user_model()
@@ -49,7 +46,6 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
     worksheet = serializers.Field(default=None)
     images = SerializerMethodField()
     offers = SerializerMethodField()
-    chats = SerializerMethodField()
 
     class Meta:
         model = OrderModel
@@ -62,7 +58,6 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             "worksheet",
             "images",
             "offers",
-            "chats",
         ]
         read_only_fields = [
             "id",
@@ -84,7 +79,6 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
     def get_offers(self, obj):
         """
         Получение офферов по ИД заказа
-        и текущему пользователю
         офферы берутся только
         если заказ был создан
         более hours(24) часов назад
@@ -102,24 +96,6 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             many=True,
         )
         return serializer.data
-
-    def get_chats(self, obj):
-        """
-        Получение чатов по ИД пользователя
-        ИД заказа через оффер
-        """
-        queryset = Conversation.objects.filter(
-            offer__order_id=obj.pk,
-        ).values("id")
-        serializer = ChatIDSerializer(
-            instance=queryset,
-            many=True,
-        )
-        return serializer.data
-
-    def _get_current_user(self) -> User:
-        request: HttpRequest = self.context["request"]
-        return request.user
 
 
 class OfferSerializer(serializers.ModelSerializer):
