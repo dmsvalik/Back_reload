@@ -13,6 +13,7 @@ from app.questionnaire.serializers import FileSerializer
 from app.utils import errorcode
 from app.chat.models import Conversation
 from app.chat.serializers import ChatIDSerializer
+from app.orders.constants import ORDER_STATE_CHOICES
 
 
 User = get_user_model()
@@ -85,27 +86,37 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         если заказ был создан
         более hours(24) часов назад
         """
-        hours = timedelta(hours=24)
-        today = datetime.now()
-        range_filter = today - hours
+        query_filter = {
+            "order_id": obj.pk,
+        }
+        serializer_obj = OfferIDSerizalizer
+        if obj.state == ORDER_STATE_CHOICES[1][0]:
+            hours = timedelta(hours=24)
+            today = datetime.now()
+            range_filter = today - hours
+            query_filter.update({"order_id__order_time__lt": range_filter})
+            serializer_obj = OfferSerializer
 
-        queryset = OrderOffer.objects.filter(
-            order_id=obj,
-            order_id__order_time__lt=range_filter,
-        ).values("id")
-        serializer = OfferSerializer(
+        queryset = OrderOffer.objects.filter(**query_filter).values("pk")
+        print(queryset)
+        serializer = serializer_obj(
             instance=queryset,
             many=True,
         )
         return serializer.data
 
 
-class OfferSerializer(serializers.ModelSerializer):
-    chats = SerializerMethodField()
-
+class OfferIDSerizalizer(serializers.ModelSerializer):
     class Meta:
         model = OrderOffer
-        fields = (
+        fields = ("id",)
+
+
+class OfferSerializer(OfferIDSerizalizer):
+    chats = SerializerMethodField()
+
+    class Meta(OfferIDSerizalizer.Meta):
+        fields = OfferIDSerizalizer.Meta.fields + (
             "id",
             "offer_price",
             "offer_execution_time",
@@ -114,7 +125,8 @@ class OfferSerializer(serializers.ModelSerializer):
         )
 
     def get_chats(self, obj):
-        queryset = Conversation.objects.filter(offer=obj.pk).all()
+        offer_pk = obj.get("pk") if isinstance(obj, dict) else obj.pk
+        queryset = Conversation.objects.filter(offer=offer_pk).all()
         serializer = ChatIDSerializer(instance=queryset, many=True)
         return serializer.data
 
