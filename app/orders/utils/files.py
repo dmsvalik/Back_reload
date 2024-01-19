@@ -1,6 +1,10 @@
 import os
+import time
 
 from rest_framework.response import Response
+from rest_framework import status
+
+from django.contrib.auth import get_user_model
 
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
@@ -16,7 +20,6 @@ from app.utils.errorcode import (
 from app.users.utils.quota_manager import UserQuotaManager
 
 # from celery import shared_task
-from rest_framework import status
 
 from app.orders.models import OrderFileData, OrderModel
 from config.settings import BASE_DIR
@@ -201,3 +204,55 @@ def upload_file_to_answer(
         raise QuestionIdNotFound()
     except Exception:
         raise IncorrectFileUploading()
+
+
+def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
+    """
+    Метод копирует файлы заказа в папку клонируемого заказа
+    @param user_id: id пользователя кому принадлежит заказ
+    @param old_order_id: id клонируемого заказа
+    @param new_order_id: id нового заказа
+    @return: str - id операции копирования
+    """
+
+    file = CloudStorage()
+    path_from = file.create_order_path(
+        user_id=user_id, order_id=old_order_id, not_check=True
+    )
+
+    path_to = file.create_order_path(
+        user_id=user_id, order_id=new_order_id, not_check=True
+    )
+    operation_id = file.cloud_copy_files(path_to, path_from, overwrite=True)
+    time.sleep(5)
+    update_order_file_data(new_order_id, operation_id, path_to)
+
+
+def update_order_file_data(order_id: int, operation_id: str, path_to: str):
+    """
+    Метод запрашивает статус копирования файлов и если копирование завершено
+    успешно, обновляет данные в БД.
+    @param order_id: id заказа.
+    @param operation_id: - id
+    @param path_to:
+    @return:
+    """
+    yandex = CloudStorage()
+    state = yandex.check_status_operation(operation_id)
+
+    if state:
+        files = OrderFileData.objects.filter(order_id=order_id)
+        user = get_user_model().objects.get(
+            pk=files[0].order_id.user_account.pk
+        )
+        print(user)
+        quota_manager = UserQuotaManager(user)
+        for file in files:
+            file.yandex_path = f"{path_to}/{file.yandex_path.split('/')[-1]}"
+            file.server_path = f"{path_to}/{file.server_path.split('/')[-1]}"
+        OrderFileData.objects.bulk_update(
+            files, ["yandex_path", "server_path"], batch_size=100
+        )
+        quota_manager.add_many(files)
+
+    return state
