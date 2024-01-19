@@ -44,9 +44,9 @@ class OrderFileDataAdmin(admin.ModelAdmin):
     """Админка для файлов заказа пользователя."""
 
     list_display = [
-        "id",
         "original_name",
         "order_id",
         "question_id",
         "date_upload",
     ]
+    readonly_fields = ("id",)
