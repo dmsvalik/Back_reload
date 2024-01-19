@@ -11,6 +11,8 @@ from app.main_page.models import ContractorData
 from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
 from app.utils import errorcode
+from app.chat.models import Conversation
+from app.chat.serializers import ChatIDSerializer
 
 
 User = get_user_model()
@@ -99,6 +101,8 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
 
 
 class OfferSerializer(serializers.ModelSerializer):
+    chats = SerializerMethodField()
+
     class Meta:
         model = OrderOffer
         fields = (
@@ -106,7 +110,13 @@ class OfferSerializer(serializers.ModelSerializer):
             "offer_price",
             "offer_execution_time",
             "offer_description",
+            "chats",
         )
+
+    def get_chats(self, obj):
+        queryset = Conversation.objects.filter(offer=obj.pk).all()
+        serializer = ChatIDSerializer(instance=queryset, many=True)
+        return serializer.data
 
 
 class OrderOfferSerializer(OfferSerializer):
