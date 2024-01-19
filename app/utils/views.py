@@ -231,6 +231,7 @@ def get_order_pdf(request, pk) -> HttpResponseNotFound | FileResponse:
         items = {"order": item, "questions": queryset}
         return FileResponse(
             open(draw_order_pdf(items, pk), "rb"),
+            as_attachment=True,
             content_type="application/pdf",
         )
     except AttributeError:

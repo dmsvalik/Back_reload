@@ -195,9 +195,7 @@ class GetOrderPdf(BaseSwaggerSchema):
         200: openapi.Response(
             "A PDF file",
             schema=openapi.Schema(
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_BINARY,
-                example="attachment; filename='name.pdf'",
+                type=openapi.TYPE_FILE,
             ),
         )
     }
