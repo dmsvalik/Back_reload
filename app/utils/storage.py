@@ -74,7 +74,7 @@ class ServerFileSystem:
 
 
 class CloudStorage:
-    """Класс для работы с Яндекс.Диском."""
+    """Класс для работы с YandexDisk."""
 
     def __init__(self):
         self.token = (TOKEN,)
@@ -111,13 +111,23 @@ class CloudStorage:
             print(response.json()["message"])
         return False
 
-    def _ensure_path_exists(self, user_id, order_id):
+    def _ensure_path_exists(
+        self, user_id: int, order_id: int, not_check=True
+    ) -> str or bool:
         """
         Метод для создания пути для файла, если он еще не существует.
+        @param user_id: int - id пользователя.
+        @param order_id: int - id заказа.
+        @param not_check: bool - проверка существования пути на YandexDisk, и
+        его создание в случае отсутствия. По умолчанию False - проверка
+        выполняется.
+        @return:
         """
         path = f"{user_id}/{order_id}"
         user_directory_path = f"{user_id}"
         order_directory_path = f"{user_id}/{order_id}"
+        if not_check:
+            return path
         if not self._check_path(order_directory_path):
             if not self._check_path(user_directory_path):
                 if not self._create_path(user_directory_path):
@@ -186,3 +196,55 @@ class CloudStorage:
         if not res.status_code == 204 and not res.status_code == 404:
             raise errorcode.IncorrectFileDeleting
         return True
+
+    def cloud_copy_files(
+        self, path_from: str, path_to: str, overwrite=False
+    ) -> bool or dict:
+        """
+        Метод копирует файлы расположенные на YandexDisk.
+        @param path_from: str - Путь до файла/директории которые
+        копируем.
+        @param path_to: str - Путь до директории/файла в которые
+        копируем.
+        @param overwrite: bool - признак перезаписи, по умолчанию False
+        @return: bool or dict - Статус выполнения: True - успех,
+        str - в процессе (возвращается id операции), False - неуспешно.
+        """
+
+        data = {"from": path_to, "path": path_from, "overwrite": overwrite}
+        res = requests.post(
+            url=f"{self.URL}/copy", params=data, headers=self.headers
+        )
+        print(res.json())
+        if res.status_code == 201:
+            return True
+        elif res.status_code == 202:
+            return res.json().get("href")
+        return False
+
+    def create_order_path(
+        self, user_id: int, order_id: int, not_check=False
+    ) -> str:
+        """
+        Метод возвращает путь до директории с файлами заказа
+        @param user_id: int - id пользователя
+        @param order_id: int - id заказа
+        @param not_check: bool - проверка существования пути на YandexDisk, и
+        его создание в случае отсутствия. По умолчанию False - проверка
+        выполняется.
+        @return: str - путь до директории
+        """
+        return self._ensure_path_exists(user_id, order_id, not_check)
+
+    def check_status_operation(self, operation_id: str) -> bool:
+        """
+        Метод проверяет статус операции на YandexDisk
+        @param operation_id: id операции
+        @return: bool - Статус операции
+        """
+        res = requests.get(url=operation_id, headers=self.headers)
+        status = res.json().get("status")
+        print(status)
+        if status == "success":
+            return True
+        return False
