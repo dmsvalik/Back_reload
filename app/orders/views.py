@@ -54,7 +54,8 @@ from .serializers import (
 )
 from .swagger_documentation import orders as swagger
 
-# from .tasks import (
+from .tasks import celery_clone_order_file_task
+
 #     celery_delete_file_task,
 #     celery_delete_image_task,
 #     celery_upload_file_task_to_answer,
@@ -67,6 +68,11 @@ from .utils.files import (
     upload_image_to_answer,
 )
 from .utils.order_state import OrderStateActivate
+from .utils.clone_db_data import (
+    clone_order_question_response,
+    clone_order,
+    clone_order_file_data,
+)
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -484,22 +490,25 @@ class OrderStateActivateView(views.APIView):
         return Response(data=data, status=200)
 
 
+@method_decorator(
+    name="post",
+    decorator=swagger_auto_schema(**swagger.CloneOrderCreate.__dict__),
+)
 class CloneOrderView(CreateAPIView):
     serializer_class = None
     permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
-        old_order = OrderModel.objects.values(
-            "name", "order_description", "questionnaire_type"
-        ).get(pk=request.data.get("order_id"))
-        old_order["questionnaire_type"] = QuestionnaireType.objects.get(
-            pk=old_order["questionnaire_type"]
-        )
+        old_order_id = request.data.get("order_id")
+        user = self.request.user
 
-        new_order = OrderModel.objects.create(
-            user_account=self.request.user, **old_order
-        )
-        new_order.save()
+        new_order_id = clone_order(old_order_id, user)
+
+        clone_order_question_response(old_order_id, new_order_id)
+        clone_order_file_data(old_order_id, new_order_id)
+
+        celery_clone_order_file_task.delay(user.pk, old_order_id, new_order_id)
+
         return Response(
-            {"order_id": new_order.id}, status=status.HTTP_201_CREATED
+            {"order_id": new_order_id}, status=status.HTTP_201_CREATED
         )
