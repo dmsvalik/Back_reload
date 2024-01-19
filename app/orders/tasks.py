@@ -1,5 +1,6 @@
 import os
 
+from app.orders.utils.files import copy_order_file
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
@@ -197,3 +198,17 @@ def celery_upload_file_task_to_answer(
         return {"status": "FAILURE", "response": "Вопрос не найден."}
     except Exception as e:
         return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}
+
+
+@shared_task()
+def celery_clone_order_file_task(
+    user_id: int, old_order_id: int, new_order_id: int
+):
+    """
+    Метод копирует файлы заказа в папку клонируемого заказа
+    @param user_id: id пользователя кому принадлежит заказ
+    @param old_order_id: id клонируемого заказа
+    @param new_order_id: id нового заказа
+    @return: str - id операции копирования
+    """
+    copy_order_file(user_id, old_order_id, new_order_id)
