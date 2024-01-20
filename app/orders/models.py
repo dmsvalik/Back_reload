@@ -109,6 +109,7 @@ class OrderOffer(models.Model):
         "Описание офера", max_length=300, blank=True
     )
     offer_status = models.BooleanField("Принят офер или нет", default=False)
+    contactor_key = models.IntegerField(verbose_name="Номер исполнителя")
 
     class Meta:
         verbose_name = "Офер"
