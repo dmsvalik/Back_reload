@@ -198,11 +198,12 @@ def draw_order_pdf(items, order_id) -> str:
                 flow_obj.append(filedata)
     pdf.build(flow_obj)
     new_pdf = PdfReader(output_pdf)
-    existing_pdf = PdfReader(open(design_pdf, "rb"))
     output = PdfWriter()
-    page = existing_pdf.pages[0]
-    page.merge_page(new_pdf.pages[0])
-    output.add_page(page)
+    for page in new_pdf.pages:
+        existing_pdf = PdfReader(open(design_pdf, "rb"))
+        design_page = existing_pdf.pages[0]
+        design_page.merge_page(page)
+        output.add_page(design_page)
     output_stream = open(output_pdf, "wb")
     output.write(output_stream)
     output_stream.close()
@@ -229,10 +230,11 @@ def get_order_pdf(request, pk) -> HttpResponseNotFound | FileResponse:
             id__in=set(question_id_with_answer + question_id_with_files)
         )
         items = {"order": item, "questions": queryset}
-        return FileResponse(
+        response = FileResponse(
             open(draw_order_pdf(items, pk), "rb"),
             as_attachment=True,
             content_type="application/pdf",
         )
+        return response
     except AttributeError:
         return HttpResponseNotFound("Такого заказа не существует")
