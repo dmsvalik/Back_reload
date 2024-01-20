@@ -1,17 +1,16 @@
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
 from django.conf import settings
+from django.utils import timezone
 
 from .models import OrderModel, OrderOffer, OrderFileData
 from app.main_page.models import ContractorData
 from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
 from app.utils import errorcode
-from app.chat.models import Conversation
-from app.chat.serializers import ChatIDSerializer
 from app.orders.constants import ORDER_STATE_CHOICES
 
 
@@ -88,12 +87,14 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         serializer_obj = OfferIDSerizalizer
         if obj.state == ORDER_STATE_CHOICES[1][0]:
             hours = timedelta(hours=24)
-            today = datetime.now()
+            today = timezone.now()
             range_filter = today - hours
             query_filter.update({"order_id__order_time__lt": range_filter})
-            serializer_obj = OfferSerializer
+            serializer_obj = OfferHalfSerializer
 
-        queryset = OrderOffer.objects.filter(**query_filter).values("pk")
+        queryset = OrderOffer.objects.filter(**query_filter).only(
+            "pk", "contactor_key", "chat"
+        )
         serializer = serializer_obj(
             instance=queryset,
             many=True,
@@ -102,28 +103,37 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
 
 
 class OfferIDSerizalizer(serializers.ModelSerializer):
+    """
+    Базовый класс для сериализатора модели Offer
+    """
+
     class Meta:
         model = OrderOffer
         fields = ("id",)
 
 
-class OfferSerializer(OfferIDSerizalizer):
-    chats = SerializerMethodField()
+class OfferHalfSerializer(OfferIDSerizalizer):
+    """
+    Сериализатор для вывода полей
+    :id - ID оффера
+    :contactor_key - номер исполнителч
+    :chat_id: ID чата этого оффера
+    """
 
+    chat_id = serializers.IntegerField(source="chat.pk")
+
+    class Meta(OfferIDSerizalizer.Meta):
+        fields = OfferIDSerizalizer.Meta.fields + ("contactor_key", "chat_id")
+
+
+class OfferSerializer(OfferIDSerizalizer):
     class Meta(OfferIDSerizalizer.Meta):
         fields = OfferIDSerizalizer.Meta.fields + (
             "id",
             "offer_price",
             "offer_execution_time",
             "offer_description",
-            "chats",
         )
-
-    def get_chats(self, obj):
-        offer_pk = obj.get("pk") if isinstance(obj, dict) else obj.pk
-        queryset = Conversation.objects.filter(offer=offer_pk).all()
-        serializer = ChatIDSerializer(instance=queryset, many=True)
-        return serializer.data
 
 
 class OrderOfferSerializer(OfferSerializer):
