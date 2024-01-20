@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 
 from PyPDF2 import PdfWriter, PdfReader
 from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from django.http import FileResponse, HttpResponseNotFound
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
@@ -196,6 +196,7 @@ def draw_order_pdf(items, order_id) -> str:
                     style=styles["Normal"],
                 )
                 flow_obj.append(filedata)
+        flow_obj.append(Spacer(10, 6))
     pdf.build(flow_obj)
     new_pdf = PdfReader(output_pdf)
     output = PdfWriter()
