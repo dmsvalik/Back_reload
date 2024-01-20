@@ -3,7 +3,6 @@ from datetime import timedelta, datetime
 from rest_framework import serializers
 from rest_framework.fields import SerializerMethodField
 
-from django.contrib.auth import get_user_model
 from django.conf import settings
 
 from .models import OrderModel, OrderOffer, OrderFileData
@@ -14,9 +13,6 @@ from app.utils import errorcode
 from app.chat.models import Conversation
 from app.chat.serializers import ChatIDSerializer
 from app.orders.constants import ORDER_STATE_CHOICES
-
-
-User = get_user_model()
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -98,7 +94,6 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             serializer_obj = OfferSerializer
 
         queryset = OrderOffer.objects.filter(**query_filter).values("pk")
-        print(queryset)
         serializer = serializer_obj(
             instance=queryset,
             many=True,
