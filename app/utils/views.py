@@ -85,6 +85,7 @@ def document_view(request, path):
     """Возврат ссылки на превью картинки. Проверяет доступ и редиректит
     на превью."""
     res = Response()
+    res.content_type = "image"
     res["X-Accel-Redirect"] = "/files/" + path
     return res
 

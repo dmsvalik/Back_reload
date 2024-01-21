@@ -408,28 +408,14 @@ class FileOrderDownload(BaseSwaggerSchema):
     operation_id = "file-order-download"
     operation_summary = "Получение прямой ссылки на скачивание файла"
     operation_description = (
-        "Эндпоинт принимает id файла в БД и **возвращает прямую ссылку на "
-        "скачивание файла с ЯндексCloud.**\n\n**Ограничения:**\n\n"
-        "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
-        "-- Администратор\n-- Владелец\n-- Исполнитель"
+        "Эндпоинт принимает id файла в БД и **делает редирект по прямой "
+        " ссылке на скачивание файла с ЯндексCloud.**\n\n**Ограничения:**\n\n"
+        "1. Доступно всем пользователям."
     )
-    method = "POST"
-    request_body = openapi.Schema(
-        type=openapi.TYPE_OBJECT,
-        required=[
-            "file_id",
-        ],
-        properties={
-            "file_id": openapi.Schema(
-                title="Id файла",
-                type=openapi.TYPE_INTEGER,
-            )
-        },
-    )
+    method = "GET"
     responses = {
-        202: openapi.Response(
-            "Success response",
-            openapi.Schema(title="download url", type=openapi.TYPE_STRING),
+        302: openapi.Response(
+            "Success response. Redirect to download file",
         ),
         401: openapi.Response("Unauthorized"),
         404: openapi.Response("FileNotFound"),
