@@ -69,21 +69,34 @@ class FileData(models.Model):
     )
 
 
-class OrderFileData(models.Model):
+class FileAbstractModel(models.Model):
+    """Абстрактная модель для файлов."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    original_name = models.CharField("Имя файла", max_length=250)
+    yandex_path = models.CharField("Путь в облаке", max_length=150, blank=True)
+    server_path = models.CharField(
+        "Путь на сервере", max_length=150, blank=True
+    )
+    date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
+    yandex_size = models.CharField(
+        "Размер файла в облаке", max_length=150, blank=True
+    )
+    server_size = models.CharField(
+        "Размер файла на сервере", max_length=150, blank=True
+    )
+
+    class Meta:
+        abstract = True
+
+
+class OrderFileData(FileAbstractModel):
     """Модель для файлов заказа пользователя."""
 
     order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE)
     question_id = models.ForeignKey(
         "questionnaire.Question", on_delete=models.SET_NULL, null=True
     )
-    original_name = models.CharField("Имя файла", max_length=250)
-    yandex_path = models.CharField("Путь в облаке", max_length=250, blank=True)
-    server_path = models.CharField(
-        "Путь на сервере", max_length=250, blank=True
-    )
-    date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
-    yandex_size = models.IntegerField("Размер файла в облаке, б")
-    server_size = models.IntegerField("Размер файла на сервер, б")
 
 
 class OrderOffer(models.Model):
