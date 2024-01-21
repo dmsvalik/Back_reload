@@ -194,14 +194,10 @@ def upload_file_to_answer(
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             os.remove(file.temp_file)
-            return Response(
-                {"detail": result}, status=status.HTTP_400_BAD_REQUEST
-            )
+            raise IncorrectFileUploading()
     except OrderModel.DoesNotExist:
         raise FileNotFound()
     except Question.DoesNotExist:
         raise QuestionIdNotFound()
-    except Exception as err:
-        return Response(
-            {"detail": str(err)}, status=status.HTTP_400_BAD_REQUEST
-        )
+    except Exception:
+        raise IncorrectFileUploading()
