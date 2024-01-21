@@ -227,11 +227,6 @@ class AllOrdersClientGetList(BaseSwaggerSchema):
         403: DEFAULT_RESPONSES[403],
         500: DEFAULT_RESPONSES[500],
     }
-    manual_parameters = [
-        openapi.Parameter(
-            "Authorization", in_=openapi.IN_HEADER, type=openapi.TYPE_STRING
-        )
-    ]
 
 
 class OrderStateActivateSwagger(BaseSwaggerSchema):
