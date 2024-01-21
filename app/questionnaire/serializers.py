@@ -50,7 +50,7 @@ class FileSerializer(serializers.ModelSerializer):
             return None
         preview = "https://{domain}/documents/{file_id}"
         return preview.format(
-            domain=settings.DOMAIN, server_path=order_file_data_obj.id
+            domain=settings.DOMAIN, file_id=order_file_data_obj.id
         )
 
 
