@@ -48,9 +48,9 @@ class FileSerializer(serializers.ModelSerializer):
         """
         if not order_file_data_obj.server_path:
             return None
-        preview = "https://{domain}/documents/{server_path}"
+        preview = "https://{domain}/documents/{file_id}"
         return preview.format(
-            domain=settings.DOMAIN, server_path=order_file_data_obj.server_path
+            domain=settings.DOMAIN, server_path=order_file_data_obj.id
         )
 
 
@@ -248,14 +248,11 @@ class OrderFullSerializer(serializers.ModelSerializer):
     questionnaire_type_id = serializers.PrimaryKeyRelatedField(
         source="questionnaire_type", read_only=True
     )
-    # answers = QuestionResponseSerializer(
-    #     source="questionresponse_set", many=True
-    # )
     answers = serializers.SerializerMethodField()
 
     class Meta:
         model = OrderModel
-        fields = ["name", "questionnaire_type_id", "answers"]
+        fields = ["id", "name", "questionnaire_type_id", "answers"]
 
     def get_answers(self, obj):
         """Метод для получения всех ответов на анкету."""
