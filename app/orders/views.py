@@ -1,6 +1,7 @@
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from uuid import UUID
 
 from django.http import HttpResponsePermanentRedirect
 from drf_yasg.utils import swagger_auto_schema
@@ -469,6 +470,10 @@ def get_download_file_link(request, file_id) -> Any:
     file_id:str (обязательное) - id файла,
     """
 
+    try:
+        UUID(str(file_id))
+    except ValueError:
+        raise errorcode.FileNotFound()
     file_models = (OrderFileData,)
     file = None
     for file_model in file_models:

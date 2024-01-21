@@ -107,15 +107,6 @@ class DocsView(BaseSwaggerSchema):
         "-- Администратор\n-- Владелец\n-- Исполнитель"
     )
     method = "get"
-    manual_parameters = [
-        openapi.Parameter(
-            "path",
-            openapi.IN_PATH,
-            description="Путь до файла",
-            type=openapi.TYPE_INTEGER,
-            required=True,
-        )
-    ]
     responses = {
         202: openapi.Response("Success response"),
         401: openapi.Response("Unauthorized"),

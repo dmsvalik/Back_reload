@@ -80,10 +80,10 @@ class FileAbstractModel(models.Model):
     )
     date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
     yandex_size = models.PositiveIntegerField(
-        "Размер файла в облаке", max_length=150, blank=True
+        "Размер файла в облаке", blank=True
     )
     server_size = models.PositiveIntegerField(
-        "Размер файла на сервере", max_length=150, blank=True
+        "Размер файла на сервере", blank=True
     )
 
     class Meta:
