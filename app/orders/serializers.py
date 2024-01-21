@@ -81,21 +81,19 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         если заказ был создан
         более hours(24) часов назад
         """
-        query_filter = {
-            "order_id": obj.pk,
-        }
-        serializer_obj = OfferIDSerizalizer
-        if obj.state == ORDER_STATE_CHOICES[1][0]:
-            hours = timedelta(hours=24)
-            today = timezone.now()
-            range_filter = today - hours
-            query_filter.update({"order_id__order_time__lt": range_filter})
-            serializer_obj = OfferHalfSerializer
-
-        queryset = OrderOffer.objects.filter(**query_filter).only(
-            "pk", "contactor_key", "chat"
+        is_selected = True if obj.state == ORDER_STATE_CHOICES[2][0] else False
+        query_filter = {"order_id": obj.pk, "offer_status": is_selected}
+        range_filter = timezone.now() - timedelta(
+            hours=settings.OFFER_ACCESS_HOURS
         )
-        serializer = serializer_obj(
+
+        if is_selected:
+            query_filter.update({"order_id__order_time__lt": range_filter})
+
+        queryset = OrderOffer.objects.filter(**query_filter).select_related(
+            "user_account"
+        )
+        serializer = OfferHalfSerializer(
             instance=queryset,
             many=True,
         )
@@ -121,9 +119,15 @@ class OfferHalfSerializer(OfferIDSerizalizer):
     """
 
     chat_id = serializers.IntegerField(source="chat.pk")
+    contactor_name = serializers.SerializerMethodField()
 
     class Meta(OfferIDSerizalizer.Meta):
-        fields = OfferIDSerizalizer.Meta.fields + ("contactor_key", "chat_id")
+        fields = OfferIDSerizalizer.Meta.fields + ("contactor_name", "chat_id")
+
+    def get_contactor_name(self, obj):
+        if obj.offer_status:
+            return obj.user_account.name
+        return f"Исполнитель {obj.contactor_key}"
 
 
 class OfferSerializer(OfferIDSerizalizer):
