@@ -145,8 +145,8 @@ def upload_image_to_answer(
         raise FileNotFound()
     except Question.DoesNotExist:
         raise QuestionIdNotFound()
-    except Exception:
-        raise IncorrectFileUploading()
+    except Exception as err:
+        raise IncorrectFileUploading(err)
 
 
 def upload_file_to_answer(
