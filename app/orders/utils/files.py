@@ -145,8 +145,8 @@ def upload_image_to_answer(
         raise FileNotFound()
     except Question.DoesNotExist:
         raise QuestionIdNotFound()
-    except Exception as err:
-        raise IncorrectFileUploading(err)
+    except Exception:
+        raise IncorrectFileUploading()
 
 
 def upload_file_to_answer(
@@ -194,10 +194,10 @@ def upload_file_to_answer(
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             os.remove(file.temp_file)
-            raise IncorrectFileUploading()
+            raise IncorrectFileUploading("что то при удажении файла не так")
     except OrderModel.DoesNotExist:
         raise FileNotFound()
     except Question.DoesNotExist:
         raise QuestionIdNotFound()
-    except Exception:
-        raise IncorrectFileUploading()
+    except Exception as err:
+        raise IncorrectFileUploading(err)
