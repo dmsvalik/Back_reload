@@ -15,6 +15,7 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 
 from app.main_page.permissions import IsContractor
@@ -38,7 +39,7 @@ from app.utils.errorcode import QuestionnaireTypeIdNotFound
 from app.utils.file_work import FileWork
 from app.utils.storage import ServerFileSystem
 from config.settings import IMAGE_FILE_FORMATS, ORDER_COOKIE_KEY_NAME
-from .constants import ErrorMessages
+from .constants import ErrorMessages, ORDER_STATE_CHOICES
 from .models import (
     OrderFileData,
     OrderModel,
@@ -203,8 +204,10 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
     # достаем все заказы пользователя, кроме выполненных
     def get_queryset(self):
         user = self.request.user
-        return OrderModel.objects.filter(user_account=user).exclude(
-            state="completed"
+        return OrderModel.objects.filter(
+            Q(user_account=user),
+            Q(state=ORDER_STATE_CHOICES[2][0])
+            | Q(state=ORDER_STATE_CHOICES[1][0]),
         )
 
     @swagger_auto_schema(**swagger.AllOrdersClientGetList.__dict__)

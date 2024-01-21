@@ -14,14 +14,23 @@ class MessageSerializer(serializers.ModelSerializer):
         read_only_fields = ("id", "sender", "sent_at")
 
 
-class ChatSerializer(serializers.ModelSerializer):
+class ChatIDSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Conversation
+        fields = ("id",)
+
+
+class ChatSerializer(ChatIDSerializer):
     messages = serializers.SerializerMethodField("get_messages")
     client = serializers.CharField(source="client.email")
     contractor = serializers.CharField(source="contractor.email")
 
-    class Meta:
-        model = Conversation
-        fields = ("id", "client", "contractor", "messages")
+    class Meta(ChatIDSerializer.Meta):
+        fields = ChatIDSerializer.Meta.fields + (
+            "client",
+            "contractor",
+            "messages",
+        )
 
     def get_messages(self, instance):
         serializer = MessageSerializer(
