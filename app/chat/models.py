@@ -36,11 +36,11 @@ class Conversation(models.Model):
         default=False,
     )
 
-    offer = models.ForeignKey(
+    offer = models.OneToOneField(
         OrderOffer,
         on_delete=models.CASCADE,
         verbose_name="оффер",
-        related_name="chats",
+        related_name="chat",
         null=True,
     )
 

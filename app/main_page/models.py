@@ -11,7 +11,7 @@ class ContractorData(models.Model):
     )
     card_permissions = models.ManyToManyField("products.Category", blank=True)
     is_active = models.BooleanField("Активен / Не активен", default=False)
-    company_name = models.CharField("Имя компании", max_length=100, blank=True)
+    company_name = models.CharField("Имя компании", max_length=100)
     created_date = models.DateTimeField(
         "Дата создания аккаунта исполнителя", auto_now=True
     )
