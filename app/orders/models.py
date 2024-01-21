@@ -79,10 +79,10 @@ class FileAbstractModel(models.Model):
         "Путь на сервере", max_length=150, blank=True
     )
     date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
-    yandex_size = models.CharField(
+    yandex_size = models.PositiveIntegerField(
         "Размер файла в облаке", max_length=150, blank=True
     )
-    server_size = models.CharField(
+    server_size = models.PositiveIntegerField(
         "Размер файла на сервере", max_length=150, blank=True
     )
 
