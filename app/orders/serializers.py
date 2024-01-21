@@ -82,16 +82,19 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         более hours(24) часов назад
         """
         is_selected = True if obj.state == ORDER_STATE_CHOICES[2][0] else False
-        query_filter = {"order_id": obj.pk, "offer_status": is_selected}
         range_filter = timezone.now() - timedelta(
             hours=settings.OFFER_ACCESS_HOURS
         )
+        query_filter = {
+            "order_id": obj.pk,
+            "offer_status": is_selected,
+            "order_id__order_time__lt": range_filter,
+        }
 
-        if is_selected:
-            query_filter.update({"order_id__order_time__lt": range_filter})
-
-        queryset = OrderOffer.objects.filter(**query_filter).select_related(
-            "user_account"
+        queryset = (
+            OrderOffer.objects.filter(**query_filter)
+            .select_related("user_account")
+            .select_related("user_account__contractordata")
         )
         serializer = OfferHalfSerializer(
             instance=queryset,
@@ -126,7 +129,7 @@ class OfferHalfSerializer(OfferIDSerizalizer):
 
     def get_contactor_name(self, obj):
         if obj.offer_status:
-            return obj.user_account.name
+            return obj.user_account.contractordata.company_name
         return f"Исполнитель {obj.contactor_key}"
 
 
