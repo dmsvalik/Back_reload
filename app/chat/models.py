@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
 
+from app.orders.models import OrderOffer
 
 User = get_user_model()
 
@@ -33,6 +34,14 @@ class Conversation(models.Model):
     is_blocked = models.BooleanField(
         verbose_name="заблокирован ли чат",
         default=False,
+    )
+
+    offer = models.OneToOneField(
+        OrderOffer,
+        on_delete=models.CASCADE,
+        verbose_name="оффер",
+        related_name="chat",
+        null=True,
     )
 
     class Meta:
