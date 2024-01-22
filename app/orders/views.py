@@ -68,11 +68,7 @@ from .utils.files import (
     upload_image_to_answer,
 )
 from .utils.order_state import OrderStateActivate
-from .utils.clone_db_data import (
-    clone_order_question_response,
-    clone_order,
-    clone_order_file_data,
-)
+from .utils.clone_db_data import CloneOrderDB
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -496,19 +492,21 @@ class OrderStateActivateView(views.APIView):
 )
 class CloneOrderView(CreateAPIView):
     serializer_class = None
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsOrderOwner)
 
     def create(self, request, *args, **kwargs):
         old_order_id = request.data.get("order_id")
         user = self.request.user
 
-        new_order_id = clone_order(old_order_id, user)
+        db = CloneOrderDB(user_id=user.pk, old_order_id=old_order_id)
+        db.clone_order()
+        db.clone_order_question_response()
+        db.clone_order_file_data()
 
-        clone_order_question_response(old_order_id, new_order_id)
-        clone_order_file_data(old_order_id, new_order_id)
-
-        celery_clone_order_file_task.delay(user.pk, old_order_id, new_order_id)
+        celery_clone_order_file_task.delay(
+            user.pk, old_order_id, db.new_order_id
+        )
 
         return Response(
-            {"order_id": new_order_id}, status=status.HTTP_201_CREATED
+            {"order_id": db.new_order_id}, status=status.HTTP_201_CREATED
         )

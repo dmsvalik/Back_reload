@@ -4,8 +4,7 @@ import time
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.contrib.auth import get_user_model
-
+from app.orders.utils.clone_db_data import CloneOrderDB
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
@@ -225,34 +224,26 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
     )
     operation_id = file.cloud_copy_files(path_to, path_from, overwrite=True)
     time.sleep(5)
-    update_order_file_data(new_order_id, operation_id, path_to)
+    update_order_file_data(new_order_id, operation_id, path_to, user_id)
 
 
-def update_order_file_data(order_id: int, operation_id: str, path_to: str):
+def update_order_file_data(
+    order_id: int, operation_id: str, path_to: str, user_id: int
+):
     """
     Метод запрашивает статус копирования файлов и если копирование завершено
     успешно, обновляет данные в БД.
     @param order_id: id заказа.
     @param operation_id: - id
     @param path_to:
+    @param user_id:
     @return:
     """
     yandex = CloudStorage()
     state = yandex.check_status_operation(operation_id)
 
     if state:
-        files = OrderFileData.objects.filter(order_id=order_id)
-        user = get_user_model().objects.get(
-            pk=files[0].order_id.user_account.pk
-        )
-        print(user)
-        quota_manager = UserQuotaManager(user)
-        for file in files:
-            file.yandex_path = f"{path_to}/{file.yandex_path.split('/')[-1]}"
-            file.server_path = f"{path_to}/{file.server_path.split('/')[-1]}"
-        OrderFileData.objects.bulk_update(
-            files, ["yandex_path", "server_path"], batch_size=100
-        )
-        quota_manager.add_many(files)
+        db = CloneOrderDB(new_order_id=order_id, user_id=user_id)
+        db.update_order_file_data(path_to)
 
     return state
