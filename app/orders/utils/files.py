@@ -1,10 +1,11 @@
 import os
-import time
 
 from rest_framework.response import Response
 from rest_framework import status
 
+from django_celery_beat.models import PeriodicTask
 from app.orders.utils.clone_db_data import CloneOrderDB
+from app.orders.utils.servise import create_celery_beat_task
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
@@ -223,27 +224,34 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
         user_id=user_id, order_id=new_order_id, not_check=True
     )
     operation_id = file.cloud_copy_files(path_to, path_from, overwrite=True)
-    time.sleep(5)
-    update_order_file_data(new_order_id, operation_id, path_to, user_id)
+    create_celery_beat_task(new_order_id, operation_id, path_to, user_id)
 
 
 def update_order_file_data(
-    order_id: int, operation_id: str, path_to: str, user_id: int
+    order_id: int,
+    operation_id: str,
+    path_to: str,
+    user_id: int,
 ):
     """
     Метод запрашивает статус копирования файлов и если копирование завершено
     успешно, обновляет данные в БД.
     @param order_id: id заказа.
-    @param operation_id: - id
-    @param path_to:
-    @param user_id:
-    @return:
+    @param operation_id: - ссылка на проверку статуса заказа яндекс API
+    @param path_to: путь до файлов заказа
+    @param user_id: id пользователя
+    @return: None
     """
     yandex = CloudStorage()
     state = yandex.check_status_operation(operation_id)
-
-    if state:
+    task = PeriodicTask.objects.get(name=f"update_files_{order_id}")
+    if state == "success":
         db = CloneOrderDB(new_order_id=order_id, user_id=user_id)
         db.update_order_file_data(path_to)
-
-    return state
+        task.delete()
+    elif state == "failed":
+        task.delete()
+    task.total_run_count += 1
+    task.save()
+    if state == "in-progress" and task.total_run_count >= 3:
+        task.delete()

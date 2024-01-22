@@ -23,6 +23,7 @@ from django.utils.decorators import method_decorator
 from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
     IsOrderFileDataOwnerWithoutUser,
+    IsOrderExists,
 )
 from app.questionnaire.models import (
     QuestionnaireType,
@@ -55,7 +56,7 @@ from .serializers import (
 )
 from .swagger_documentation import orders as swagger
 
-from .tasks import celery_clone_order_file_task
+from .tasks import celery_copy_order_file_task
 
 #     celery_delete_file_task,
 #     celery_delete_image_task,
@@ -530,9 +531,18 @@ class OrderStateActivateView(views.APIView):
 )
 class CloneOrderView(CreateAPIView):
     serializer_class = None
-    permission_classes = (IsAuthenticated, IsOrderOwner)
+    permission_classes = (IsOrderExists, IsAuthenticated, IsOrderOwner)
 
     def create(self, request, *args, **kwargs):
+        """
+        Клонирование заказа со всеми связанными данными.
+        URL: http://localhost/order/clone/
+        METHOD - "POST"
+        pk:int (обязательное) - id заказа к которому крепится файл,
+        Данные которые передаются через form-data
+            - order_id: int - id заказа который необходимо клонировать,
+        @return: Response object {"new_order_id": int}
+        """
         old_order_id = request.data.get("order_id")
         user = self.request.user
 
@@ -541,7 +551,7 @@ class CloneOrderView(CreateAPIView):
         db.clone_order_question_response()
         db.clone_order_file_data()
 
-        celery_clone_order_file_task.delay(
+        celery_copy_order_file_task.delay(
             user.pk, old_order_id, db.new_order_id
         )
 
