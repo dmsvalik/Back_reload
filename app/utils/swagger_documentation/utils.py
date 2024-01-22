@@ -101,23 +101,13 @@ class DocsView(BaseSwaggerSchema):
     operation_summary = "Редирект на превью картинки"
     operation_id = "document-view"
     operation_description = (
-        "Редирект на превью картинки, с добавлением ограничений доступа."
+        "Редирект на превью картинки."
         "\n\n**Ограничения:**\n\n"
-        "1. Проверка на существование файла\n2. Проверка пользователя(или):\n"
-        "-- Администратор\n-- Владелец\n-- Исполнитель"
+        "1. Доступен всем пользователям."
     )
     method = "get"
-    manual_parameters = [
-        openapi.Parameter(
-            "path",
-            openapi.IN_PATH,
-            description="Путь до файла",
-            type=openapi.TYPE_INTEGER,
-            required=True,
-        )
-    ]
     responses = {
-        202: openapi.Response("Success response"),
+        200: openapi.Response("Success response"),
         401: openapi.Response("Unauthorized"),
         404: openapi.Response("FileNotFound"),
     }
