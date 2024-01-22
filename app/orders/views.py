@@ -147,6 +147,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
     """Поведение Оффера"""
 
     serializer_class = OrderOfferSerializer
+    lookup_field = "id"
 
     def get_permissions(self):
         permission_classes = [
@@ -166,31 +167,33 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         return [permission() for permission in permission_classes]
 
     def get_queryset(self):
-        order_id = self.kwargs.get("pk", None)
+        order_id = self._get_order_id()
         if OrderModel.objects.filter(id=order_id).exists():
             date = OrderModel.objects.get(id=order_id).order_time
             if (datetime.now(timezone.utc) - date) > timedelta(hours=24):
                 return OrderOffer.objects.filter(order_id=order_id).all()
         return []
 
-    @swagger_auto_schema(**swagger.OfferGetList.__dict__)
     def list(self, request, *args, **kwargs):
-        order_id = self.kwargs["pk"]
+        order_id = self._get_order_id()
         if not OrderModel.objects.filter(id=order_id).exists():
             raise errorcode.OrderIdNotFound()
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @swagger_auto_schema(**swagger.OfferCreate.__dict__)
-    def create(self, request, *args, **kwargs):
-        return super().create(request)
-
     def perform_create(self, serializer):
         user = self.request.user
-        order = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
+        order_id = self._get_order_id()
+        order = OrderModel.objects.filter(pk=order_id).first()
         serializer.is_valid()
         serializer.save(user_account=user, order_id=order)
+
+    def _get_order_id(self):
+        return self.kwargs.get("pk")
+
+    def _get_offer_id(self):
+        return self.kwargs.get("id", None)
 
 
 class AllOrdersClientViewSet(viewsets.ModelViewSet):
