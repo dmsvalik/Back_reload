@@ -1,7 +1,9 @@
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
+from uuid import UUID
 
+from django.http import HttpResponsePermanentRedirect
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets, views
 from rest_framework.decorators import (
@@ -11,16 +13,16 @@ from rest_framework.decorators import (
 )
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated, AllowAny, IsAdminUser
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.generics import CreateAPIView
 
+from django.db.models import Q
 from django.utils.decorators import method_decorator
 
 from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
     IsOrderFileDataOwnerWithoutUser,
-    IsFileExistById,
 )
 from app.questionnaire.models import (
     QuestionnaireType,
@@ -37,10 +39,9 @@ from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
 from app.utils.errorcode import QuestionnaireTypeIdNotFound
 from app.utils.file_work import FileWork
-from app.utils.permissions import IsContactor, IsFileOwner
 from app.utils.storage import ServerFileSystem
 from config.settings import IMAGE_FILE_FORMATS, ORDER_COOKIE_KEY_NAME
-from .constants import ErrorMessages
+from .constants import ErrorMessages, ORDER_STATE_CHOICES
 from .models import (
     OrderFileData,
     OrderModel,
@@ -207,8 +208,10 @@ class AllOrdersClientViewSet(viewsets.ModelViewSet):
     # достаем все заказы пользователя, кроме выполненных
     def get_queryset(self):
         user = self.request.user
-        return OrderModel.objects.filter(user_account=user).exclude(
-            state="completed"
+        return OrderModel.objects.filter(
+            Q(user_account=user),
+            Q(state=ORDER_STATE_CHOICES[2][0])
+            | Q(state=ORDER_STATE_CHOICES[1][0]),
         )
 
     @swagger_auto_schema(**swagger.AllOrdersClientGetList.__dict__)
@@ -438,24 +441,59 @@ def attach_file(request, pk: int):
     return response
 
 
+# @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
+# @api_view(["POST"])
+# @permission_classes([IsFileExistById, IsAdminUser | IsContactor | IsFileOwner])
+# def get_download_file_link(request) -> Any:
+#     """
+#     Получение и передача на фронт ссылки на скачивание файла
+#     URL: http://localhost/download/
+#     METHOD - "POST"
+#     file_id:int (обязательное) - id файла модели OrderFileData,
+#     """
+#     try:
+#         file_link = FileWork.get_download_file_link(
+#             file_id=request.data.get("file_id")
+#         )
+#     except Exception as e:
+#         return Response(str(e), status=status.HTTP_404_NOT_FOUND)
+#
+#     return Response(file_link, status=status.HTTP_200_OK)
+
+
 @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
-@api_view(["POST"])
-@permission_classes([IsFileExistById, IsAdminUser | IsContactor | IsFileOwner])
-def get_download_file_link(request) -> Any:
+@api_view(["GET"])
+@permission_classes(
+    [
+        AllowAny,
+    ]
+)
+def get_download_file_link(request, file_id) -> Any:
     """
     Получение и передача на фронт ссылки на скачивание файла
     URL: http://localhost/download/
-    METHOD - "POST"
-    file_id:int (обязательное) - id файла модели OrderFileData,
+    METHOD - "GET"
+    file_id:str (обязательное) - id файла,
     """
+
     try:
-        file_link = FileWork.get_download_file_link(
-            file_id=request.data.get("file_id")
-        )
+        UUID(str(file_id))
+    except ValueError:
+        raise errorcode.FileNotFound()
+    file_models = (OrderFileData,)
+    file = None
+    for file_model in file_models:
+        file = file_model.objects.filter(id=file_id.strip()).first()
+        if file:
+            break
+    if not file:
+        raise errorcode.FileNotFound()
+    try:
+        file_link = FileWork.get_download_file_link(file)
     except Exception as e:
         return Response(str(e), status=status.HTTP_404_NOT_FOUND)
 
-    return Response(file_link, status=status.HTTP_200_OK)
+    return HttpResponsePermanentRedirect(file_link)
 
 
 class OrderStateActivateView(views.APIView):

@@ -1,4 +1,5 @@
 import os
+from uuid import UUID
 
 from celery.result import AsyncResult
 from datetime import datetime, timedelta
@@ -21,11 +22,10 @@ from django.utils.decorators import method_decorator
 from drf_yasg.utils import swagger_auto_schema
 
 from app.users.models import UserAccount
-from app.orders.models import OrderModel, OrderOffer
-from app.utils.permissions import IsContactor, IsFileExist, IsFileOwner
+from app.orders.models import OrderModel, OrderOffer, OrderFileData
 from app.utils.swagger_documentation import utils as swagger
 from config.settings import ttf_file, design_pdf, PDF_DIR
-
+from . import errorcode
 
 from .serializers import GalleryImagesSerializer
 from .models import GalleryImages
@@ -77,15 +77,31 @@ def get_task_status(request, task_id):
 @api_view(("GET",))
 @permission_classes(
     [
-        IsFileExist,
-        IsAdminUser | IsContactor | IsFileOwner,
+        AllowAny,
     ]
 )
-def document_view(request, path):
-    """Возврат ссылки на превью картинки. Проверяет доступ и редиректит
-    на превью."""
+def document_view(request, file_id: UUID):
+    """Возврат ссылки на превью картинки. Редиректит
+    на превью.
+    URL: http://localhost/documents/<file_id>/
+    METHOD - "GET"
+    file_id:str (обязательное) - id файла"""
+
+    try:
+        UUID(str(file_id))
+    except ValueError:
+        raise errorcode.FileNotFound()
+    file_models = (OrderFileData,)
+    file = None
+    for file_model in file_models:
+        file = file_model.objects.filter(id=file_id).first()
+        if file:
+            break
+    if not file:
+        raise errorcode.FileNotFound()
     res = Response()
-    res["X-Accel-Redirect"] = "/files/" + path
+    res.content_type = "image"
+    res["X-Accel-Redirect"] = "/files/" + file.server_path
     return res
 
 

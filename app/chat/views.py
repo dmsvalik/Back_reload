@@ -31,16 +31,11 @@ class ChatViewSet(
         user = self.request.user
         if user.is_authenticated:
             if user.role == "contractor":
-                order_ids = OrderOffer.objects.filter(
+                offers_ids = OrderOffer.objects.filter(
                     user_account=user,
-                ).values_list("order_id", flat=True)
-                client_ids = OrderModel.objects.filter(
-                    pk__in=order_ids,
-                ).values_list("user_account", flat=True)
+                ).values_list("pk", flat=True)
                 return Conversation.objects.filter(
-                    contractor=user,
-                    is_blocked=False,
-                    client__in=client_ids,
+                    offer__in=offers_ids,
                 )
             available_date = datetime.now() - timedelta(
                 days=settings.CHATTING["DAYS_TO_UNLOCK"],
@@ -49,13 +44,13 @@ class ChatViewSet(
                 user_account=user,
                 order_time__lte=available_date,
             ).values_list("pk", flat=True)
-            contractor_ids = OrderOffer.objects.filter(
+            offers_ids = OrderOffer.objects.filter(
                 order_id__in=orders_ids,
-            ).values_list("user_account", flat=True)
+            ).values_list("pk", flat=True)
             return Conversation.objects.filter(
                 client=user,
                 is_blocked=False,
-                contractor__in=contractor_ids,
+                offer__in=offers_ids,
             )
         return None
 

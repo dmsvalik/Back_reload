@@ -47,7 +47,6 @@ class CloneOrderDB(BaseOrderDB):
         )
         user = get_user_model().objects.get(pk=self.user_id)
         new_order = OrderModel.objects.create(user_account=user, **old_order)
-        new_order.save()
         self.new_order_id = new_order.pk
         return new_order.pk
 

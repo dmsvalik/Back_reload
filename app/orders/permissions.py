@@ -32,7 +32,7 @@ class IsOrderOwner(permissions.BasePermission):
 
     def has_permission(self, request, view):
         key = request.COOKIES.get("key")
-        order_id = view.kwargs.get("pk")
+        order_id = view.kwargs.get("pk") or request.data.get("order_id")
         if OrderModel.objects.filter(
             id=order_id, key=key, user_account__isnull=True
         ).exists():

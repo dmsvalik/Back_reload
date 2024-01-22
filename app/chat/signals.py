@@ -24,6 +24,7 @@ def manage_chats_for_offer(sender, instance, **kwargs):
             new_conversation = Conversation.objects.create(
                 client=instance.order_id.user_account,
                 contractor=contractor,
+                offer=instance,
             )
             ChatMessage.objects.create(
                 conversation=new_conversation,
@@ -38,17 +39,19 @@ def manage_chats_for_offer(sender, instance, **kwargs):
         try:
             order = instance.order_id
             if instance.offer_status:
-                client = order.user_account
-                offers_users_ids = (
+                # client = order.user_account
+                # offers_users_ids = (
+                offers_ids = (
                     OrderOffer.objects.filter(
                         order_id=order,
                     )
                     .exclude(pk=instance.pk)
-                    .values_list("user_account", flat=True)
+                    .values_list("pk", flat=True)
                 )
                 chats = Conversation.objects.filter(
-                    client=client,
-                    contractor__in=offers_users_ids,
+                    # client=client,
+                    # contractor__in=offers_users_ids,
+                    offer__in=offers_ids,
                 )
                 for chat in chats:
                     chat.is_blocked = True
@@ -57,12 +60,14 @@ def manage_chats_for_offer(sender, instance, **kwargs):
                     ["is_blocked"],
                 )
                 if Conversation.objects.filter(
-                    client=client,
-                    contractor=instance.user_account,
+                    # client=client,
+                    # contractor=instance.user_account,
+                    offer=instance,
                 ).exists():
                     current_order_chat = Conversation.objects.filter(
-                        client=client,
-                        contractor=instance.user_account,
+                        # client=client,
+                        # contractor=instance.user_account,
+                        offer=instance,
                     ).first()
                     current_order_chat.is_match = True
                     current_order_chat.save()

@@ -236,15 +236,12 @@ class CloudStorage:
         """
         return self._ensure_path_exists(user_id, order_id, not_check)
 
-    def check_status_operation(self, operation_id: str) -> bool:
+    def check_status_operation(self, operation_id: str) -> str:
         """
         Метод проверяет статус операции на YandexDisk
         @param operation_id: id операции
-        @return: bool - Статус операции
+        @return: str - Статус операции (success, failed,
         """
         res = requests.get(url=operation_id, headers=self.headers)
         status = res.json().get("status")
-        print(status)
-        if status == "success":
-            return True
-        return False
+        return status
