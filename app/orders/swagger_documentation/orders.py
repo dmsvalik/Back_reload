@@ -452,9 +452,7 @@ class CloneOrderCreate(BaseSwaggerSchema):
         "**\n\n**Ограничения:**\n\n"
         "1. Проверка авторизован ли пользователь\n"
         "2. Проверка на существование заказа с переданным id\n"
-        "3. Проверка статуса заказа (не допускается дублирование "
-        "активного заказа)\n"
-        "4. Проверка пользователя(или):\n"
+        "3. Проверка пользователя(или):\n"
         "-- Владелец заказа"
     )
     request_body = openapi.Schema(
@@ -481,6 +479,7 @@ class CloneOrderCreate(BaseSwaggerSchema):
                 },
             ),
         ),
-        401: openapi.Response("Unauthorized"),
-        500: openapi.Response(""),
+        401: DEFAULT_RESPONSES[401],
+        403: DEFAULT_RESPONSES[403],
+        500: DEFAULT_RESPONSES[500],
     }

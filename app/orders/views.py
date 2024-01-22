@@ -531,7 +531,7 @@ class OrderStateActivateView(views.APIView):
 )
 class CloneOrderView(CreateAPIView):
     serializer_class = None
-    permission_classes = (IsOrderExists, IsAuthenticated, IsOrderOwner)
+    permission_classes = (IsAuthenticated, IsOrderExists, IsOrderOwner)
 
     def create(self, request, *args, **kwargs):
         """

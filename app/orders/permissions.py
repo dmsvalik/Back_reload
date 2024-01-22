@@ -30,6 +30,8 @@ class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
 class IsOrderOwner(permissions.BasePermission):
     """Проверка что пользователь является владельцем заказа."""
 
+    message = {"detail": "You are not the order owner"}
+
     def has_permission(self, request, view):
         key = request.COOKIES.get("key")
         order_id = view.kwargs.get("pk") or request.data.get("order_id")
@@ -60,3 +62,13 @@ class IsFileExistById(permissions.BasePermission):
         )
 
         return OrderModel.objects.filter(id=file_id).exists()
+
+
+class IsOrderExists(permissions.BasePermission):
+    """Проверка на наличие заказа"""
+
+    message = {"detail": "No order information found for the specified id"}
+
+    def has_permission(self, request, view):
+        order_id = view.request.data.get("order_id")
+        return OrderModel.objects.filter(id=order_id).exists()
