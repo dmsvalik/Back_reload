@@ -165,18 +165,19 @@ class OrderOfferSerializer(OfferSerializer):
         return self.context["view"].kwargs["pk"]
 
     def validate(self, data):
+        request = self.context.get("request")
         order_id = self.context["view"].kwargs["pk"]
-        if not OrderModel.objects.filter(id=order_id).exists():
-            raise errorcode.OrderIdNotFound()
-        user = self.context["view"].request.user
-        if user.role != "contractor":
-            raise errorcode.NotContractorOffer()
-        # Вот тут надо продумать как автоматически создавать ContractorData
-        # если у пользователя role = 'contractor'
-        if OrderModel.objects.get(id=order_id).state != "offer":
+        user = request.user
+        contactor = ContractorData.objects.filter(user=user).first()
+
+        if (
+            OrderModel.objects.get(id=order_id).state
+            != ORDER_STATE_CHOICES[1][0]
+        ):
             raise errorcode.OrderInWrongStatus()
-        if not ContractorData.objects.get(user=user).is_active:
-            raise errorcode.ContractorIsInactive()
+        if not user.is_staff:
+            if not contactor and not contactor.is_active:
+                raise errorcode.ContractorIsInactive()
         if OrderOffer.objects.filter(
             user_account=user, order_id=order_id
         ).exists():
