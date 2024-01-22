@@ -3,21 +3,22 @@ from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
-from django.http import HttpResponsePermanentRedirect
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets, views
+from rest_framework.exceptions import ValidationError
+from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 from rest_framework.decorators import (
     api_view,
     permission_classes,
     parser_classes,
 )
-from rest_framework.exceptions import ValidationError
-from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
 
 from django.db.models import Q
 from django.utils.decorators import method_decorator
+from django.http import HttpResponsePermanentRedirect
+from django.conf import settings
 
 from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
@@ -36,10 +37,8 @@ from app.users.signals import send_notify
 from app.users.utils.quota_manager import UserQuotaManager
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
-from app.utils.errorcode import QuestionnaireTypeIdNotFound
 from app.utils.file_work import FileWork
 from app.utils.storage import ServerFileSystem
-from config.settings import IMAGE_FILE_FORMATS, ORDER_COOKIE_KEY_NAME
 from .constants import ErrorMessages, ORDER_STATE_CHOICES
 from .models import (
     OrderFileData,
@@ -54,12 +53,6 @@ from .serializers import (
 )
 from .swagger_documentation import orders as swagger
 
-# from .tasks import (
-#     celery_delete_file_task,
-#     celery_delete_image_task,
-#     celery_upload_file_task_to_answer,
-#     celery_upload_image_task_to_answer,
-# )
 from .utils.files import (
     delete_file,
     delete_image,
@@ -95,7 +88,7 @@ def create_order(request):
         QuestionnaireType.objects.filter(id=order_questionnaire_type).exists()
         is False
     ):
-        raise QuestionnaireTypeIdNotFound
+        raise errorcode.QuestionnaireTypeIdNotFound
     if request.user.is_authenticated:
         user = request.user
     else:
@@ -119,7 +112,10 @@ def create_order(request):
     )
     if not user:
         response.set_cookie(
-            ORDER_COOKIE_KEY_NAME, order.key, samesite="None", secure=True
+            settings.ORDER_COOKIE_KEY_NAME,
+            order.key,
+            samesite="None",
+            secure=True,
         )
     else:
         context = {"order_id": order.id, "user_id": user.id}
@@ -192,8 +188,9 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
+        order = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
         serializer.is_valid()
-        serializer.save(user_account=user)
+        serializer.save(user_account=user, order_id=order)
 
 
 class AllOrdersClientViewSet(viewsets.ModelViewSet):
@@ -340,7 +337,10 @@ def delete_file_order(request):
             quota_manager = UserQuotaManager(request.user)
         else:
             quota_manager = None
-        if file_to_delete.original_name.split(".")[-1] in IMAGE_FILE_FORMATS:
+        if (
+            file_to_delete.original_name.split(".")[-1]
+            in settings.IMAGE_FILE_FORMATS
+        ):
             # task = celery_delete_image_task.delay(file_id)
             response = delete_image(file_id, quota_manager)
         else:
@@ -410,7 +410,7 @@ def attach_file(request, pk: int):
         quota_manager = UserQuotaManager(request.user)
     else:
         quota_manager = None
-    if temp_file.split(".")[-1] in IMAGE_FILE_FORMATS:
+    if temp_file.split(".")[-1] in settings.IMAGE_FILE_FORMATS:
         # task = celery_upload_image_task_to_answer.delay(
         #     temp_file, order_id, user_id, question_id, original_name
         # )

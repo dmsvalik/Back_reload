@@ -7,10 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 
 from .models import OrderModel, OrderOffer, OrderFileData
-from app.main_page.models import ContractorData
 from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
-from app.utils import errorcode
 from app.orders.constants import ORDER_STATE_CHOICES
 
 
@@ -140,6 +138,7 @@ class OfferSerializer(OfferIDSerizalizer):
             "offer_price",
             "offer_execution_time",
             "offer_description",
+            "contactor_key",
         )
 
 
@@ -163,22 +162,22 @@ class OrderOfferSerializer(OfferSerializer):
     def get_order_id(self, value):
         return self.context["view"].kwargs["pk"]
 
-    def validate(self, data):
-        order_id = self.context["view"].kwargs["pk"]
-        if not OrderModel.objects.filter(id=order_id).exists():
-            raise errorcode.OrderIdNotFound()
-        user = self.context["view"].request.user
-        if user.role != "contractor":
-            raise errorcode.NotContractorOffer()
-        # Вот тут надо продумать как автоматически создавать ContractorData
-        # если у пользователя role = 'contractor'
-        if OrderModel.objects.get(id=order_id).state != "offer":
-            raise errorcode.OrderInWrongStatus()
-        if not ContractorData.objects.get(user=user).is_active:
-            raise errorcode.ContractorIsInactive()
-        if OrderOffer.objects.filter(
-            user_account=user, order_id=order_id
-        ).exists():
-            raise errorcode.UniqueOrderOffer()
+    # def validate(self, data):
+    #     order_id = self.context["view"].kwargs["pk"]
+    #     if not OrderModel.objects.filter(id=order_id).exists():
+    #         raise errorcode.OrderIdNotFound()
+    #     user = self.context["view"].request.user
+    #     if user.role != "contractor":
+    #         raise errorcode.NotContractorOffer()
+    #     # Вот тут надо продумать как автоматически создавать ContractorData
+    #     # если у пользователя role = 'contractor'
+    #     if OrderModel.objects.get(id=order_id).state != "offer":
+    #         raise errorcode.OrderInWrongStatus()
+    #     if not ContractorData.objects.get(user=user).is_active:
+    #         raise errorcode.ContractorIsInactive()
+    #     if OrderOffer.objects.filter(
+    #         user_account=user, order_id=order_id
+    #     ).exists():
+    #         raise errorcode.UniqueOrderOffer()
 
-        return data
+    #     return data
