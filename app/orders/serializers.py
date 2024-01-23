@@ -7,10 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 
 from .models import OrderModel, OrderOffer, OrderFileData
-from app.main_page.models import ContractorData
 from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
-from app.utils import errorcode
 from app.orders.constants import ORDER_STATE_CHOICES
 
 
@@ -87,7 +85,7 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         )
         query_filter = {
             "order_id": obj.pk,
-            "offer_status": is_selected,
+            "status": is_selected,
             "order_id__order_time__lt": range_filter,
         }
 
@@ -128,7 +126,7 @@ class OfferHalfSerializer(OfferIDSerizalizer):
         fields = OfferIDSerizalizer.Meta.fields + ("contactor_name", "chat_id")
 
     def get_contactor_name(self, obj):
-        if obj.offer_status:
+        if obj.status:
             return obj.user_account.contractordata.company_name
         return f"Исполнитель {obj.contactor_key}"
 
@@ -141,6 +139,7 @@ class OfferSerializer(OfferIDSerizalizer):
             "offer_execution_time",
             "offer_description",
             "contactor_key",
+            "status",
         )
 
 
@@ -162,25 +161,4 @@ class OrderOfferSerializer(OfferSerializer):
         )
 
     def get_order_id(self, value):
-        return self.context["view"].kwargs["pk"]
-
-    def validate(self, data):
-        request = self.context.get("request")
-        order_id = self.context["view"].kwargs["pk"]
-        user = request.user
-        contactor = ContractorData.objects.filter(user=user).first()
-
-        if (
-            OrderModel.objects.get(id=order_id).state
-            != ORDER_STATE_CHOICES[1][0]
-        ):
-            raise errorcode.OrderInWrongStatus()
-        if not user.is_staff:
-            if not contactor and not contactor.is_active:
-                raise errorcode.ContractorIsInactive()
-        if OrderOffer.objects.filter(
-            user_account=user, order_id=order_id
-        ).exists():
-            raise errorcode.UniqueOrderOffer()
-
-        return data
+        return self.context["view"].kwargs["order_id"]
