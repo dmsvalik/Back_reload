@@ -1,6 +1,7 @@
 from typing import List, Optional
 
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 from app.orders.serializers import (
     AllOrdersClientSerializer,
@@ -13,6 +14,7 @@ from app.questionnaire.serializers import (
 )
 from app.orders.serializers import OrderModelSerializer
 from config.settings import SWAGGER_TAGS, MAX_STORAGE_QUOTA
+from app.orders.constants import OfferState
 
 
 def generate_400_response(fields: List[str]):
@@ -422,21 +424,54 @@ class FileOrderDownload(BaseSwaggerSchema):
     }
 
 
+class OrderOfferList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Получение списка офферов"
+    manual_parameters = (
+        openapi.Parameter(
+            "status",
+            in_=openapi.IN_QUERY,
+            description="Статус заказа",
+            required=False,
+            type=openapi.TYPE_STRING,
+            enum=[i.value for i in OfferState],
+        ),
+    )
+
+
 class OrderOfferRetrieve(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = (
-        "Получение информации о отдельном оффере " "**в разработке**"
-    )
-    deprecated = True
+    operation_summary = "Получение информации о отдельном оффере"
 
 
-class OrderOfferDelete(BaseSwaggerSchema):
+class OrderOfferCreate(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = "Удаление отдельного оффера **в разработке**"
-    deprecated = True
+    operation_summary = "Создание оффера"
+
+
+class OrderOfferPartialUpdate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Частичное изменение отдельного оффера"
 
 
 class OrderOfferUpdate(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = "Изменение отдельного оффера **в разработке"
-    deprecated = True
+    operation_summary = "Изменение отдельного оффера"
+
+
+class OrderOfferDelete(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Удаление отдельного оффера"
+
+
+swagger_offer_set = (
+    (swagger_auto_schema(**OrderOfferList.__dict__), "list"),
+    (swagger_auto_schema(**OrderOfferRetrieve.__dict__), "retrieve"),
+    (swagger_auto_schema(**OrderOfferCreate.__dict__), "create"),
+    (
+        swagger_auto_schema(**OrderOfferPartialUpdate.__dict__),
+        "partial_update",
+    ),
+    (swagger_auto_schema(**OrderOfferUpdate.__dict__), "update"),
+    (swagger_auto_schema(**OrderOfferDelete.__dict__), "destroy"),
+)
