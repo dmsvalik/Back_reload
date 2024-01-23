@@ -1,5 +1,4 @@
 import os
-from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
@@ -16,7 +15,6 @@ from rest_framework.decorators import (
 )
 
 from django.db.models import Q
-from django.utils.decorators import method_decorator
 from django.http import HttpResponsePermanentRedirect
 from django.conf import settings
 
@@ -39,13 +37,13 @@ from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
 from app.utils.file_work import FileWork
 from app.utils.storage import ServerFileSystem
-from .constants import ErrorMessages, ORDER_STATE_CHOICES
+from .constants import ErrorMessages, ORDER_STATE_CHOICES, OfferState
 from .models import (
     OrderFileData,
     OrderModel,
     OrderOffer,
 )
-from .permissions import IsOrderOwner
+from .permissions import IsOrderOwner, OneOfferPerContactor, IsActiveContactor
 from .serializers import (
     AllOrdersClientSerializer,
     OrderOfferSerializer,
@@ -60,6 +58,7 @@ from .utils.files import (
     upload_image_to_answer,
 )
 from .utils.order_state import OrderStateActivate
+from .utils.services import range_filter, parse_query_params, register_method
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -131,18 +130,7 @@ def create_order(request):
     return response
 
 
-@method_decorator(
-    name="retrieve",
-    decorator=swagger_auto_schema(**swagger.OrderOfferRetrieve.__dict__),
-)
-@method_decorator(
-    name="destroy",
-    decorator=swagger_auto_schema(**swagger.OrderOfferDelete.__dict__),
-)
-@method_decorator(
-    name="update",
-    decorator=swagger_auto_schema(**swagger.OrderOfferUpdate.__dict__),
-)
+@register_method(swagger.swagger_offer_set)
 class OrderOfferViewSet(viewsets.ModelViewSet):
     """Поведение Оффера"""
 
@@ -151,36 +139,47 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
     def get_permissions(self):
         permission_classes = [
-            IsAuthenticated,
+            IsAuthenticated(),
         ]
-        if self.action == "list":
-            # уточнить пермишены
-            permission_classes = [
-                IsAuthenticated,
-            ]
         if self.action == "create":
             # уточнить пермишены
-            permission_classes = [
-                IsAuthenticated,
-                IsContractor,
-            ]
-        return [permission() for permission in permission_classes]
+            permission_classes.extend(
+                [
+                    IsContractor(),
+                    IsActiveContactor(),
+                    OneOfferPerContactor(),
+                ]
+            )
+        if self.action == "update":
+            permission_classes.extend(
+                [
+                    IsContractor(),
+                    IsActiveContactor(),
+                ]
+            )
+        return permission_classes
 
     def get_queryset(self):
+        """
+        Фильтрует queryset, добавляет статус
+        к фильтру из query params - если задан.
+        Отдает офферы только если с
+        момента создания заказа прошло > OFFER_ACCESS_HOURS
+        """
         order_id = self._get_order_id()
-        if OrderModel.objects.filter(id=order_id).exists():
-            date = OrderModel.objects.get(id=order_id).order_time
-            if (datetime.now(timezone.utc) - date) > timedelta(hours=24):
-                return OrderOffer.objects.filter(order_id=order_id).all()
-        return []
+        filters: dict = {
+            "order_id": order_id,
+            "order_id__order_time__lt": range_filter(
+                settings.OFFER_ACCESS_HOURS
+            ),
+        }
 
-    def list(self, request, *args, **kwargs):
-        order_id = self._get_order_id()
-        if not OrderModel.objects.filter(id=order_id).exists():
-            raise errorcode.OrderIdNotFound()
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
+        params = self._get_query_params()
+        status = params.get("status", None)
+        if status and status in [state.value for state in OfferState]:
+            filters.update({"status": status})
+        offers = OrderOffer.objects.filter(**filters)
+        return offers
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -194,6 +193,9 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
 
     def _get_offer_id(self):
         return self.kwargs.get("id", None)
+
+    def _get_query_params(self):
+        return parse_query_params(self.request.query_params)
 
 
 class AllOrdersClientViewSet(viewsets.ModelViewSet):
