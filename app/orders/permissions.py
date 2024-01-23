@@ -87,3 +87,4 @@ class OneOfferPerContactor(permissions.BasePermission):
             user_account=user, order_id=order_id
         ).exists():
             raise UniqueOrderOffer()
+        return True
