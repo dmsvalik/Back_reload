@@ -6,6 +6,9 @@ from drf_yasg.openapi import Schema
 
 from datetime import timedelta, datetime
 
+from app.orders.constants import OfferState, OrderState
+from app.orders.models import OrderOffer, OrderModel
+
 
 def range_filter(hours: int) -> datetime:
     """
@@ -34,3 +37,24 @@ def register_method(method_set: tuple[tuple[Schema, str]]):
         return obj
 
     return wrapper
+
+
+def select_offer(obj: OrderOffer, status: str | None) -> None:
+    """
+    При обновлении статуса оффера на selected
+    Меняет все статусы всех остальных офферов
+    которые связаны с эти заказом на archive
+    """
+    if status != OfferState.SELECTED.value:
+        return  # TODO: raise exception
+    offers_order = (
+        OrderOffer.objects.filter(order_id=obj.order_id)
+        .exclude(pk=obj.pk)
+        .all()
+    )
+    for offer in offers_order:
+        offer.status = OfferState.ARCHIVE.value
+    OrderOffer.objects.bulk_update(offers_order, fields=["status"])
+    OrderModel.objects.filter(pk=obj.order_id.pk).update(
+        state=OrderState.SELECTED.value
+    )
