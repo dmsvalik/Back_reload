@@ -58,7 +58,12 @@ from .utils.files import (
     upload_image_to_answer,
 )
 from .utils.order_state import OrderStateActivate
-from .utils.services import range_filter, parse_query_params, register_method
+from .utils.services import (
+    range_filter,
+    parse_query_params,
+    register_method,
+    select_offer,
+)
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -150,7 +155,7 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
                     OneOfferPerContactor(),
                 ]
             )
-        if self.action == "update":
+        if self.action in ("update", "partial_update"):
             permission_classes.extend(
                 [
                     IsContractor(),
@@ -173,10 +178,9 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
                 settings.OFFER_ACCESS_HOURS
             ),
         }
-
         params = self._get_query_params()
         status = params.get("status", None)
-        if status and status in [state.value for state in OfferState]:
+        if status in [state.value for state in OfferState]:
             filters.update({"status": status})
         offers = OrderOffer.objects.filter(**filters)
         return offers
@@ -188,11 +192,17 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         serializer.is_valid()
         serializer.save(user_account=user, order_id=order)
 
+    def perform_update(self, serializer):
+        super().perform_update(serializer)
+        offer = serializer.instance
+        if status := self.request._data:
+            select_offer(offer, status.get("status"))
+
     def _get_order_id(self):
-        return self.kwargs.get("pk")
+        return self.kwargs.get("order_id")
 
     def _get_offer_id(self):
-        return self.kwargs.get("id", None)
+        return self.kwargs.get("id")
 
     def _get_query_params(self):
         return parse_query_params(self.request.query_params)

@@ -17,7 +17,6 @@ urlpatterns = [
                     views.get_answers_to_order,
                     name="get-order-answers",
                 ),
-                path("", include(router.urls)),
                 path(
                     "answers/",
                     views.create_answers_to_order,
@@ -32,6 +31,7 @@ urlpatterns = [
             ]
         ),
     ),
+    path("<int:order_id>/", include(router.urls)),
     path("create/", views.create_order, name="order-create"),
     path(
         "client/all_orders/",
