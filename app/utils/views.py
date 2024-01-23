@@ -1,34 +1,25 @@
-import os
 from uuid import UUID
 
 from celery.result import AsyncResult
 from datetime import datetime, timedelta
 
-from PyPDF2 import PdfWriter, PdfReader
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
-from django.http import FileResponse, HttpResponseNotFound
+# from django.http import FileResponse, HttpResponseNotFound
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+
 from app.products.models import Category
 from django.utils.decorators import method_decorator
 
 from drf_yasg.utils import swagger_auto_schema
 
 from app.users.models import UserAccount
-from app.orders.models import OrderFileData
-from app.orders.models import OrderModel, OrderOffer
-from app.questionnaire.models import Question
-from app.orders.permissions import IsOrderOwner
-from app.utils.permissions import IsContactor
+from app.orders.models import OrderModel, OrderOffer, OrderFileData
 from app.utils.swagger_documentation import utils as swagger
-from config.settings import ttf_file, design_pdf, PDF_DIR
+from app.utils.tasks import celery_get_order_pdf
 from . import errorcode
 
 from .serializers import GalleryImagesSerializer
@@ -173,86 +164,92 @@ class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
             )
 
 
-def draw_order_pdf(items, order_id) -> str:
-    """Function for drawing pdf file"""
-    output_pdf = os.path.join(PDF_DIR, f"output_pdf{order_id}.pdf")
-    pdf = SimpleDocTemplate(output_pdf)
-    flow_obj = []
-    styles = getSampleStyleSheet()
-    styles["Title"].fontName = "Montserrat-Medium"
-    styles["Normal"].fontName = "Montserrat-Medium"
-    styles["Heading1"].fontName = "Montserrat-Medium"
-    styles["Heading2"].fontName = "Montserrat-Medium"
-    pdfmetrics.registerFont(TTFont("Montserrat-Medium", ttf_file))
-    title = Paragraph("Ваш заказ", styles["Title"])
-    flow_obj.append(title)
-    order = items["order"]
-    description = Paragraph(f"{order.order_description}", styles["Heading2"])
-    flow_obj.append(description)
-    for i, question in enumerate(items["questions"], 1):
-        flow_obj.append(
-            Paragraph(
-                f"{i}) {question.text}",
-                style=styles["Normal"],
-            )
-        )
-        response = question.questionresponse_set.filter(order=order).first()
-        if response:
-            flow_obj.append(
-                Paragraph(
-                    f"- {response.response}",
-                    style=styles["Normal"],
-                )
-            )
-        files = question.orderfiledata_set.filter(order_id=order)
-        if files:
-            for file in files:
-                filedata = Paragraph(
-                    f""" <a href={file.server_path}> -
-                                <u>{file.original_name}</u></a> """,
-                    style=styles["Normal"],
-                )
-                flow_obj.append(filedata)
-        flow_obj.append(Spacer(10, 6))
-    pdf.build(flow_obj)
-    new_pdf = PdfReader(output_pdf)
-    output = PdfWriter()
-    for page in new_pdf.pages:
-        existing_pdf = PdfReader(open(design_pdf, "rb"))
-        design_page = existing_pdf.pages[0]
-        design_page.merge_page(page)
-        output.add_page(design_page)
-    output_stream = open(output_pdf, "wb")
-    output.write(output_stream)
-    output_stream.close()
-    return output_pdf
+#
+# def draw_order_pdf(items, order_id) -> str:
+#     """Function for drawing pdf file"""
+#     output_pdf = os.path.join(PDF_DIR, f"output_pdf{order_id}.pdf")
+#     pdf = SimpleDocTemplate(output_pdf)
+#     flow_obj = []
+#     styles = getSampleStyleSheet()
+#     styles["Title"].fontName = "Montserrat-Medium"
+#     styles["Normal"].fontName = "Montserrat-Medium"
+#     styles["Heading1"].fontName = "Montserrat-Medium"
+#     styles["Heading2"].fontName = "Montserrat-Medium"
+#     pdfmetrics.registerFont(TTFont("Montserrat-Medium", ttf_file))
+#     title = Paragraph("Ваш заказ", styles["Title"])
+#     flow_obj.append(title)
+#     order = items["order"]
+#     description = Paragraph(f"{order.order_description}", styles["Heading2"])
+#     flow_obj.append(description)
+#     for i, question in enumerate(items["questions"], 1):
+#         flow_obj.append(
+#             Paragraph(
+#                 f"{i}) {question.text}",
+#                 style=styles["Normal"],
+#             )
+#         )
+#         response = question.questionresponse_set.filter(order=order).first()
+#         if response:
+#             flow_obj.append(
+#                 Paragraph(
+#                     f"- {response.response}",
+#                     style=styles["Normal"],
+#                 )
+#             )
+#         files = question.orderfiledata_set.filter(order_id=order)
+#         if files:
+#             for file in files:
+#                 filedata = Paragraph(
+#                     f""" <a href={file.server_path}> -
+#                                 <u>{file.original_name}</u></a> """,
+#                     style=styles["Normal"],
+#                 )
+#                 flow_obj.append(filedata)
+#         flow_obj.append(Spacer(10, 6))
+#     pdf.build(flow_obj)
+#     new_pdf = PdfReader(output_pdf)
+#     output = PdfWriter()
+#     for page in new_pdf.pages:
+#         existing_pdf = PdfReader(open(design_pdf, "rb"))
+#         design_page = existing_pdf.pages[0]
+#         design_page.merge_page(page)
+#         output.add_page(design_page)
+#     output_stream = open(output_pdf, "wb")
+#     output.write(output_stream)
+#     output_stream.close()
+#     return output_pdf
+#
+#
 
 
 @swagger_auto_schema(**swagger.GetOrderPdf.__dict__)
 @api_view(["GET"])
-@permission_classes([IsContactor | IsOrderOwner])
-def get_order_pdf(request, pk) -> HttpResponseNotFound | FileResponse:
+@permission_classes([AllowAny])
+def get_order_pdf(request, pk) -> Response:
     """Return pdf file"""
-    try:
-        item = OrderModel.objects.filter(id=pk).first()
-        question_id_with_answer = list(
-            item.questionresponse_set.values_list("question_id", flat=True)
-        )
-        question_id_with_files = list(
-            item.orderfiledata_set.values_list("question_id_id", flat=True)
-        )
-        all_questions = Question.objects.filter(
-            chapter__type=item.questionnaire_type
-        )
-        queryset = all_questions.filter(
-            id__in=set(question_id_with_answer + question_id_with_files)
-        )
-        items = {"order": item, "questions": queryset}
-        response = FileResponse(
-            open(draw_order_pdf(items, pk), "rb"),
-            as_attachment=True,
-            content_type="application/pdf",
-        )
-        return response
-    except AttributeError:
-        return HttpResponseNotFound("Такого заказа не существует")
+    task = celery_get_order_pdf(pk)
+    return Response({"task_id": task.id})
+
+    # try:
+    #     item = OrderModel.objects.filter(id=pk).first()
+    #     question_id_with_answer = list(
+    #         item.questionresponse_set.values_list("question_id", flat=True)
+    #     )
+    #     question_id_with_files = list(
+    #         item.orderfiledata_set.values_list("question_id_id", flat=True)
+    #     )
+    #     all_questions = Question.objects.filter(
+    #         chapter__type=item.questionnaire_type
+    #     )
+    #     queryset = all_questions.filter(
+    #         id__in=set(question_id_with_answer + question_id_with_files)
+    #     )
+    #     items = {"order": item, "questions": queryset}
+    #     response = FileResponse(
+    #         open(draw_order_pdf(items, pk), "rb"),
+    #         as_attachment=True,
+    #         content_type="application/pdf",
+    #     )
+    #     return response
+    # except AttributeError:
+    #     return HttpResponseNotFound("Такого заказа не существует")
