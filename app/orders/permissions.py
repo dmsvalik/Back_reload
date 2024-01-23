@@ -1,7 +1,12 @@
 from rest_framework import permissions
 
-from app.orders.models import OrderFileData, OrderModel
-from app.utils.errorcode import FileNotFound
+from app.orders.models import OrderFileData, OrderModel, OrderOffer
+from app.main_page.models import ContractorData
+from app.utils.errorcode import (
+    FileNotFound,
+    UniqueOrderOffer,
+    ContractorIsInactive,
+)
 from config.settings import ORDER_COOKIE_KEY_NAME
 
 
@@ -60,3 +65,25 @@ class IsFileExistById(permissions.BasePermission):
         )
 
         return OrderModel.objects.filter(id=file_id).exists()
+
+
+class IsActiveContactor(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        contactor = ContractorData.objects.filter(user=user).first()
+
+        if not user.is_staff:
+            if not contactor and not contactor.is_active:
+                raise ContractorIsInactive()
+        return True
+
+
+class OneOfferPerContactor(permissions.BasePermission):
+    def has_permission(self, request, view):
+        user = request.user
+        order_id = view.kwargs.get("id")
+
+        if OrderOffer.objects.filter(
+            user_account=user, order_id=order_id
+        ).exists():
+            raise UniqueOrderOffer()
