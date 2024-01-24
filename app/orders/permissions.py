@@ -1,11 +1,13 @@
 from rest_framework import permissions
 
+from .constants import OrderState
 from app.orders.models import OrderFileData, OrderModel, OrderOffer
 from app.main_page.models import ContractorData
 from app.utils.errorcode import (
     FileNotFound,
     UniqueOrderOffer,
     ContractorIsInactive,
+    OrderInWrongStatus,
 )
 from config.settings import ORDER_COOKIE_KEY_NAME
 
@@ -68,6 +70,11 @@ class IsFileExistById(permissions.BasePermission):
 
 
 class IsActiveContactor(permissions.BasePermission):
+    """
+    Является ли исполнитель активным,
+    пропускает юзера с правами staff
+    """
+
     def has_permission(self, request, view):
         user = request.user
         contactor = ContractorData.objects.filter(user=user).first()
@@ -79,12 +86,31 @@ class IsActiveContactor(permissions.BasePermission):
 
 
 class OneOfferPerContactor(permissions.BasePermission):
+    """
+    Ограничение на создание нескольких предложений
+    к одному заказу от 1 исполнителя
+    """
+
     def has_permission(self, request, view):
         user = request.user
-        order_id = view.kwargs.get("id")
+        order_id = view.kwargs.get("order_id")
 
         if OrderOffer.objects.filter(
             user_account=user, order_id=order_id
         ).exists():
             raise UniqueOrderOffer()
         return True
+
+
+class OfferCanCreated(permissions.BasePermission):
+    """
+    Позволяет ли статус заказа создать на него оффер
+    """
+
+    def has_permission(self, request, view):
+        order = OrderModel.objects.filter(
+            pk=view.kwargs.get("order_id")
+        ).first()
+        if order.state == OrderState.OFFER.value:
+            return True
+        raise OrderInWrongStatus()

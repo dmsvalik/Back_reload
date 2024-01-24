@@ -43,7 +43,7 @@ from .models import (
     OrderModel,
     OrderOffer,
 )
-from .permissions import IsOrderOwner, OneOfferPerContactor, IsActiveContactor
+from . import permissions as perm
 from .serializers import (
     AllOrdersClientSerializer,
     OrderOfferSerializer,
@@ -150,16 +150,17 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
             # уточнить пермишены
             permission_classes.extend(
                 [
+                    perm.OfferCanCreated(),
                     IsContractor(),
-                    IsActiveContactor(),
-                    OneOfferPerContactor(),
+                    perm.IsActiveContactor(),
+                    perm.OneOfferPerContactor(),
                 ]
             )
         if self.action in ("update", "partial_update"):
             permission_classes.extend(
                 [
                     IsContractor(),
-                    IsActiveContactor(),
+                    perm.IsActiveContactor(),
                 ]
             )
         return permission_classes
@@ -249,7 +250,7 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
 
 @swagger_auto_schema(**swagger.QuestionnaireResponsePost.__dict__)
 @api_view(["POST"])
-@permission_classes([IsOrderOwner])
+@permission_classes([perm.IsOrderOwner])
 def create_answers_to_order(request, pk):
     """
     Создание ответов на вопросы к заказу.
@@ -318,7 +319,7 @@ def create_answers_to_order(request, pk):
 
 @swagger_auto_schema(**swagger.QuestionnaireResponseGet.__dict__)
 @api_view(["GET"])
-@permission_classes([IsOrderOwner])
+@permission_classes([perm.IsOrderOwner])
 def get_answers_to_order(request, pk):
     """
     Получение ответов на вопросы к заказу.
@@ -376,7 +377,7 @@ def delete_file_order(request):
 
 @swagger_auto_schema(**swagger.AttachFileAnswerPost.__dict__)
 @api_view(["POST"])
-@permission_classes([IsOrderOwner])
+@permission_classes([perm.IsOrderOwner])
 @parser_classes([MultiPartParser])
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
@@ -513,7 +514,7 @@ class OrderStateActivateView(views.APIView):
     Активирует заказ меняя его статус на offer
     """
 
-    permission_classes = (IsAuthenticated, IsOrderOwner)
+    permission_classes = (IsAuthenticated, perm.IsOrderOwner)
 
     def get_object(self) -> OrderModel:
         instance = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
