@@ -25,7 +25,7 @@ def draw_order_pdf(items: dict, order_id: int, user_id: int) -> str:
 
     output_pdf = os.path.join(
         BASE_DIR,
-        "media",
+        "files",
         str(user_id),
         str(order_id),
         f"worksheet_{order_id}.pdf",
