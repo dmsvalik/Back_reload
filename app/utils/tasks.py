@@ -15,19 +15,20 @@ from app.orders.models import OrderModel, WorksheetFile
 from app.questionnaire.models import Question
 
 from celery import shared_task
-from django.contrib.auth import get_user_model
 from celery.utils.log import get_task_logger
-
-User = get_user_model()
 
 logger = get_task_logger(__name__)
 
 
-def draw_order_pdf(items, order_id, user_id) -> str:
+def draw_order_pdf(items: dict, order_id: int, user_id: int) -> str:
     """Function for drawing pdf file"""
 
     output_pdf = os.path.join(
-        BASE_DIR, "files", user_id, order_id, f"worksheet_{order_id}.pdf"
+        BASE_DIR,
+        "media",
+        str(user_id),
+        str(order_id),
+        f"worksheet_{order_id}.pdf",
     )
     pdf = SimpleDocTemplate(output_pdf)
     flow_obj = []
@@ -85,8 +86,8 @@ def draw_order_pdf(items, order_id, user_id) -> str:
 def celery_get_order_pdf(order_id):
     """Return pdf file"""
     try:
-        user = User.objects.get(order_id=order_id)
         item = OrderModel.objects.filter(id=order_id).first()
+        user = item.user_account
         question_id_with_answer = list(
             item.questionresponse_set.values_list("question_id", flat=True)
         )
@@ -105,19 +106,18 @@ def celery_get_order_pdf(order_id):
         worksheet = WorksheetFile.objects.create(
             order_id=order_id,
             original_name=file_name,
-            server_path=user.id / order_id / file_name,
+            server_path=f"{user.id}/{order_id}/{file_name}",
         )
         yandex = CloudStorage()
         result = yandex.cloud_upload_image(
             output_pdf, user.id, order_id, file_name
         )
         if result["status_code"] == status.HTTP_201_CREATED:
-            worksheet.yandex_path = user.id / order_id / file_name
+            worksheet.yandex_path = f"{user.id}/{order_id}/{file_name}"
+            if os.path.exists(output_pdf):
+                os.remove(output_pdf)
+                worksheet.server_path = ""
             worksheet.save()
-        if os.path.exists(output_pdf):
-            os.remove(output_pdf)
-            worksheet.server_path = ""
-        worksheet.save()
         return {"status": "SUCCESS", "response": "Файл создан"}
     except AttributeError:
         return logger.error(f"Заказ с номером {order_id} не найден")

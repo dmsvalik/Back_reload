@@ -3,7 +3,7 @@ from uuid import UUID
 from celery.result import AsyncResult
 from datetime import datetime, timedelta
 
-# from django.http import FileResponse, HttpResponseNotFound
+from django.http import HttpResponseNotFound
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAdminUser, AllowAny
@@ -225,10 +225,13 @@ class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
 @swagger_auto_schema(**swagger.GetOrderPdf.__dict__)
 @api_view(["GET"])
 @permission_classes([AllowAny])
-def get_order_pdf(request, pk) -> Response:
+def get_order_pdf(request, pk) -> Response | HttpResponseNotFound:
     """Return pdf file"""
-    task = celery_get_order_pdf(pk)
-    return Response({"task_id": task.id})
+    try:
+        task = celery_get_order_pdf(pk)
+        return Response({"task_id": task.id})
+    except AttributeError:
+        return HttpResponseNotFound("Такого заказа не существует")
 
     # try:
     #     item = OrderModel.objects.filter(id=pk).first()
