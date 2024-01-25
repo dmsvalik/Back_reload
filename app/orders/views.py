@@ -140,7 +140,6 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
     """Поведение Оффера"""
 
     serializer_class = OrderOfferSerializer
-    lookup_field = "id"
 
     def get_permissions(self):
         permission_classes = [
@@ -172,23 +171,29 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         Отдает офферы только если с
         момента создания заказа прошло > OFFER_ACCESS_HOURS
         """
-        order_id = self._get_order_id()
+        pk = self.kwargs.get("pk")
         filters: dict = {
-            "order_id": order_id,
             "order_id__order_time__lt": range_filter(
                 settings.OFFER_ACCESS_HOURS
             ),
         }
+
+        if self.action in ("create", "list"):
+            filters.update({"order_id": pk})
+        else:
+            filters.update({"pk": pk})
+
         params = self._get_query_params()
         status = params.get("status", None)
         if status in [state.value for state in OfferState]:
             filters.update({"status": status})
+
         offers = OrderOffer.objects.filter(**filters)
         return offers
 
     def perform_create(self, serializer):
         user = self.request.user
-        order_id = self._get_order_id()
+        order_id = self.kwargs.get("pk")
         order = OrderModel.objects.filter(pk=order_id).first()
         serializer.is_valid()
         serializer.save(user_account=user, order_id=order)
@@ -198,12 +203,6 @@ class OrderOfferViewSet(viewsets.ModelViewSet):
         offer = serializer.instance
         if status := self.request._data:
             select_offer(offer, status.get("status"))
-
-    def _get_order_id(self):
-        return self.kwargs.get("order_id")
-
-    def _get_offer_id(self):
-        return self.kwargs.get("id")
 
     def _get_query_params(self):
         return parse_query_params(self.request.query_params)

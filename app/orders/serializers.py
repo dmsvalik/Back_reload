@@ -161,4 +161,4 @@ class OrderOfferSerializer(OfferSerializer):
         )
 
     def get_order_id(self, value):
-        return self.context["view"].kwargs["order_id"]
+        return self.context["view"].kwargs["pk"]

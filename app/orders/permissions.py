@@ -8,6 +8,7 @@ from app.utils.errorcode import (
     UniqueOrderOffer,
     ContractorIsInactive,
     OrderInWrongStatus,
+    OrderIdNotFound,
 )
 from config.settings import ORDER_COOKIE_KEY_NAME
 
@@ -93,7 +94,7 @@ class OneOfferPerContactor(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        order_id = view.kwargs.get("order_id")
+        order_id = view.kwargs.get("pk")
 
         if OrderOffer.objects.filter(
             user_account=user, order_id=order_id
@@ -108,9 +109,10 @@ class OfferCanCreated(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        order = OrderModel.objects.filter(
-            pk=view.kwargs.get("order_id")
-        ).first()
+        print(view.kwargs.get("pk"))
+        order = OrderModel.objects.filter(pk=view.kwargs.get("pk")).first()
+        if not order:
+            raise OrderIdNotFound()
         if order.state == OrderState.OFFER.value:
             return True
         raise OrderInWrongStatus()
