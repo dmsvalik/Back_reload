@@ -1,15 +1,11 @@
 from django.urls import path, include
-from rest_framework import routers
 
 from . import views
 
-router = routers.DefaultRouter()
-# all offers method
-router.register("offers", views.OrderOfferViewSet, "offers")
 
 urlpatterns = [
     path(
-        "<int:pk>/",
+        "orders/<int:pk>/",
         include(
             [
                 path(
@@ -28,10 +24,15 @@ urlpatterns = [
                     name="order-activate",
                 ),
                 path("files/", views.attach_file, name="file attach"),
+                path(
+                    "offers/",
+                    views.OrderOfferViewSet.as_view(
+                        {"get": "list", "post": "create"}
+                    ),
+                ),
             ]
         ),
     ),
-    path("<int:order_id>/", include(router.urls)),
     path("create/", views.create_order, name="order-create"),
     path(
         "client/all_orders/",
@@ -46,5 +47,16 @@ urlpatterns = [
         "download/<str:file_id>/",
         views.get_download_file_link,
         name="get-download-link",
+    ),
+    path(
+        "offers/<int:pk>",
+        views.OrderOfferViewSet.as_view(
+            {
+                "get": "retrieve",
+                "put": "update",
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
     ),
 ]
