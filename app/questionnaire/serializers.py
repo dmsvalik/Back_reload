@@ -63,7 +63,7 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ["id", "question_id", "response", "files"]
+        fields = ["question_id", "response", "files"]
 
     def get_response(self, question: Question):
         question_response = QuestionResponse.objects.filter(

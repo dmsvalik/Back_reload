@@ -322,6 +322,25 @@ def get_answers_to_order(request, pk):
     return Response(serializer.data)
 
 
+@swagger_auto_schema(**swagger.QuestionnaireResponseLastGet.__dict__)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_answers_to_last_order(request):
+    """
+    Получение ответов на вопросы к последнему заказу в статусе черновика.
+    URL: http://localhost/order/last/
+    METHOD - "GET"
+    """
+    user = request.user
+    order = OrderModel.objects.filter(
+        user_account=user, state=ORDER_STATE_CHOICES[1][0]
+    ).last()
+    if not order:
+        raise errorcode.OrderIdNotFound()
+    serializer = OrderFullSerializer(order)
+    return Response(serializer.data)
+
+
 @swagger_auto_schema(**swagger.FileOrderDelete.__dict__)
 @api_view(["DELETE"])
 @permission_classes([IsOrderFileDataOwnerWithoutUser])
