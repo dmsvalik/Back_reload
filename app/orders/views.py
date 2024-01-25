@@ -41,11 +41,7 @@ from app.utils.file_work import FileWork
 from app.utils.storage import ServerFileSystem
 from config.settings import IMAGE_FILE_FORMATS, ORDER_COOKIE_KEY_NAME
 from .constants import ErrorMessages, ORDER_STATE_CHOICES
-from .models import (
-    OrderFileData,
-    OrderModel,
-    OrderOffer,
-)
+from .models import OrderFileData, OrderModel, OrderOffer, WorksheetFile
 from .permissions import IsOrderOwner
 from .serializers import (
     AllOrdersClientSerializer,
@@ -477,7 +473,7 @@ def get_download_file_link(request, file_id) -> Any:
         UUID(str(file_id))
     except ValueError:
         raise errorcode.FileNotFound()
-    file_models = (OrderFileData,)
+    file_models = (OrderFileData, WorksheetFile)
     file = None
     for file_model in file_models:
         file = file_model.objects.filter(id=file_id.strip()).first()

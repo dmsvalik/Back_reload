@@ -172,3 +172,20 @@ class GetTaskStatus(BaseSwaggerSchema):
         "вернется и сам результат выполнения."
     )
     method = "get"
+
+
+class GetOrderPdf(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_summary = "Получение pdf анкеты заказа"
+    operation_description = (
+        "Получение pdf с картинками и ответами анкеты заказа "
+    )
+    method = "get"
+    responses = {
+        200: openapi.Response(
+            "A PDF file",
+            schema=openapi.Schema(
+                type=openapi.TYPE_FILE,
+            ),
+        )
+    }
