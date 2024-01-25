@@ -1,6 +1,12 @@
 from django.contrib import admin
 
-from .models import FileData, OrderFileData, OrderModel, OrderOffer
+from .models import (
+    FileData,
+    OrderFileData,
+    OrderModel,
+    OrderOffer,
+    WorksheetFile,
+)
 
 
 @admin.register(OrderModel)
@@ -47,6 +53,18 @@ class OrderFileDataAdmin(admin.ModelAdmin):
         "original_name",
         "order_id",
         "question_id",
+        "date_upload",
+    ]
+    readonly_fields = ("id",)
+
+
+@admin.register(WorksheetFile)
+class WorksheetFile(admin.ModelAdmin):
+    """Админка для генерации pdf файлов пользователя."""
+
+    list_display = [
+        "original_name",
+        "order_id",
         "date_upload",
     ]
     readonly_fields = ("id",)

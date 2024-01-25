@@ -22,14 +22,15 @@ logger = get_task_logger(__name__)
 
 def draw_order_pdf(items: dict, order_id: int, user_id: int) -> str:
     """Function for drawing pdf file"""
-
+    output_directory = os.path.join(
+        BASE_DIR, "files", str(user_id), str(order_id)
+    )
     output_pdf = os.path.join(
-        BASE_DIR,
-        "files",
-        str(user_id),
-        str(order_id),
+        output_directory,
         f"worksheet_{order_id}.pdf",
     )
+    if not os.path.exists(output_directory):
+        os.makedirs(output_directory)
     pdf = SimpleDocTemplate(output_pdf)
     flow_obj = []
     styles = getSampleStyleSheet()
@@ -76,48 +77,48 @@ def draw_order_pdf(items: dict, order_id: int, user_id: int) -> str:
         design_page = existing_pdf.pages[0]
         design_page.merge_page(page)
         output.add_page(design_page)
-    output_stream = open(output_pdf, "wb")
-    output.write(output_stream)
-    output_stream.close()
+    with open(output_pdf, "wb") as output_stream:
+        output.write(output_stream)
+        output_stream.close()
     return output_pdf
 
 
 @shared_task()
 def celery_get_order_pdf(order_id):
     """Return pdf file"""
-    try:
-        item = OrderModel.objects.filter(id=order_id).first()
-        user = item.user_account
-        question_id_with_answer = list(
-            item.questionresponse_set.values_list("question_id", flat=True)
-        )
-        question_id_with_files = list(
-            item.orderfiledata_set.values_list("question_id_id", flat=True)
-        )
-        all_questions = Question.objects.filter(
-            chapter__type=item.questionnaire_type
-        )
-        queryset = all_questions.filter(
-            id__in=set(question_id_with_answer + question_id_with_files)
-        )
-        items = {"order": item, "questions": queryset}
-        output_pdf = draw_order_pdf(items, order_id, user.id)
-        file_name = output_pdf.split("/")[-1]
-        worksheet = WorksheetFile.objects.create(
-            order_id=order_id,
-            original_name=file_name,
-            server_path=f"{user.id}/{order_id}/{file_name}",
-        )
-        yandex = CloudStorage()
-        result = yandex.cloud_upload_image(
-            output_pdf, user.id, order_id, file_name
-        )
-        if result["status_code"] == status.HTTP_201_CREATED:
-            worksheet.yandex_path = f"{user.id}/{order_id}/{file_name}"
-            if os.path.exists(output_pdf):
-                os.remove(output_pdf)
-                worksheet.server_path = ""
-            worksheet.save()
-        return {"status": "SUCCESS", "response": "Файл создан"}
-    except AttributeError:
-        return logger.error(f"Заказ с номером {order_id} не найден")
+    item = OrderModel.objects.filter(id=order_id).first()
+    user = item.user_account
+    question_id_with_answer = list(
+        item.questionresponse_set.values_list("question_id", flat=True)
+    )
+    question_id_with_files = list(
+        item.orderfiledata_set.values_list("question_id_id", flat=True)
+    )
+    all_questions = Question.objects.filter(
+        chapter__type=item.questionnaire_type
+    )
+    queryset = all_questions.filter(
+        id__in=set(question_id_with_answer + question_id_with_files)
+    )
+    items = {"order": item, "questions": queryset}
+    output_pdf = draw_order_pdf(items, order_id, user.id)
+    file_name = output_pdf.split("/")[-1]
+    worksheet = WorksheetFile.objects.create(
+        order_id=item,
+        original_name=file_name,
+        server_path=f"{user.id}/{order_id}/{file_name}",
+        yandex_path="",
+        yandex_size=0,
+        server_size=0,
+    )
+    yandex = CloudStorage()
+    result = yandex.cloud_upload_image(
+        output_pdf, user.id, order_id, file_name
+    )
+    if result["status_code"] == status.HTTP_201_CREATED:
+        worksheet.yandex_path = f"{user.id}/{order_id}/{file_name}"
+        if os.path.exists(output_pdf):
+            os.remove(output_pdf)
+            worksheet.server_path = ""
+        worksheet.save()
+    return {"status": "SUCCESS", "response": "Файл создан"}
