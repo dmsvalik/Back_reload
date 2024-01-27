@@ -364,9 +364,7 @@ class QuestionnaireResponseLastGet(BaseSwaggerSchema):
         SWAGGER_TAGS.get("order"),
     ]
     operation_id = "get-last-order-answers"
-    operation_summary = (
-        "Получение ответов на вопросов анкеты к последнему заказу"
-    )
+    operation_summary = "Получение ответов на вопросов анкеты к последнему заказу в статусе черновик."
     operation_description = (
         "Используйте этот метод для получения ответов на вопросов анкеты к последнему заказу."
         "\n\n**Ограничения:**\n"
