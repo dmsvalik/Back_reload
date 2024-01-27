@@ -329,7 +329,7 @@ def get_answers_to_last_order(request):
     """
     user = request.user
     order = OrderModel.objects.filter(
-        user_account=user, state=ORDER_STATE_CHOICES[1][0]
+        user_account=user, state=ORDER_STATE_CHOICES[0][0]
     ).last()
     if not order:
         raise errorcode.OrderIdNotFound()
