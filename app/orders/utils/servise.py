@@ -1,5 +1,5 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, List, Dict
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
@@ -46,5 +46,5 @@ def create_celery_beat_task(
         task="app.orders.tasks.celery_update_order_file_data_tusk",
         interval=schedule,
         kwargs=json.dumps(data),
-        start_time=datetime.now() + timedelta(minutes=1),
+        start_time=datetime.now(timezone.utc) + timedelta(minutes=1),
     )

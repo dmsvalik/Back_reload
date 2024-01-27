@@ -215,7 +215,6 @@ class CloudStorage:
         res = requests.post(
             url=f"{self.URL}/copy", params=data, headers=self.headers
         )
-        print(res.json())
         if res.status_code == 201:
             return True
         elif res.status_code == 202:
