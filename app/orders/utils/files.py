@@ -224,7 +224,9 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
         user_id=user_id, order_id=new_order_id, not_check=True
     )
     operation_id = file.cloud_copy_files(path_to, path_from, overwrite=True)
-    create_celery_beat_task(new_order_id, operation_id, path_to, user_id)
+
+    if type(operation_id) is str:
+        create_celery_beat_task(new_order_id, operation_id, path_to, user_id)
 
 
 def update_order_file_data(
@@ -245,13 +247,13 @@ def update_order_file_data(
     yandex = CloudStorage()
     state = yandex.check_status_operation(operation_id)
     task = PeriodicTask.objects.get(name=f"update_files_{order_id}")
+    task.total_run_count += 1
+    task.save()
     if state == "success":
         db = CloneOrderDB(new_order_id=order_id, user_id=user_id)
         db.update_order_file_data(path_to)
         task.delete()
     elif state == "failed":
         task.delete()
-    task.total_run_count += 1
-    task.save()
     if state == "in-progress" and task.total_run_count >= 3:
         task.delete()
