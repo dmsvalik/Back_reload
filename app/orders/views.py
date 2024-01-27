@@ -539,20 +539,20 @@ class CloneOrderView(CreateAPIView):
         URL: http://localhost/order/clone/
         METHOD - "POST"
         pk:int (обязательное) - id заказа к которому крепится файл,
-        Данные которые передаются через form-data
+        Данные передаваемые в запросе:
             - order_id: int - id заказа который необходимо клонировать,
         @return: Response object {"new_order_id": int}
         """
         old_order_id = request.data.get("order_id")
-        user = self.request.user
+        user_id = OrderModel.objects.get(pk=old_order_id).user_account.pk
 
-        db = CloneOrderDB(user_id=user.pk, old_order_id=old_order_id)
+        db = CloneOrderDB(user_id=user_id, old_order_id=old_order_id)
         db.clone_order()
         db.clone_order_question_response()
         db.clone_order_file_data()
 
         celery_copy_order_file_task.delay(
-            user.pk, old_order_id, db.new_order_id
+            user_id, old_order_id, db.new_order_id
         )
 
         return Response(
