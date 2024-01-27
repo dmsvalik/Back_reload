@@ -196,6 +196,10 @@ class CustomTokenViewBase(TokenViewBase):
         """
         serializer = self.get_serializer(data=request.data)
 
+        # приведение 'email' в нижний регистр
+        if "email" in request.data:
+            request.data["email"] = request.data["email"].lower()
+
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
