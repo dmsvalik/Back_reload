@@ -1,7 +1,10 @@
+import datetime
+
 from django.dispatch import Signal
 from django.db.models import QuerySet
+from django.db.models.signals import post_save
 
-from app.users.models import UserAccount
+from app.users.models import UserAccount, UserQuota, UserAgreement
 from app.orders.constants import ORDER_STATE_CHOICES as STATE_CHOICES
 from app.orders.models import OrderModel, OrderFileData
 from app.users.utils.quota_manager import UserQuotaManager
@@ -76,3 +79,18 @@ class SendNotifySignal:
 
 quota_recalculate.connect(QuotaRecalculateSignal())
 send_notify.connect(SendNotifySignal())
+
+
+def create_userquota_and_agreement(sender, instance, created, **kwargs):
+    """
+    Создание объекта уведомления пользователя по email
+    при создании пользователя.
+    """
+    if created:
+        UserQuota.objects.create(user=instance)
+        UserAgreement.objects.create(
+            user_account=instance, date=datetime.date.today()
+        )
+
+
+post_save.connect(create_userquota_and_agreement, sender=UserAccount)
