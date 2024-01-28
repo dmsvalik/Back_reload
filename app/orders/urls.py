@@ -26,9 +26,7 @@ urlpatterns = [
                 path("files/", views.attach_file, name="file attach"),
                 path(
                     "offers/",
-                    views.OrderOfferViewSet.as_view(
-                        {"get": "list", "post": "create"}
-                    ),
+                    views.OrderOfferView.as_view(),
                 ),
             ]
         ),
@@ -47,16 +45,5 @@ urlpatterns = [
         "download/<str:file_id>/",
         views.get_download_file_link,
         name="get-download-link",
-    ),
-    path(
-        "offers/<int:pk>",
-        views.OrderOfferViewSet.as_view(
-            {
-                "get": "retrieve",
-                "put": "update",
-                "patch": "partial_update",
-                "delete": "destroy",
-            }
-        ),
     ),
 ]

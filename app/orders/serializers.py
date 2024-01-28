@@ -7,9 +7,8 @@ from django.conf import settings
 from django.utils import timezone
 
 from .models import OrderModel, OrderOffer, OrderFileData
-from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
-from app.orders.constants import ORDER_STATE_CHOICES
+from app.orders.constants import ORDER_STATE_CHOICES, OfferState
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -94,71 +93,84 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             .select_related("user_account")
             .select_related("user_account__contractordata")
         )
-        serializer = OfferHalfSerializer(
+        serializer = OfferSerizalizer(
             instance=queryset,
             many=True,
         )
         return serializer.data
 
 
-class OfferIDSerizalizer(serializers.ModelSerializer):
+class OfferSerizalizer(serializers.ModelSerializer):
     """
     Базовый класс для сериализатора модели Offer
     """
 
     class Meta:
         model = OrderOffer
-        fields = ("id",)
-
-
-class OfferHalfSerializer(OfferIDSerizalizer):
-    """
-    Сериализатор для вывода полей
-    :id - ID оффера
-    :contactor_key - номер исполнителч
-    :chat_id: ID чата этого оффера
-    """
-
-    chat_id = serializers.IntegerField(source="chat.pk")
-    contactor_name = serializers.SerializerMethodField()
-
-    class Meta(OfferIDSerizalizer.Meta):
-        fields = OfferIDSerizalizer.Meta.fields + ("contactor_name", "chat_id")
-
-    def get_contactor_name(self, obj):
-        if obj.status:
-            return obj.user_account.contractordata.company_name
-        return f"Исполнитель {obj.contactor_key}"
-
-
-class OfferSerializer(OfferIDSerizalizer):
-    class Meta(OfferIDSerizalizer.Meta):
-        fields = OfferIDSerizalizer.Meta.fields + (
+        fields = (
             "id",
             "offer_price",
             "offer_execution_time",
             "offer_description",
-            "contactor_key",
             "status",
         )
 
 
-class OrderOfferSerializer(OfferSerializer):
-    user_account = UserAccountSerializer(
-        read_only=True, default=serializers.CurrentUserDefault()
-    )
-    order_id = serializers.SerializerMethodField(read_only=True)
+class OfferOrderSerializer(OfferSerizalizer):
+    """
+    :contactor_key - номер исполнителч
+    :chat_id - ID чата этого оффера
+    :files - файлы заказа
+    """
 
-    class Meta(OfferSerializer.Meta):
-        fields = OfferSerializer.Meta.fields + (
-            "user_account",
-            "order_id",
-        )
-        read_only_fields = (
-            "id",
-            "user_account",
-            "order_id",
+    chat_id = serializers.IntegerField(source="chat.pk")
+    contactor_name = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
+
+    class Meta(OfferSerizalizer.Meta):
+        fields = OfferSerizalizer.Meta.fields + (
+            "contactor_name",
+            "chat_id",
+            "files",
         )
 
-    def get_order_id(self, value):
-        return self.context["view"].kwargs["pk"]
+    def get_contactor_name(self, obj):
+        """
+        Возвращает название компании исполнителя
+        если статус оффера == selected
+        Или возвращает номер исполнителя
+        как счетчик количества предложений к заказу
+        """
+        if obj.status == OfferState.SELECTED.value:
+            return obj.user_account.contractordata.company_name
+        return f"Исполнитель {obj.contactor_key}"
+
+    def get_files(self, obj):
+        queryset = OrderFileData.objects.filter(order_id=obj.order_id).all()
+        serializer = FileSerializer(instance=queryset, many=True)
+        return serializer.data
+
+
+class OfferContactorSerializer(OfferSerizalizer):
+    """
+    :order_name - название заказа
+    :chat_id - ID чата
+    :images - картинки оффера
+    :file - файл с тз
+    :task - задача заказа
+    """
+
+    chat_id = serializers.IntegerField(source="chat.pk")
+    order_name = serializers.CharField(source="order_id.name")
+    images = serializers.CharField(default=None)
+    file = serializers.CharField(default=None)
+    task = serializers.CharField(default=None)
+
+    class Meta(OfferSerizalizer.Meta):
+        fields = OfferSerizalizer.Meta.fields + (
+            "order_name",
+            "chat_id",
+            "images",
+            "file",
+            "task",
+        )
