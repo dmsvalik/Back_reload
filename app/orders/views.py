@@ -14,7 +14,7 @@ from rest_framework.decorators import (
     parser_classes,
 )
 
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from django.http import HttpResponsePermanentRedirect
 from django.conf import settings
 
@@ -150,7 +150,29 @@ class OrderOfferView(generics.ListAPIView):
 
     def get_queryset(self):
         order_id = self.kwargs.get("pk")
-        offers = OrderOffer.objects.filter(order_id=order_id).all()
+        offers = (
+            OrderOffer.objects.filter(order_id=order_id)
+            .select_related("order_id", "chat", "user_account__contractordata")
+            .prefetch_related(
+                Prefetch(lookup="order_id__orderfiledata_set", to_attr="files")
+            )
+            .only(
+                "id",
+                "user_account_id",
+                "order_id_id",
+                "offer_price",
+                "offer_execution_time",
+                "offer_description",
+                "contactor_key",
+                "status",
+                "user_account__id",
+                "user_account__contractordata__user_id",
+                "user_account__contractordata__company_name",
+                "order_id__id",
+                "chat__id",
+            )
+            .all()
+        )
         return offers
 
 
@@ -166,10 +188,30 @@ class ContactorOfferView(generics.ListAPIView):
 
     def get_queryset(self):
         contactor_id = self.kwargs.get("pk")
-        contactor = ContractorData.objects.filter(pk=contactor_id).first()
-        return OrderOffer.objects.filter(
-            user_account_id=contactor.user_id
-        ).all()
+        contactor = (
+            ContractorData.objects.filter(pk=contactor_id)
+            .only("user_id")
+            .first()
+        )
+        offers = (
+            OrderOffer.objects.filter(user_account_id=contactor.user_id)
+            .select_related("order_id", "chat")
+            .only(
+                "id",
+                "user_account_id",
+                "order_id_id",
+                "offer_price",
+                "offer_execution_time",
+                "offer_description",
+                "contactor_key",
+                "status",
+                "order_id__id",
+                "order_id__name",
+                "chat__id",
+            )
+            .all()
+        )
+        return offers
 
 
 class AllOrdersClientViewSet(viewsets.ModelViewSet):

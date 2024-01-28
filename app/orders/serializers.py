@@ -146,8 +146,7 @@ class OfferOrderSerializer(OfferSerizalizer):
         return f"Исполнитель {obj.contactor_key}"
 
     def get_files(self, obj):
-        queryset = OrderFileData.objects.filter(order_id=obj.order_id).all()
-        serializer = FileSerializer(instance=queryset, many=True)
+        serializer = FileSerializer(instance=obj.order_id.files, many=True)
         return serializer.data
 
 
