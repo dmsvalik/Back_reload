@@ -5,7 +5,7 @@ from drf_yasg.utils import swagger_auto_schema
 
 from app.orders.serializers import (
     AllOrdersClientSerializer,
-    OrderOfferSerializer,
+    OfferOrderSerializer,
 )
 from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
@@ -107,7 +107,7 @@ class OfferGetList(BaseSwaggerSchema):
     request_body = None
     responses = {
         200: openapi.Response(
-            "Success response", OrderOfferSerializer(many=True)
+            "Success response", OfferOrderSerializer(many=True)
         ),
         404: DEFAULT_RESPONSES[404],
     }
@@ -202,7 +202,7 @@ class OfferCreate(BaseSwaggerSchema):
         },
     )
     responses = {
-        201: openapi.Response("Success response", OrderOfferSerializer),
+        # 201: openapi.Response("Success response", OrderOfferSerializer),
         400: generate_400_response(
             ["offer_price", "offer_execution_time", "offer_description"]
         ),
