@@ -20,6 +20,7 @@ from config.settings import DJOSER_EMAIL_CLASSES, ORDER_COOKIE_KEY_NAME
 
 from .swagger_documentation import users as swagger
 from .utils.helpers import site_data_from_request
+from ..orders.utils.order_state import OrderStateActivate
 from ..sending.models import UserNotifications
 
 
@@ -151,11 +152,14 @@ class CustomUserViewSet(UserViewSet):
 
         order = user.ordermodel_set.filter(state="draft").first()
         if order:
-            order.state = "offer"
-            order.save()
-            signals.send_notify.send(
-                sender=self.__class__, user=user, order=order
-            )
+            try:
+                OrderStateActivate(order).execute()
+
+                signals.send_notify.send(
+                    sender=self.__class__, user=user, order=order
+                )
+            except Exception:
+                pass
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -222,11 +226,15 @@ class CustomTokenViewBase(TokenViewBase):
                 sender=self.__class__,
                 user=user,
                 order=order,
-                change_order_state=True,
             )
-            signals.send_notify.send(
-                sender=self.__class__, user=user, order=order
-            )
+            try:
+                OrderStateActivate(order).execute()
+
+                signals.send_notify.send(
+                    sender=self.__class__, user=user, order=order
+                )
+            except Exception:
+                pass
             response.delete_cookie(ORDER_COOKIE_KEY_NAME)
 
         return response
