@@ -22,6 +22,11 @@ urlpatterns = [
         "order/<int:pk>/", views.get_answers_to_order, name="get-order-answers"
     ),
     path(
+        "order/last/",
+        views.get_answers_to_last_order,
+        name="get-last-order-answers",
+    ),
+    path(
         "offer/<int:pk>/",
         OrderOfferViewSet.as_view(
             {"get": "retrieve", "delete": "destroy", "put": "update"}

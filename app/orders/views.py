@@ -41,11 +41,7 @@ from app.utils.file_work import FileWork
 from app.utils.storage import ServerFileSystem
 from config.settings import IMAGE_FILE_FORMATS, ORDER_COOKIE_KEY_NAME
 from .constants import ErrorMessages, ORDER_STATE_CHOICES
-from .models import (
-    OrderFileData,
-    OrderModel,
-    OrderOffer,
-)
+from .models import OrderFileData, OrderModel, OrderOffer, WorksheetFile
 from .permissions import IsOrderOwner
 from .serializers import (
     AllOrdersClientSerializer,
@@ -322,6 +318,25 @@ def get_answers_to_order(request, pk):
     return Response(serializer.data)
 
 
+@swagger_auto_schema(**swagger.QuestionnaireResponseLastGet.__dict__)
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_answers_to_last_order(request):
+    """
+    Получение ответов на вопросы к последнему заказу в статусе черновика.
+    URL: http://localhost/order/last/
+    METHOD - "GET"
+    """
+    user = request.user
+    order = OrderModel.objects.filter(
+        user_account=user, state=ORDER_STATE_CHOICES[0][0]
+    ).last()
+    if not order:
+        raise errorcode.OrderIdNotFound()
+    serializer = OrderFullSerializer(order)
+    return Response(serializer.data)
+
+
 @swagger_auto_schema(**swagger.FileOrderDelete.__dict__)
 @api_view(["DELETE"])
 @permission_classes([IsOrderFileDataOwnerWithoutUser])
@@ -477,7 +492,7 @@ def get_download_file_link(request, file_id) -> Any:
         UUID(str(file_id))
     except ValueError:
         raise errorcode.FileNotFound()
-    file_models = (OrderFileData,)
+    file_models = (OrderFileData, WorksheetFile)
     file = None
     for file_model in file_models:
         file = file_model.objects.filter(id=file_id.strip()).first()

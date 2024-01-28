@@ -261,8 +261,8 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("JWT",),
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
-    "REFRESH_TOKEN_LIFETIME": timedelta(minutes=720),
+    "ACCESS_TOKEN_LIFETIME": timedelta(days=7),  # 60 minutes
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=10),  # 12 hours
     "BLACKLIST_AFTER_ROTATION": False,
 
     "ALGORITHM": "HS256",
@@ -344,12 +344,12 @@ OFFER_ACCESS_HOURS = 24
 
 CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379/0")
 CELERY_RESULT_BACKEND = os.environ.get("CELERY_BROKER", "redis://localhost:6379/0")
-CELERY_BEAT_SCHEDULE = {
-    "check_expired_auction_orders": {
-        "task": "utils.views.check_expired_auction_orders",
-        "schedule": crontab(minute="0", hour="*/12"),
-    },
-}
+# CELERY_BEAT_SCHEDULE = {
+#     "check_expired_auction_orders": {
+#         "task": "utils.views.check_expired_auction_orders",
+#         "schedule": crontab(minute="0", hour="*/12"),
+#     },
+# }
 
 # записывать логи
 # документация https://pypi.org/project/drf-api-logger/

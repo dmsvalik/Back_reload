@@ -90,6 +90,12 @@ class FileAbstractModel(models.Model):
         abstract = True
 
 
+class WorksheetFile(FileAbstractModel):
+    """Модель для генерации pdf файлов пользователя."""
+
+    order_id = models.ForeignKey(OrderModel, on_delete=models.CASCADE)
+
+
 class OrderFileData(FileAbstractModel):
     """Модель для файлов заказа пользователя."""
 

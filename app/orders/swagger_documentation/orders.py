@@ -359,6 +359,30 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
     }
 
 
+class QuestionnaireResponseLastGet(BaseSwaggerSchema):
+    tags = [
+        SWAGGER_TAGS.get("order"),
+    ]
+    operation_id = "get-last-order-answers"
+    operation_summary = (
+        "Получение ответов на вопросов анкеты к последнему заказу в "
+        "статусе черновик."
+    )
+    operation_description = (
+        "Используйте этот метод для получения ответов на вопросов анкеты к "
+        "последнему заказу в статусе черновик."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является \n"
+    )
+    method = "GET"
+    request_body = None
+    responses = {
+        200: openapi.Response("Success response", OrderFullSerializer()),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
 class AttachFileAnswerPost(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("files")]
     operation_id = "file attach"
