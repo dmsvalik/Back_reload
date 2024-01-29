@@ -5,6 +5,9 @@
 
 import os
 import json
+import shutil
+
+
 import requests
 import random
 import string
@@ -16,7 +19,30 @@ from config.settings import BASE_DIR
 from pathlib import Path
 
 
-class ServerFileSystem:
+class BaseServerFileWork(object):
+    """Базовый класс работы с файлами на сервере"""
+
+    def __init__(self):
+        self.dir_path = BASE_DIR
+
+    def copy_dir_files(self, src_path, dst_path):
+        """
+        Метод рекурсивного копирования файлов указанной директории. Если
+        директория назначения содержит файл с тем же именем, что и файл в
+        исходной директории, файл назначения будет заменен.
+        @param src_path: Путь до директории с файлами для копирования
+        @param dst_path: Путь до директории в которую копируются файлы
+        @return:
+        """
+
+        path_from = os.path.join(self.dir_path, src_path)
+        path_to = os.path.join(self.dir_path, dst_path)
+
+        shutil.copytree(str(path_from), str(path_to), dirs_exist_ok=True)
+        return path_to
+
+
+class ServerFileSystem(BaseServerFileWork):
     """Предварительная подготовка файла."""
 
     NUMBER_OF_CHARACTERS_IN_FILENAME = FILE_SETTINGS[
@@ -26,6 +52,7 @@ class ServerFileSystem:
     def __init__(self, file_name, user_id, order_id=None):
         # there may be documents without an order and user, in this case we
         # save them in a special folder
+        super().__init__()
         if order_id is None:
             order_id = "no_order"
 
@@ -71,6 +98,14 @@ class ServerFileSystem:
             )
 
         return f"{generated_file_name}.{self.file_format}"
+
+
+class UserServerFiles(BaseServerFileWork):
+    """Класс для работы со всеми пользовательскими файлами на сервере"""
+
+    def __init__(self):
+        super().__init__()
+        self.dir_path = os.path.join(BASE_DIR, "files")
 
 
 class CloudStorage:

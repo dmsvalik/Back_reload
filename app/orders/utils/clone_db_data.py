@@ -1,3 +1,5 @@
+import os
+
 from django.contrib.auth import get_user_model
 
 from app.orders.models import OrderModel, OrderFileData
@@ -6,8 +8,8 @@ from app.questionnaire.models import (
     QuestionnaireType,
     Question,
 )
-from app.users.utils.quota_manager import UserQuotaManager
 from .servise import save_many_obj_to_db
+from ...users.utils.quota_manager import UserQuotaManager
 
 
 class BaseOrderDB(object):
@@ -82,19 +84,36 @@ class CloneOrderDB(BaseOrderDB):
             file["question_id"] = Question.objects.get(pk=file["question_id"])
         save_many_obj_to_db(OrderFileData, files_data, order_id=new_order)
 
-    def update_order_file_data(self, path_to: str) -> None:
+    def update_order_file_path(
+        self, path_to: str, server: bool = True, cloud: bool = True
+    ) -> None:
         """
-        Метод обновляет пути до файлов в БД
+        Метод обновляет пути до файлов в БД, по умолчанию обновляются все
+        пути (сервер, YandexCloud), однако опционально можно отключить.
         @param path_to: Новый путь до папки с файлами
-        @return:
+        @param server: bool флаг хранилища сервера
+        @param cloud: bool флаг YandexCloud
+        @return: QuerySet обновленных файлов
         """
         files = OrderFileData.objects.filter(order_id=self.new_order_id)
+        for file in files:
+            if server:
+                file.server_path = os.path.join(
+                    path_to, file.server_path.split("/")[-1]
+                )
+            if cloud:
+                file.yandex_path = os.path.join(
+                    path_to, file.yandex_path.split("/")[-1]
+                )
+
+        fields_update = []
+        if server:
+            fields_update.append("server_path")
+        if cloud:
+            fields_update.append("yandex_path")
+
+        OrderFileData.objects.bulk_update(files, fields_update, batch_size=100)
+
         user = get_user_model().objects.get(pk=self.user_id)
         quota_manager = UserQuotaManager(user)
-        for file in files:
-            file.yandex_path = f"{path_to}/{file.yandex_path.split('/')[-1]}"
-            file.server_path = f"{path_to}/{file.server_path.split('/')[-1]}"
-        OrderFileData.objects.bulk_update(
-            files, ["yandex_path", "server_path"], batch_size=100
-        )
-        quota_manager.add_many(files)
+        quota_manager.add_many(files, server=server, cloud=cloud)

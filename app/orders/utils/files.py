@@ -10,7 +10,7 @@ from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
-from app.utils.storage import CloudStorage
+from app.utils.storage import CloudStorage, UserServerFiles
 from app.utils.errorcode import (
     FileNotFound,
     IncorrectFileDeleting,
@@ -228,6 +228,12 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
     if type(operation_id) is str:
         create_celery_beat_task(new_order_id, operation_id, path_to, user_id)
 
+    s_file = UserServerFiles()
+    server_path = s_file.copy_dir_files(path_from, path_to)
+
+    db = CloneOrderDB(new_order_id=new_order_id, user_id=user_id)
+    db.update_order_file_path(server_path, cloud=False)
+
 
 def update_order_file_data(
     order_id: int,
@@ -246,14 +252,17 @@ def update_order_file_data(
     """
     yandex = CloudStorage()
     state = yandex.check_status_operation(operation_id)
+
     task = PeriodicTask.objects.get(name=f"update_files_{order_id}")
     task.total_run_count += 1
     task.save()
+
+    if state == "in-progress" and task.total_run_count < 3:
+        return
+
+    db = CloneOrderDB(new_order_id=order_id, user_id=user_id)
     if state == "success":
-        db = CloneOrderDB(new_order_id=order_id, user_id=user_id)
-        db.update_order_file_data(path_to)
+        db.update_order_file_path(path_to, server=False)
         task.delete()
-    elif state == "failed":
-        task.delete()
-    if state == "in-progress" and task.total_run_count >= 3:
+    else:
         task.delete()
