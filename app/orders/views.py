@@ -24,6 +24,7 @@ from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
     IsOrderFileDataOwnerWithoutUser,
     IsOrderExists,
+    IsUserQuotaForClone,
 )
 from app.questionnaire.models import (
     QuestionnaireType,
@@ -531,7 +532,12 @@ class OrderStateActivateView(views.APIView):
 )
 class CloneOrderView(CreateAPIView):
     serializer_class = None
-    permission_classes = (IsAuthenticated, IsOrderExists, IsOrderOwner)
+    permission_classes = (
+        IsAuthenticated,
+        IsOrderExists,
+        IsOrderOwner,
+        IsUserQuotaForClone,
+    )
 
     def create(self, request, *args, **kwargs):
         """
