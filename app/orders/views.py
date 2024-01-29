@@ -15,6 +15,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import CreateAPIView
 
 from django.db.models import Q
 from django.utils.decorators import method_decorator
@@ -22,6 +23,8 @@ from django.utils.decorators import method_decorator
 from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
     IsOrderFileDataOwnerWithoutUser,
+    IsOrderExists,
+    IsUserQuotaForClone,
 )
 from app.questionnaire.models import (
     QuestionnaireType,
@@ -50,7 +53,8 @@ from .serializers import (
 )
 from .swagger_documentation import orders as swagger
 
-# from .tasks import (
+from .tasks import celery_copy_order_file_task
+
 #     celery_delete_file_task,
 #     celery_delete_image_task,
 #     celery_upload_file_task_to_answer,
@@ -63,6 +67,7 @@ from .utils.files import (
     upload_image_to_answer,
 )
 from .utils.order_state import OrderStateActivate
+from .utils.clone_db_data import CloneOrderDB
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -534,3 +539,43 @@ class OrderStateActivateView(views.APIView):
 
         data = self.serialize(instance)
         return Response(data=data, status=200)
+
+
+@method_decorator(
+    name="post",
+    decorator=swagger_auto_schema(**swagger.CloneOrderCreate.__dict__),
+)
+class CloneOrderView(CreateAPIView):
+    serializer_class = None
+    permission_classes = (
+        IsAuthenticated,
+        IsOrderExists,
+        IsOrderOwner,
+        IsUserQuotaForClone,
+    )
+
+    def create(self, request, *args, **kwargs):
+        """
+        Клонирование заказа со всеми связанными данными.
+        URL: http://localhost/order/clone/
+        METHOD - "POST"
+        pk:int (обязательное) - id заказа к которому крепится файл,
+        Данные передаваемые в запросе:
+            - order_id: int - id заказа который необходимо клонировать,
+        @return: Response object {"new_order_id": int}
+        """
+        old_order_id = request.data.get("order_id")
+        user_id = OrderModel.objects.get(pk=old_order_id).user_account.pk
+
+        db = CloneOrderDB(user_id=user_id, old_order_id=old_order_id)
+        db.clone_order()
+        db.clone_order_question_response()
+        db.clone_order_file_data()
+
+        celery_copy_order_file_task.delay(
+            user_id, old_order_id, db.new_order_id
+        )
+
+        return Response(
+            {"order_id": db.new_order_id}, status=status.HTTP_201_CREATED
+        )

@@ -464,3 +464,48 @@ class OrderOfferUpdate(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
     operation_summary = "Изменение отдельного оффера **в разработке"
     deprecated = True
+
+
+class CloneOrderCreate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_summary = "Пересоздание заказа"
+    operation_description = (
+        "Используйте этот метод для создания нового заказа на основе "
+        "созданного ранее.\nПри использовании данного метода скопируются все "
+        "параметры предыдущего заказа (анкеты, файлы, описание и название)."
+        "**\n\n**Ограничения:**\n\n"
+        "1. Проверка авторизован ли пользователь\n"
+        "2. Проверка на существование заказа с переданным id\n"
+        "3. Проверка пользователя(или):\n"
+        "-- Владелец заказа\n"
+        "4. Проверка наличия доступного дискового пространства для "
+        "пользователя"
+    )
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=[
+            "order_id",
+        ],
+        properties={
+            "order_id": openapi.Schema(
+                title="ID заказа для клонирования",
+                type=openapi.TYPE_INTEGER,
+            )
+        },
+    )
+    responses = {
+        201: openapi.Response(
+            "Success response",
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "new_order_id": openapi.Schema(
+                        type=openapi.TYPE_INTEGER, title="ID нового заказа"
+                    ),
+                },
+            ),
+        ),
+        401: DEFAULT_RESPONSES[401],
+        403: DEFAULT_RESPONSES[403],
+        500: DEFAULT_RESPONSES[500],
+    }
