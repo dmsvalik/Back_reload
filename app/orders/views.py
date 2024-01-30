@@ -5,7 +5,7 @@ from uuid import UUID
 
 from django.http import HttpResponsePermanentRedirect
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, viewsets, views
+from rest_framework import mixins, status, viewsets, views
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -305,22 +305,22 @@ def create_answers_to_order(request, pk):
     return Response(serializer.data)
 
 
-@swagger_auto_schema(**swagger.QuestionnaireResponseGet.__dict__)
-@api_view(["GET"])
-@permission_classes([IsOrderOwner])
-def get_answers_to_order(request, pk):
-    """
-    Получение ответов на вопросы к заказу.
-    URL: http://localhost/order/<int:pk>/
-    METHOD - "GET"
-    param pk:int (обязательное) - id заказа,
-    """
-    try:
-        order = OrderModel.objects.get(id=pk)
-    except Exception:
-        raise errorcode.OrderIdNotFound()
-    serializer = OrderFullSerializer(order)
-    return Response(serializer.data)
+@method_decorator(
+    name="retrieve",
+    decorator=swagger_auto_schema(**swagger.QuestionnaireResponseGet.__dict__),
+)
+@method_decorator(
+    name="partial_update",
+    decorator=swagger_auto_schema(**swagger.OrderUpdate.__dict__),
+)
+class OrderViewSet(
+    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
+):
+    queryset = OrderModel.objects.all()
+    serializer_class = OrderFullSerializer
+    permission_classes = [
+        IsOrderOwner,
+    ]
 
 
 @swagger_auto_schema(**swagger.QuestionnaireResponseLastGet.__dict__)
@@ -456,26 +456,6 @@ def attach_file(request, pk: int):
         )
 
     return response
-
-
-# @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
-# @api_view(["POST"])
-# @permission_classes([IsFileExistById, IsAdminUser | IsContactor | IsFileOwner])
-# def get_download_file_link(request) -> Any:
-#     """
-#     Получение и передача на фронт ссылки на скачивание файла
-#     URL: http://localhost/download/
-#     METHOD - "POST"
-#     file_id:int (обязательное) - id файла модели OrderFileData,
-#     """
-#     try:
-#         file_link = FileWork.get_download_file_link(
-#             file_id=request.data.get("file_id")
-#         )
-#     except Exception as e:
-#         return Response(str(e), status=status.HTTP_404_NOT_FOUND)
-#
-#     return Response(file_link, status=status.HTTP_200_OK)
 
 
 @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
