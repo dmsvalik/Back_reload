@@ -19,7 +19,11 @@ urlpatterns = [
         name="post-order-answers",
     ),
     path(
-        "order/<int:pk>/", views.get_answers_to_order, name="get-order-answers"
+        "order/<int:pk>/",
+        views.OrderViewSet.as_view(
+            {"get": "retrieve", "patch": "partial_update"}
+        ),
+        name="get-order-answers",
     ),
     path(
         "order/last/",

@@ -334,15 +334,15 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
 class QuestionnaireResponseGet(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("questionnaire")]
     operation_id = "get-order-answers"
-    operation_summary = "Получение вопросов анкеты к заказу"
+    operation_summary = "Получение ответов на вопросы анкеты к заказу"
     operation_description = (
-        "Используйте этот метод для получения вопросов для анкеты к заказу."
+        "Используйте этот метод для получения ответов на вопросы  для анкеты "
+        "к заказу."
         "\n\n**Ограничения:**\n"
         "- Авторизованный пользователь является **владельцем заказа**\n"
         "- В куках неавторизованного пользователя **содержится уникальный "
         "ключ**"
     )
-    method = "GET"
     manual_parameters = [
         openapi.Parameter(
             type=openapi.TYPE_INTEGER,
@@ -352,6 +352,33 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
         )
     ]
     request_body = None
+    responses = {
+        200: openapi.Response("Success response", OrderFullSerializer()),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
+class OrderUpdate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "update-order"
+    operation_summary = "Обновление информации о заказе"
+    operation_description = (
+        "Используйте этот метод для обновления информации о заказе."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является **владельцем заказа**\n"
+        "- В куках неавторизованного пользователя **содержится уникальный "
+        "ключ**"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
+    request_body = OrderFullSerializer()
     responses = {
         200: openapi.Response("Success response", OrderFullSerializer()),
         403: DEFAULT_RESPONSES[403],
