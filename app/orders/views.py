@@ -5,7 +5,7 @@ from uuid import UUID
 
 from django.http import HttpResponsePermanentRedirect
 from drf_yasg.utils import swagger_auto_schema
-from rest_framework import status, viewsets, views
+from rest_framework import mixins, status, viewsets, views
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -15,6 +15,7 @@ from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
+from rest_framework.generics import CreateAPIView
 
 from django.db.models import Q
 from django.utils.decorators import method_decorator
@@ -22,6 +23,8 @@ from django.utils.decorators import method_decorator
 from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
     IsOrderFileDataOwnerWithoutUser,
+    IsOrderExists,
+    IsUserQuotaForClone,
 )
 from app.questionnaire.models import (
     QuestionnaireType,
@@ -50,7 +53,8 @@ from .serializers import (
 )
 from .swagger_documentation import orders as swagger
 
-# from .tasks import (
+from .tasks import celery_copy_order_file_task
+
 #     celery_delete_file_task,
 #     celery_delete_image_task,
 #     celery_upload_file_task_to_answer,
@@ -63,6 +67,7 @@ from .utils.files import (
     upload_image_to_answer,
 )
 from .utils.order_state import OrderStateActivate
+from .utils.clone_db_data import CloneOrderDB
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -300,22 +305,22 @@ def create_answers_to_order(request, pk):
     return Response(serializer.data)
 
 
-@swagger_auto_schema(**swagger.QuestionnaireResponseGet.__dict__)
-@api_view(["GET"])
-@permission_classes([IsOrderOwner])
-def get_answers_to_order(request, pk):
-    """
-    Получение ответов на вопросы к заказу.
-    URL: http://localhost/order/<int:pk>/
-    METHOD - "GET"
-    param pk:int (обязательное) - id заказа,
-    """
-    try:
-        order = OrderModel.objects.get(id=pk)
-    except Exception:
-        raise errorcode.OrderIdNotFound()
-    serializer = OrderFullSerializer(order)
-    return Response(serializer.data)
+@method_decorator(
+    name="retrieve",
+    decorator=swagger_auto_schema(**swagger.QuestionnaireResponseGet.__dict__),
+)
+@method_decorator(
+    name="partial_update",
+    decorator=swagger_auto_schema(**swagger.OrderUpdate.__dict__),
+)
+class OrderViewSet(
+    mixins.RetrieveModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet
+):
+    queryset = OrderModel.objects.all()
+    serializer_class = OrderFullSerializer
+    permission_classes = [
+        IsOrderOwner,
+    ]
 
 
 @swagger_auto_schema(**swagger.QuestionnaireResponseLastGet.__dict__)
@@ -453,26 +458,6 @@ def attach_file(request, pk: int):
     return response
 
 
-# @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
-# @api_view(["POST"])
-# @permission_classes([IsFileExistById, IsAdminUser | IsContactor | IsFileOwner])
-# def get_download_file_link(request) -> Any:
-#     """
-#     Получение и передача на фронт ссылки на скачивание файла
-#     URL: http://localhost/download/
-#     METHOD - "POST"
-#     file_id:int (обязательное) - id файла модели OrderFileData,
-#     """
-#     try:
-#         file_link = FileWork.get_download_file_link(
-#             file_id=request.data.get("file_id")
-#         )
-#     except Exception as e:
-#         return Response(str(e), status=status.HTTP_404_NOT_FOUND)
-#
-#     return Response(file_link, status=status.HTTP_200_OK)
-
-
 @swagger_auto_schema(**swagger.FileOrderDownload.__dict__)
 @api_view(["GET"])
 @permission_classes(
@@ -534,3 +519,43 @@ class OrderStateActivateView(views.APIView):
 
         data = self.serialize(instance)
         return Response(data=data, status=200)
+
+
+@method_decorator(
+    name="post",
+    decorator=swagger_auto_schema(**swagger.CloneOrderCreate.__dict__),
+)
+class CloneOrderView(CreateAPIView):
+    serializer_class = None
+    permission_classes = (
+        IsAuthenticated,
+        IsOrderExists,
+        IsOrderOwner,
+        IsUserQuotaForClone,
+    )
+
+    def create(self, request, *args, **kwargs):
+        """
+        Клонирование заказа со всеми связанными данными.
+        URL: http://localhost/order/clone/
+        METHOD - "POST"
+        pk:int (обязательное) - id заказа к которому крепится файл,
+        Данные передаваемые в запросе:
+            - order_id: int - id заказа который необходимо клонировать,
+        @return: Response object {"new_order_id": int}
+        """
+        old_order_id = request.data.get("order_id")
+        user_id = OrderModel.objects.get(pk=old_order_id).user_account.pk
+
+        db = CloneOrderDB(user_id=user_id, old_order_id=old_order_id)
+        db.clone_order()
+        db.clone_order_question_response()
+        db.clone_order_file_data()
+
+        celery_copy_order_file_task.delay(
+            user_id, old_order_id, db.new_order_id
+        )
+
+        return Response(
+            {"order_id": db.new_order_id}, status=status.HTTP_201_CREATED
+        )
