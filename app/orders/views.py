@@ -61,6 +61,7 @@ from .utils.files import (
     upload_file_to_answer,
     upload_image_to_answer,
 )
+from .utils.services import range_filter
 from .utils.order_state import OrderStateActivate
 from .utils.clone_db_data import CloneOrderDB
 
@@ -155,7 +156,12 @@ class OrderOfferView(generics.ListAPIView):
     def get_queryset(self):
         order_id = self.kwargs.get("pk")
         offers = (
-            OrderOffer.objects.filter(order_id=order_id)
+            OrderOffer.objects.filter(
+                order_id=order_id,
+                order_id__order_time__lt=range_filter(
+                    settings.OFFER_ACCESS_HOURS
+                ),
+            )
             .select_related("order_id", "chat", "user_account__contractordata")
             .prefetch_related(
                 Prefetch(lookup="order_id__orderfiledata_set", to_attr="files")
