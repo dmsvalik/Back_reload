@@ -6,7 +6,6 @@ class OfferState(Enum):
     VIEWED = "viewed"
     SELECTED = "selected"
     REJECTED = "rejected"
-    ARCHIVE = "archive"
 
 
 class OrderState(Enum):
@@ -24,7 +23,6 @@ OFFER_STATE_CHOICES = (
         OfferState.REJECTED.value,
         "Отклонен",
     ),  # заказчик выбрал другой оффер к заказу
-    (OfferState.ARCHIVE.value, "В архиве"),  # оффер перенесен в архив
 )
 
 ORDER_STATE_CHOICES = (

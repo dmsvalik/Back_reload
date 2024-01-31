@@ -128,6 +128,7 @@ class OrderOffer(models.Model):
         "Описание офера", max_length=300, blank=True
     )
     contactor_key = models.IntegerField(verbose_name="Номер исполнителя")
+    is_archive = models.BooleanField(default=False)
     status = models.CharField(
         verbose_name="Статус",
         choices=OFFER_STATE_CHOICES,
