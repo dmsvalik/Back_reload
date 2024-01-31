@@ -1,6 +1,7 @@
 from app.orders.models import OrderModel
 from app.questionnaire.models import QuestionResponse, Question
 from app.utils.errorcode import OrderInWrongStatus, OrderAnswersNotComplete
+from app.utils.tasks import celery_get_order_pdf
 
 from ..constants import ORDER_STATE_CHOICES
 
@@ -47,6 +48,7 @@ class OrderStateActivate(OrderState):
 
         self.instance.state = ORDER_STATE_CHOICES[1][0]
         self.instance.save()
+        celery_get_order_pdf.delay(self.instance.id)
 
     def answer_is_complete(self) -> bool:
         """

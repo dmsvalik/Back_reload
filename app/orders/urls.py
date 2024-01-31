@@ -9,11 +9,6 @@ urlpatterns = [
         include(
             [
                 path(
-                    "",
-                    views.get_answers_to_order,
-                    name="get-order-answers",
-                ),
-                path(
                     "answers/",
                     views.create_answers_to_order,
                     name="post-order-answers",
@@ -28,22 +23,39 @@ urlpatterns = [
                     "offers/",
                     views.OrderOfferView.as_view(),
                 ),
+                path(
+                    "offer/", views.OrderOfferView.as_view({"post": "create"})
+                ),
             ]
         ),
     ),
-    path("create/", views.create_order, name="order-create"),
     path(
-        "client/all_orders/",
+        "order/last/",
+        views.get_answers_to_last_order,
+        name="get-last-order-answers",
+    ),
+    path(
+        "offer/<int:pk>/",
+        views.OfferViewSet.as_view(
+            {"get": "retrieve", "delete": "destroy", "put": "update"}
+        ),
+    ),
+    path("order/create/", views.create_order, name="order-create"),
+    path(
+        "order/client/all_orders/",
         views.AllOrdersClientViewSet.as_view({"get": "list"}),
     ),
     path(
-        "client/archive/",
+        "order/client/archive/",
         views.ArchiveOrdersClientViewSet.as_view({"get": "list"}),
     ),
-    path("file_order/", views.delete_file_order, name="delete-file-order"),
     path(
-        "download/<str:file_id>/",
+        "order/file_order/", views.delete_file_order, name="delete-file-order"
+    ),
+    path(
+        "order/download/<str:file_id>/",
         views.get_download_file_link,
         name="get-download-link",
     ),
+    path("order/clone/", views.CloneOrderView.as_view(), name="order_clone"),
 ]

@@ -1,21 +1,16 @@
-import os
 from uuid import UUID
 
 from celery.result import AsyncResult
 from datetime import datetime, timedelta
 
-from PyPDF2 import PdfWriter, PdfReader
-from reportlab.lib.styles import getSampleStyleSheet
-from reportlab.platypus import SimpleDocTemplate, Paragraph
-from django.http import FileResponse
+from django.http import HttpResponseNotFound
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAdminUser, AllowAny
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.response import Response
 from rest_framework.generics import GenericAPIView
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
+
 from app.products.models import Category
 from django.utils.decorators import method_decorator
 
@@ -24,7 +19,7 @@ from drf_yasg.utils import swagger_auto_schema
 from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderOffer, OrderFileData
 from app.utils.swagger_documentation import utils as swagger
-from config.settings import ttf_file, design_pdf, PDF_DIR
+from app.utils.tasks import celery_get_order_pdf
 from . import errorcode
 
 from .serializers import GalleryImagesSerializer
@@ -100,7 +95,6 @@ def document_view(request, file_id: UUID):
     if not file:
         raise errorcode.FileNotFound()
     res = Response()
-    res.content_type = "image"
     res["X-Accel-Redirect"] = "/files/" + file.server_path
     return res
 
@@ -170,76 +164,12 @@ class AllDeleteAPIView(viewsets.ViewSet, GenericAPIView):
             )
 
 
-def draw_order_pdf(items, order_id) -> str:
-    """Function for drawing pdf file"""
-    output_pdf = os.path.join(PDF_DIR, f"output_pdf{order_id}.pdf")
-    pdf = SimpleDocTemplate(output_pdf)
-    flow_obj = []
-    styles = getSampleStyleSheet()
-    styles["Title"].fontName = "Montserrat-Medium"
-    styles["Normal"].fontName = "Montserrat-Medium"
-    styles["Heading1"].fontName = "Montserrat-Medium"
-    styles["Heading2"].fontName = "Montserrat-Medium"
-    pdfmetrics.registerFont(TTFont("Montserrat-Medium", ttf_file))
-    title = Paragraph("Ваш заказ", styles["Title"])
-    flow_obj.append(title)
-    name = Paragraph(
-        f'{items[0]["user_account__ordermodel__name"]}', styles["Heading1"]
-    )
-    flow_obj.append(name)
-    description = Paragraph(
-        f'{items[1]["order_description"]}', styles["Heading2"]
-    )
-    flow_obj.append(description)
-    for i, item in enumerate(items, 1):
-        flow_obj.append(
-            Paragraph(
-                f'{i}) {item["questionresponse__question__text"]}',
-                style=styles["Normal"],
-            )
-        )
-        flow_obj.append(
-            Paragraph(
-                f'- {item["questionresponse__response"]}',
-                style=styles["Normal"],
-            )
-        )
-        flow_obj.append(
-            Paragraph(
-                f""" <a href={item["orderfiledata__server_path"]}> -
-                        <u>{item["orderfiledata__original_name"]}</u></a> """,
-                style=styles["Normal"],
-            )
-        )
-    pdf.build(flow_obj)
-    new_pdf = PdfReader(output_pdf)
-    existing_pdf = PdfReader(open(design_pdf, "rb"))
-    output = PdfWriter()
-    page = existing_pdf.pages[0]
-    page.merge_page(new_pdf.pages[0])
-    output.add_page(page)
-    output_stream = open(output_pdf, "wb")
-    output.write(output_stream)
-    output_stream.close()
-    return output_pdf
-
-
+@swagger_auto_schema(**swagger.GetOrderPdf.__dict__)
 @api_view(["GET"])
-def get_order_pdf(request, order_id) -> Response | FileResponse:
+@permission_classes([AllowAny])
+def get_order_pdf(request, pk) -> Response | HttpResponseNotFound:
     """Return pdf file"""
-    user = request.user
-    if not OrderModel.objects.filter(user_account=user).exists():
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-    items = OrderModel.objects.filter(id=order_id)
-    items = items.values(
-        "user_account__ordermodel__name",
-        "order_description",
-        "questionresponse__response",
-        "questionresponse__question__text",
-        "orderfiledata__server_path",
-        "orderfiledata__original_name",
-    )
-    return FileResponse(
-        open(draw_order_pdf(items, order_id), "rb"),
-        content_type="application/pdf",
-    )
+    if OrderModel.objects.filter(id=pk).exists():
+        task = celery_get_order_pdf.delay(pk)
+        return Response({"task_id": task.id})
+    return HttpResponseNotFound("Такого заказа не существует")

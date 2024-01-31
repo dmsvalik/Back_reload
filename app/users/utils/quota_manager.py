@@ -23,19 +23,31 @@ class UserQuotaManager:
         )
         return self.user_quota
 
-    def add_many(self, files: QuerySet[OrderFileData | FileData]) -> UserQuota:
+    def add_many(
+        self,
+        files: QuerySet[OrderFileData | FileData],
+        server: bool = True,
+        cloud: bool = True,
+    ) -> UserQuota:
         """
         Добавляет сумму переданных файлов к квоте
         """
         sizes: dict = files.aggregate(
             cloud_size=Sum("yandex_size"), server_size=Sum("server_size")
         )
+        update_fields: dict = {}
+        if cloud:
+            update_fields["total_cloud_size"] = F(
+                "total_cloud_size"
+            ) + sizes.get("cloud_size")
+        if server:
+            update_fields["total_server_size"] = F(
+                "total_server_size"
+            ) + sizes.get("server_size")
+
         (
             UserQuota.objects.filter(pk=self.user_quota.pk).update(
-                total_cloud_size=F("total_cloud_size")
-                + sizes.get("cloud_size"),
-                total_server_size=F("total_server_size")
-                + sizes.get("server_size"),
+                **update_fields
             )
         )
 
