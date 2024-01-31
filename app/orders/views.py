@@ -51,6 +51,7 @@ from .serializers import (
     OrderModelSerializer,
     OfferOrderSerializer,
     OfferContactorSerializer,
+    OfferSerizalizer,
 )
 from .swagger_documentation import orders as swagger
 
@@ -62,7 +63,7 @@ from .utils.files import (
     upload_file_to_answer,
     upload_image_to_answer,
 )
-from .utils.services import range_filter
+from .utils.services import range_filter, last_contactor_key_offer
 from .utils.order_state import OrderStateActivate
 from .utils.clone_db_data import CloneOrderDB
 
@@ -141,8 +142,31 @@ class OfferViewSet(viewsets.ModelViewSet):
     Операции с офферами
     """
 
-    ...
-    # TODO: только для офферов без привязки к остальным обьектам + логика изменения статуса
+    queryset = OrderOffer.objects.all()
+    serializer_class = OfferSerizalizer
+    permission_classes = (IsAuthenticated,)
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        contactor_key = (
+            last_contactor_key_offer(request.data.get("order_id")) + 1
+        )
+        serializer.validated_data.update({"contactor_key": contactor_key})
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    def update(self, request, *args, **kwargs):
+        pass
+
+    def partial_update(self, request, *args, **kwargs):
+        pass
+
+    def destroy(self, request, *args, **kwargs):
+        pass
 
 
 class OrderOfferView(generics.ListAPIView):

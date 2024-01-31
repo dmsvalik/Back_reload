@@ -99,3 +99,8 @@ def create_celery_beat_task(
         kwargs=json.dumps(data),
         start_time=datetime.now(timezone.utc) + timedelta(minutes=1),
     )
+
+
+def last_contactor_key_offer(order_id: int) -> OrderOffer:
+    last_offer = OrderOffer.objects.filter(order_id=order_id).last()
+    return last_offer.contactor_key
