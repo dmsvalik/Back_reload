@@ -4,6 +4,7 @@ from rest_framework import permissions
 from app.utils.errorcode import (
     FileNotFound,
     UniqueOrderOffer,
+    OrderInWrongStatus,
 )
 from app.orders.models import OrderFileData, OrderModel, OrderOffer
 from app.users.utils.quota_manager import UserQuotaManager
@@ -12,6 +13,7 @@ from config.settings import (
     MAX_SERVER_QUOTA,
     MAX_STORAGE_QUOTA,
 )
+from .constants import OrderState
 
 
 class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
@@ -126,3 +128,11 @@ class IsUserQuotaForClone(permissions.BasePermission):
             proj_server_size < MAX_SERVER_QUOTA
             and proj_yandex_size < MAX_STORAGE_QUOTA
         )
+
+
+class IsOrderOfferStateNotDraft(permissions.BasePermission):
+    def has_permission(self, request, view):
+        offer = OrderOffer.objects.filter(pk=view.kwargs.get("pk")).first()
+        if offer.order_id.state != OrderState.DRAFT.value:
+            raise OrderInWrongStatus()
+        return True

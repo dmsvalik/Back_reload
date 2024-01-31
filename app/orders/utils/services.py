@@ -34,22 +34,26 @@ def register_method(method_set: tuple[tuple[Schema, str]]):
     return wrapper
 
 
-def select_offer(obj: OrderOffer, status: str | None) -> None:
+def select_offer(obj: OrderOffer) -> None:
     """
     При обновлении статуса оффера на selected
     Меняет все статусы всех остальных офферов
     которые связаны с эти заказом на archive
     """
-    if status != OfferState.SELECTED.value:
-        return  # TODO: raise exception
+    # offer to selected
+    OrderOffer.objects.filter(pk=obj.pk).update(
+        status=OfferState.SELECTED.value
+    )
     offers_order = (
         OrderOffer.objects.filter(order_id=obj.order_id)
         .exclude(pk=obj.pk)
         .all()
     )
+    # other offers to rejecred
     for offer in offers_order:
-        offer.status = OfferState.ARCHIVE.value
+        offer.status = OfferState.REJECTED.value
     OrderOffer.objects.bulk_update(offers_order, fields=["status"])
+    # order to selected
     OrderModel.objects.filter(pk=obj.order_id.pk).update(
         state=OrderState.SELECTED.value
     )

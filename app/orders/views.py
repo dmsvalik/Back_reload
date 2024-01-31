@@ -11,6 +11,7 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
     parser_classes,
+    action,
 )
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
@@ -63,7 +64,11 @@ from .utils.files import (
     upload_file_to_answer,
     upload_image_to_answer,
 )
-from .utils.services import range_filter, last_contactor_key_offer
+from .utils.services import (
+    range_filter,
+    last_contactor_key_offer,
+    select_offer,
+)
 from .utils.order_state import OrderStateActivate
 from .utils.clone_db_data import CloneOrderDB
 
@@ -158,6 +163,23 @@ class OfferViewSet(viewsets.ModelViewSet):
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
+
+    @action(
+        methods=["post"],
+        detail=True,
+        url_path="select",
+        permission_classes=[IsAuthenticated, perm.IsOrderOfferStateNotDraft],
+    )
+    def select_offer_view(self, request, *args, **kwargs):
+        """
+        Меняет статус оффера на выбран,
+        статус на заказа на выбран,
+        остальные офферы заказа на отклонен
+        """
+        instance = self.get_object()
+        select_offer(instance)
+        serializer = OfferSerizalizer(instance=instance, many=False)
+        return Response(data=serializer.data)
 
     def update(self, request, *args, **kwargs):
         pass

@@ -119,6 +119,7 @@ class BaseOfferSerizalizer(serializers.ModelSerializer):
 
 class OfferSerizalizer(BaseOfferSerizalizer):
     contactor_key = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
 
     class Meta(BaseOfferSerizalizer.Meta):
         fields = BaseOfferSerizalizer.Meta.fields + (
