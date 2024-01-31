@@ -1,11 +1,9 @@
 from django.db.models import Sum
 from rest_framework import permissions
 
-from app.main_page.models import ContractorData
 from app.utils.errorcode import (
     FileNotFound,
     UniqueOrderOffer,
-    ContractorIsInactive,
 )
 from app.orders.models import OrderFileData, OrderModel, OrderOffer
 from app.users.utils.quota_manager import UserQuotaManager
@@ -73,22 +71,6 @@ class IsFileExistById(permissions.BasePermission):
         )
 
         return OrderModel.objects.filter(id=file_id).exists()
-
-
-class IsActiveContactor(permissions.BasePermission):
-    """
-    Является ли исполнитель активным,
-    пропускает юзера с правами staff
-    """
-
-    def has_permission(self, request, view):
-        user = request.user
-        contactor = ContractorData.objects.filter(user=user).first()
-
-        if not user.is_staff:
-            if not contactor and not contactor.is_active:
-                raise ContractorIsInactive()
-        return True
 
 
 class OneOfferPerContactor(permissions.BasePermission):

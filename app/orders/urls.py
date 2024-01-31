@@ -23,7 +23,6 @@ urlpatterns = [
                     "offers/",
                     views.OrderOfferView.as_view(),
                 ),
-                path("offer/", views.OrderOfferView.as_view()),
             ]
         ),
     ),
@@ -33,7 +32,7 @@ urlpatterns = [
         name="get-last-order-answers",
     ),
     path(
-        "offer/<int:pk>/",
+        "offers/<int:pk>/",
         views.OfferViewSet.as_view(
             {"get": "retrieve", "delete": "destroy", "put": "update"}
         ),

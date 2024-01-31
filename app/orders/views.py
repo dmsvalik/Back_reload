@@ -38,6 +38,7 @@ from app.sending.views import send_user_notifications
 from app.users.signals import send_notify
 from app.users.utils.quota_manager import UserQuotaManager
 from app.main_page.models import ContractorData
+from app.main_page.permissions import IsContractor
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
 from app.utils.file_work import FileWork
@@ -194,6 +195,7 @@ class ContactorOfferView(generics.ListAPIView):
     serializer_class = OfferContactorSerializer
     permission_classes = [
         IsAuthenticated,
+        IsContractor,
     ]
 
     def get_queryset(self):

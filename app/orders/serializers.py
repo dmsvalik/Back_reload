@@ -162,7 +162,7 @@ class OfferContactorSerializer(OfferSerizalizer):
     chat_id = serializers.IntegerField(source="chat.pk")
     order_name = serializers.CharField(source="order_id.name")
     images = serializers.CharField(default=None)
-    file = serializers.CharField(default=None)
+    file = serializers.SerializerMethodField()
     task = serializers.CharField(default=None)
 
     class Meta(OfferSerizalizer.Meta):
@@ -173,3 +173,12 @@ class OfferContactorSerializer(OfferSerizalizer):
             "file",
             "task",
         )
+
+    def get_file(self, obj):
+        file = (
+            OrderFileData.objects.filter(order_id=obj.order_id_id)
+            .order_by("date_upload")
+            .last()
+        )
+        serializer = FileSerializer(instance=file, many=False)
+        return serializer.data
