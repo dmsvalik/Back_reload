@@ -8,7 +8,8 @@ from django.utils import timezone
 
 from .models import OrderModel, OrderOffer, OrderFileData
 from app.questionnaire.serializers import FileSerializer
-from app.orders.constants import ORDER_STATE_CHOICES, OfferState
+from app.orders.constants import ORDER_STATE_CHOICES, OfferState, OrderState
+from app.utils.errorcode import OrderInWrongStatus
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -100,7 +101,7 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         return serializer.data
 
 
-class OfferSerizalizer(serializers.ModelSerializer):
+class BaseOfferSerizalizer(serializers.ModelSerializer):
     """
     Базовый класс для сериализатора модели Offer
     """
@@ -116,7 +117,24 @@ class OfferSerizalizer(serializers.ModelSerializer):
         )
 
 
-class OfferOrderSerializer(OfferSerizalizer):
+class OfferSerizalizer(BaseOfferSerizalizer):
+    contactor_key = serializers.IntegerField(read_only=True)
+
+    class Meta(BaseOfferSerizalizer.Meta):
+        fields = BaseOfferSerizalizer.Meta.fields + (
+            "user_account",
+            "order_id",
+            "contactor_key",
+        )
+
+    def create(self, validated_data):
+        order_obj: OrderModel = validated_data.get("order_id")
+        if order_obj.state != OrderState.DRAFT.value:
+            raise OrderInWrongStatus()
+        return super().create(validated_data)
+
+
+class OfferOrderSerializer(BaseOfferSerizalizer):
     """
     :contactor_key - номер исполнителч
     :chat_id - ID чата этого оффера
@@ -127,8 +145,8 @@ class OfferOrderSerializer(OfferSerizalizer):
     contactor_name = serializers.SerializerMethodField()
     files = serializers.SerializerMethodField()
 
-    class Meta(OfferSerizalizer.Meta):
-        fields = OfferSerizalizer.Meta.fields + (
+    class Meta(BaseOfferSerizalizer.Meta):
+        fields = BaseOfferSerizalizer.Meta.fields + (
             "contactor_name",
             "chat_id",
             "files",
@@ -150,7 +168,7 @@ class OfferOrderSerializer(OfferSerizalizer):
         return serializer.data
 
 
-class OfferContactorSerializer(OfferSerizalizer):
+class OfferContactorSerializer(BaseOfferSerizalizer):
     """
     :order_name - название заказа
     :chat_id - ID чата
@@ -165,8 +183,8 @@ class OfferContactorSerializer(OfferSerizalizer):
     file = serializers.SerializerMethodField()
     task = serializers.CharField(default=None)
 
-    class Meta(OfferSerizalizer.Meta):
-        fields = OfferSerizalizer.Meta.fields + (
+    class Meta(BaseOfferSerizalizer.Meta):
+        fields = BaseOfferSerizalizer.Meta.fields + (
             "order_name",
             "chat_id",
             "images",
