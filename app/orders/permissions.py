@@ -1,14 +1,11 @@
 from django.db.models import Sum
 from rest_framework import permissions
 
-from .constants import OrderState
 from app.main_page.models import ContractorData
 from app.utils.errorcode import (
     FileNotFound,
     UniqueOrderOffer,
     ContractorIsInactive,
-    OrderInWrongStatus,
-    OrderIdNotFound,
 )
 from app.orders.models import OrderFileData, OrderModel, OrderOffer
 from app.users.utils.quota_manager import UserQuotaManager
@@ -109,21 +106,6 @@ class OneOfferPerContactor(permissions.BasePermission):
         ).exists():
             raise UniqueOrderOffer()
         return True
-
-
-class OfferCanCreated(permissions.BasePermission):
-    """
-    Позволяет ли статус заказа создать на него оффер
-    """
-
-    def has_permission(self, request, view):
-        print(view.kwargs.get("pk"))
-        order = OrderModel.objects.filter(pk=view.kwargs.get("pk")).first()
-        if not order:
-            raise OrderIdNotFound()
-        if order.state == OrderState.OFFER.value:
-            return True
-        raise OrderInWrongStatus()
 
 
 class IsOrderExists(permissions.BasePermission):

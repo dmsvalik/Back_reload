@@ -23,9 +23,7 @@ urlpatterns = [
                     "offers/",
                     views.OrderOfferView.as_view(),
                 ),
-                path(
-                    "offer/", views.OrderOfferView.as_view({"post": "create"})
-                ),
+                path("offer/", views.OrderOfferView.as_view()),
             ]
         ),
     ),

@@ -1,13 +1,11 @@
 from django.utils import timezone
-from django.http import QueryDict
 from django.utils.decorators import method_decorator
 
 from drf_yasg.openapi import Schema
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
-from datetime import timedelta, datetime
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from typing import Any, List, Dict
 
 from app.orders.constants import OfferState, OrderState
@@ -20,13 +18,6 @@ def range_filter(hours: int) -> datetime:
     """
     result = timezone.now() - timedelta(hours=hours)
     return result
-
-
-def parse_query_params(params: QueryDict) -> dict:
-    """
-    Возвращает параметры запроса в виде словаря
-    """
-    return {k: v for k, v in params.items()}
 
 
 def register_method(method_set: tuple[tuple[Schema, str]]):
