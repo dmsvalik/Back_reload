@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django_celery_beat.models import PeriodicTask
-from app.orders.utils.clone_db_data import CloneOrderDB, UpdateOrderDB
+from app.orders.utils.db_data import CloneOrderDB, UpdateOrderDB
 from app.orders.utils.servise import create_celery_beat_task
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
