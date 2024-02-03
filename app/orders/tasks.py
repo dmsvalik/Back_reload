@@ -2,7 +2,8 @@ import os
 
 from app.orders.utils.files import (
     copy_order_file,
-    update_order_file_data,
+    update_order_file_data_copy,
+    update_order_file_data_move,
     moving_order_files_to_user,
 )
 from app.questionnaire.models import Question
@@ -231,7 +232,30 @@ def celery_update_order_file_data_tusk(
     @param user_id: id пользователя
     @return: None
     """
-    update_order_file_data(order_id, operation_id, path_to, user_id)
+    update_order_file_data_copy(order_id, operation_id, path_to, user_id)
+
+
+@shared_task()
+def celery_update_order_file_data_move_task(
+    order_id: int,
+    operation_id: str,
+    path_to: str,
+    user_id: int,
+    path_from: str,
+):
+    """
+    Метод запрашивает статус копирования файлов и если копирование завершено
+    успешно, обновляет данные в БД и удаляет файлы источника.
+    @param order_id: id заказа.
+    @param operation_id: - ссылка на проверку статуса заказа яндекс API
+    @param path_to: путь до файлов заказа
+    @param path_from: путь до папки предыдущего хранения
+    @param user_id: id пользователя
+    @return: None
+    """
+    update_order_file_data_move(
+        order_id, operation_id, path_to, user_id, path_from
+    )
 
 
 @shared_task

@@ -240,9 +240,8 @@ class CloudStorage:
             f"{self.URL}?path={yandex_path}&permanently=True",
             headers=self.headers,
         )
-        print(res.status_code)
         # если файл на сервере удален или не найден возвращаем True
-        if not res.status_code == 204 and not res.status_code == 404:
+        if res.status_code not in [202, 204, 404]:
             raise errorcode.IncorrectFileDeleting
         return True
 
