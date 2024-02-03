@@ -1,6 +1,10 @@
 import os
 
-from app.orders.utils.files import copy_order_file, update_order_file_data
+from app.orders.utils.files import (
+    copy_order_file,
+    update_order_file_data,
+    moving_order_files_to_user,
+)
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
@@ -228,3 +232,15 @@ def celery_update_order_file_data_tusk(
     @return: None
     """
     update_order_file_data(order_id, operation_id, path_to, user_id)
+
+
+@shared_task
+def moving_user_order_files_task(user_id: int, order_id: int) -> None:
+    """
+    Отложенная задача для перемещения файлов пользователя из каталога no_user
+    в каталог пользователя.
+    @param user_id: id пользователя
+    @param order_id: id заказа
+    @return:
+    """
+    moving_order_files_to_user(user_id, order_id)
