@@ -539,7 +539,6 @@ class CloneOrderView(CreateAPIView):
         Клонирование заказа со всеми связанными данными.
         URL: http://localhost/order/clone/
         METHOD - "POST"
-        pk:int (обязательное) - id заказа к которому крепится файл,
         Данные передаваемые в запросе:
             - order_id: int - id заказа который необходимо клонировать,
         @return: Response object {"new_order_id": int}
