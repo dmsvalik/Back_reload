@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from django_celery_beat.models import PeriodicTask
-from app.orders.utils.clone_db_data import CloneOrderDB
+from app.orders.utils.clone_db_data import CloneOrderDB, UpdateOrderDB
 from app.orders.utils.servise import create_celery_beat_task
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
@@ -231,7 +231,7 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
     s_file = UserServerFiles()
     server_path = s_file.copy_dir_files(path_from, path_to)
 
-    db = CloneOrderDB(new_order_id=new_order_id, user_id=user_id)
+    db = CloneOrderDB(order_id=new_order_id, user_id=user_id)
     db.update_order_file_path(server_path, cloud=False)
 
 
@@ -260,9 +260,39 @@ def update_order_file_data(
     if state == "in-progress" and task.total_run_count < 3:
         return
 
-    db = CloneOrderDB(new_order_id=order_id, user_id=user_id)
+    db = CloneOrderDB(order_id=order_id, user_id=user_id)
     if state == "success":
         db.update_order_file_path(path_to, server=False)
         task.delete()
     else:
         task.delete()
+
+
+def moving_order_files_to_user(user_id: int, order_id: int) -> None:
+    """
+    Метод перемещает файлы пользователя из каталога no_user в каталог
+    файлов пользователя на сервере и YandexDisk.
+    @param user_id: id пользователя
+    @param order_id: id файлов принадлежащих заказу
+    @return: None
+    """
+
+    file = CloudStorage()
+    path_from = file.create_order_path(
+        user_id="no_user",
+        order_id=order_id,
+    )
+
+    path_to = file.create_order_path(
+        user_id=user_id, order_id=order_id, not_check=True
+    )
+    operation_id = file.cloud_move_files(path_to, path_from, overwrite=True)
+    print(operation_id)
+    if type(operation_id) is str:
+        create_celery_beat_task(order_id, operation_id, path_to, user_id)
+
+    s_file = UserServerFiles()
+    server_path = s_file.move_dir_files(path_from, path_to)
+
+    db = UpdateOrderDB(order_id=order_id, user_id=user_id)
+    db.update_order_file_path(server_path, cloud=False)
