@@ -41,6 +41,20 @@ class BaseServerFileWork(object):
         shutil.copytree(str(path_from), str(path_to), dirs_exist_ok=True)
         return path_to
 
+    def move_dir_files(self, src_path, dst_path):
+        """
+        Метод рекурсивного перемещения файлов из указанной директории. Если
+        директория назначения содержит файл с тем же именем, что и файл в
+        исходной директории, файл назначения будет заменен.
+        @param src_path: Путь до директории с файлами для перемещения
+        @param dst_path: Путь до директории в которую перемещаются файлы
+        @return:
+        """
+        path_from = os.path.join(self.dir_path, src_path)
+        path_to = os.path.join(self.dir_path, dst_path)
+        shutil.move(str(path_from), str(path_to))
+        return path_to
+
 
 class ServerFileSystem(BaseServerFileWork):
     """Предварительная подготовка файла."""
@@ -147,7 +161,7 @@ class CloudStorage:
         return False
 
     def _ensure_path_exists(
-        self, user_id: int, order_id: int, not_check=True
+        self, user_id: int or str, order_id: int, not_check=True
     ) -> str or bool:
         """
         Метод для создания пути для файла, если он еще не существует.
@@ -234,7 +248,7 @@ class CloudStorage:
 
     def cloud_copy_files(
         self, path_from: str, path_to: str, overwrite=False
-    ) -> bool or dict:
+    ) -> bool or str:
         """
         Метод копирует файлы расположенные на YandexDisk.
         @param path_from: str - Путь до файла/директории которые
@@ -257,7 +271,7 @@ class CloudStorage:
         return False
 
     def create_order_path(
-        self, user_id: int, order_id: int, not_check=False
+        self, user_id: int or str, order_id: int, not_check=False
     ) -> str:
         """
         Метод возвращает путь до директории с файлами заказа
@@ -279,3 +293,28 @@ class CloudStorage:
         res = requests.get(url=operation_id, headers=self.headers)
         status = res.json().get("status")
         return status
+
+    def cloud_move_files(
+        self, path_from: str, path_to: str, overwrite=False
+    ) -> bool or str:
+        """
+        Метод перемещает файлы расположенные на YandexDisk.
+        @param path_from: str - Путь до файла/директории которые
+        перемещаем.
+        @param path_to: str - Путь до директории/файла в которые
+        перемещаем.
+        @param overwrite: bool - признак перезаписи, по умолчанию False
+        @return: bool or dict - Статус выполнения: True - успех,
+        str - в процессе (возвращается id операции), False - неуспешно.
+        """
+
+        data = {"from": path_to, "path": path_from, "overwrite": overwrite}
+        res = requests.post(
+            url=f"{self.URL}/move", params=data, headers=self.headers
+        )
+        print(res.json())
+        if res.status_code == 201:
+            return True
+        elif res.status_code == 202:
+            return res.json().get("href")
+        return False
