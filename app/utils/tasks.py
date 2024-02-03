@@ -121,4 +121,4 @@ def celery_get_order_pdf(order_id):
             os.remove(output_pdf)
             worksheet.server_path = ""
         worksheet.save()
-    return {"status": "SUCCESS", "response": "Файл создан"}
+        return {"status": "SUCCESS", "response": "Файл создан"}
