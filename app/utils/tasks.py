@@ -8,11 +8,13 @@ from rest_framework import status
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+from app.questionnaire.utils.helpers import (
+    all_ordered_questions_in_questionnaire,
+)
 from app.utils.storage import CloudStorage
 from config.settings import ttf_file, design_pdf, BASE_DIR
 
 from app.orders.models import OrderModel, WorksheetFile
-from app.questionnaire.models import Question
 
 from celery import shared_task
 from celery.utils.log import get_task_logger
@@ -94,12 +96,19 @@ def celery_get_order_pdf(order_id):
     question_id_with_files = list(
         item.orderfiledata_set.values_list("question_id_id", flat=True)
     )
-    all_questions = Question.objects.filter(
-        chapter__type=item.questionnaire_type
+    all_questions = all_ordered_questions_in_questionnaire(
+        item.questionnaire_type
     )
-    queryset = all_questions.filter(
-        id__in=set(question_id_with_answer + question_id_with_files)
-    ).order_by("chapter", "position")
+    queryset = []
+    for question in all_questions:
+        if question.id in set(
+            question_id_with_answer + question_id_with_files
+        ):
+            queryset.append(question)
+
+    # queryset = all_questions.filter(
+    #     id__in=set(question_id_with_answer + question_id_with_files)
+    # ).order_by("chapter", "position")
     items = {"order": item, "questions": queryset}
     output_pdf = draw_order_pdf(items, order_id, user.id)
     file_name = output_pdf.split("/")[-1]
