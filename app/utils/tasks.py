@@ -99,7 +99,7 @@ def celery_get_order_pdf(order_id):
     )
     queryset = all_questions.filter(
         id__in=set(question_id_with_answer + question_id_with_files)
-    )
+    ).order_by("chapter", "position")
     items = {"order": item, "questions": queryset}
     output_pdf = draw_order_pdf(items, order_id, user.id)
     file_name = output_pdf.split("/")[-1]
@@ -121,4 +121,4 @@ def celery_get_order_pdf(order_id):
             os.remove(output_pdf)
             worksheet.server_path = ""
         worksheet.save()
-        return {"status": "SUCCESS", "response": "Файл создан"}
+    return {"status": "SUCCESS", "response": "Файл создан"}
