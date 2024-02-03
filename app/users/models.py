@@ -1,4 +1,3 @@
-import datetime
 import re
 
 from django.contrib.auth.models import (
@@ -72,10 +71,6 @@ class UserAccountManager(BaseUserManager):
             raise IncorrectPasswordCreateUser
         user.set_password(password)
         user.save()
-        UserQuota.objects.create(user=user)
-        UserAgreement.objects.create(
-            user_account=user, date=datetime.date.today()
-        )
 
         return user
 

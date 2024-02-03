@@ -63,7 +63,7 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Question
-        fields = ["id", "question_id", "response", "files"]
+        fields = ["question_id", "response", "files"]
 
     def get_response(self, question: Question):
         question_response = QuestionResponse.objects.filter(
@@ -252,7 +252,14 @@ class OrderFullSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderModel
-        fields = ["id", "name", "questionnaire_type_id", "answers"]
+        fields = [
+            "id",
+            "name",
+            "order_description",
+            "questionnaire_type_id",
+            "answers",
+        ]
+        read_only_fields = ["id", "questionnaire_type_id", "answers"]
 
     def get_answers(self, obj):
         """Метод для получения всех ответов на анкету."""

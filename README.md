@@ -99,6 +99,18 @@ EMAIL_USE_TLS =
 python manage.py migrate
 ```
 
+Для успешной работы вам вероятно необходимо использовать worker планировщика задач Celery.
+
+- Запустите worker Celery
+```shell
+celery -A config worker -l INFO
+```
+- Запустите планировщик задач Celery Beat
+
+```shell
+celery -A config beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
+```
+
 
 ### 2. Правила по созданию веток и pull request
 Вся работа проходит с веткой pre-main. Как только набирается критическая масса обновлений DevOps(Ильшат) или Team Lead

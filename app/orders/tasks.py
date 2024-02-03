@@ -1,5 +1,6 @@
 import os
 
+from app.orders.utils.files import copy_order_file, update_order_file_data
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
@@ -197,3 +198,33 @@ def celery_upload_file_task_to_answer(
         return {"status": "FAILURE", "response": "Вопрос не найден."}
     except Exception as e:
         return {"status": "FAILURE", "response": f"Ошибка: {str(e)}"}
+
+
+@shared_task()
+def celery_copy_order_file_task(
+    user_id: int, old_order_id: int, new_order_id: int
+):
+    """
+    Метод копирует файлы заказа в папку клонируемого заказа
+    @param user_id: id пользователя кому принадлежит заказ
+    @param old_order_id: id клонируемого заказа
+    @param new_order_id: id нового заказа
+    @return: str - id операции копирования
+    """
+    copy_order_file(user_id, old_order_id, new_order_id)
+
+
+@shared_task()
+def celery_update_order_file_data_tusk(
+    order_id: int, operation_id: str, path_to: str, user_id: int
+):
+    """
+    Метод запрашивает статус копирования файлов и если копирование завершено
+    успешно, обновляет данные в БД.
+    @param order_id: id заказа.
+    @param operation_id: - ссылка на проверку статуса заказа яндекс API
+    @param path_to: путь до файлов заказа
+    @param user_id: id пользователя
+    @return: None
+    """
+    update_order_file_data(order_id, operation_id, path_to, user_id)

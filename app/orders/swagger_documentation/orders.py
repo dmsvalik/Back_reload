@@ -334,15 +334,15 @@ class QuestionnaireResponsePost(BaseSwaggerSchema):
 class QuestionnaireResponseGet(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("questionnaire")]
     operation_id = "get-order-answers"
-    operation_summary = "Получение вопросов анкеты к заказу"
+    operation_summary = "Получение ответов на вопросы анкеты к заказу"
     operation_description = (
-        "Используйте этот метод для получения вопросов для анкеты к заказу."
+        "Используйте этот метод для получения ответов на вопросы  для анкеты "
+        "к заказу."
         "\n\n**Ограничения:**\n"
         "- Авторизованный пользователь является **владельцем заказа**\n"
         "- В куках неавторизованного пользователя **содержится уникальный "
         "ключ**"
     )
-    method = "GET"
     manual_parameters = [
         openapi.Parameter(
             type=openapi.TYPE_INTEGER,
@@ -351,6 +351,57 @@ class QuestionnaireResponseGet(BaseSwaggerSchema):
             in_=openapi.IN_PATH,
         )
     ]
+    request_body = None
+    responses = {
+        200: openapi.Response("Success response", OrderFullSerializer()),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
+class OrderUpdate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_id = "update-order"
+    operation_summary = "Обновление информации о заказе"
+    operation_description = (
+        "Используйте этот метод для обновления информации о заказе."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является **владельцем заказа**\n"
+        "- В куках неавторизованного пользователя **содержится уникальный "
+        "ключ**"
+    )
+    manual_parameters = [
+        openapi.Parameter(
+            type=openapi.TYPE_INTEGER,
+            name="id",
+            description="ID заказа",
+            in_=openapi.IN_PATH,
+        )
+    ]
+    request_body = OrderFullSerializer()
+    responses = {
+        200: openapi.Response("Success response", OrderFullSerializer()),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
+class QuestionnaireResponseLastGet(BaseSwaggerSchema):
+    tags = [
+        SWAGGER_TAGS.get("order"),
+    ]
+    operation_id = "get-last-order-answers"
+    operation_summary = (
+        "Получение ответов на вопросов анкеты к последнему заказу в "
+        "статусе черновик."
+    )
+    operation_description = (
+        "Используйте этот метод для получения ответов на вопросов анкеты к "
+        "последнему заказу в статусе черновик."
+        "\n\n**Ограничения:**\n"
+        "- Авторизованный пользователь является \n"
+    )
+    method = "GET"
     request_body = None
     responses = {
         200: openapi.Response("Success response", OrderFullSerializer()),
@@ -440,3 +491,48 @@ class OrderOfferUpdate(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
     operation_summary = "Изменение отдельного оффера **в разработке"
     deprecated = True
+
+
+class CloneOrderCreate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_summary = "Пересоздание заказа"
+    operation_description = (
+        "Используйте этот метод для создания нового заказа на основе "
+        "созданного ранее.\nПри использовании данного метода скопируются все "
+        "параметры предыдущего заказа (анкеты, файлы, описание и название)."
+        "**\n\n**Ограничения:**\n\n"
+        "1. Проверка авторизован ли пользователь\n"
+        "2. Проверка на существование заказа с переданным id\n"
+        "3. Проверка пользователя(или):\n"
+        "-- Владелец заказа\n"
+        "4. Проверка наличия доступного дискового пространства для "
+        "пользователя"
+    )
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=[
+            "order_id",
+        ],
+        properties={
+            "order_id": openapi.Schema(
+                title="ID заказа для клонирования",
+                type=openapi.TYPE_INTEGER,
+            )
+        },
+    )
+    responses = {
+        201: openapi.Response(
+            "Success response",
+            openapi.Schema(
+                type=openapi.TYPE_OBJECT,
+                properties={
+                    "new_order_id": openapi.Schema(
+                        type=openapi.TYPE_INTEGER, title="ID нового заказа"
+                    ),
+                },
+            ),
+        ),
+        401: DEFAULT_RESPONSES[401],
+        403: DEFAULT_RESPONSES[403],
+        500: DEFAULT_RESPONSES[500],
+    }
