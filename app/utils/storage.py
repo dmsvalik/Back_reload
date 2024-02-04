@@ -25,35 +25,35 @@ class BaseServerFileWork(object):
     def __init__(self):
         self.dir_path = BASE_DIR
 
-    def copy_dir_files(self, src_path, dst_path):
+    def copy_dir_files(self, src_path: str, dst_path: str):
         """
         Метод рекурсивного копирования файлов указанной директории. Если
         директория назначения содержит файл с тем же именем, что и файл в
         исходной директории, файл назначения будет заменен.
         @param src_path: Путь до директории с файлами для копирования
         @param dst_path: Путь до директории в которую копируются файлы
-        @return:
+        @return: dst_path
         """
 
         path_from = os.path.join(self.dir_path, src_path)
         path_to = os.path.join(self.dir_path, dst_path)
 
         shutil.copytree(str(path_from), str(path_to), dirs_exist_ok=True)
-        return path_to
+        return dst_path
 
-    def move_dir_files(self, src_path, dst_path):
+    def move_dir_files(self, src_path: str, dst_path: str):
         """
         Метод рекурсивного перемещения файлов из указанной директории. Если
         директория назначения содержит файл с тем же именем, что и файл в
         исходной директории, файл назначения будет заменен.
         @param src_path: Путь до директории с файлами для перемещения
         @param dst_path: Путь до директории в которую перемещаются файлы
-        @return:
+        @return: dst_path
         """
         path_from = os.path.join(self.dir_path, src_path)
         path_to = os.path.join(self.dir_path, dst_path)
         shutil.move(str(path_from), str(path_to))
-        return path_to
+        return dst_path
 
 
 class ServerFileSystem(BaseServerFileWork):
