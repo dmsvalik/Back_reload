@@ -98,7 +98,9 @@ class CustomUserViewSet(UserViewSet):
             if order:
                 order.user_account = self.user_instance
                 order.save()
-                moving_user_order_files_task(self.user_instance.id, order.id)
+                moving_user_order_files_task.delay(
+                    self.user_instance.id, order.id
+                )
             signals.quota_recalculate.send(
                 sender=self.__class__, user=self.user_instance, order=order
             )
@@ -224,6 +226,7 @@ class CustomTokenViewBase(TokenViewBase):
             if order:
                 order.user_account = user
                 order.save()
+                moving_user_order_files_task.delay(user.id, order.id)
             signals.quota_recalculate.send(
                 sender=self.__class__,
                 user=user,
