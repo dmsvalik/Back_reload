@@ -161,7 +161,7 @@ class CloudStorage:
         return False
 
     def _ensure_path_exists(
-        self, user_id: int or str, order_id: int, not_check=True
+        self, user_id: int or str, order_id: int, not_check=False
     ) -> str or bool:
         """
         Метод для создания пути для файла, если он еще не существует.
