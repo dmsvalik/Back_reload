@@ -20,6 +20,7 @@ from config.settings import DJOSER_EMAIL_CLASSES, ORDER_COOKIE_KEY_NAME
 
 from .swagger_documentation import users as swagger
 from .utils.helpers import site_data_from_request
+from ..orders.tasks import moving_user_order_files_task
 from ..orders.utils.order_state import OrderStateActivate
 from ..sending.models import UserNotifications
 
@@ -97,6 +98,9 @@ class CustomUserViewSet(UserViewSet):
             if order:
                 order.user_account = self.user_instance
                 order.save()
+                moving_user_order_files_task.delay(
+                    self.user_instance.id, order.id
+                )
             signals.quota_recalculate.send(
                 sender=self.__class__, user=self.user_instance, order=order
             )
@@ -222,6 +226,7 @@ class CustomTokenViewBase(TokenViewBase):
             if order:
                 order.user_account = user
                 order.save()
+                moving_user_order_files_task.delay(user.id, order.id)
             signals.quota_recalculate.send(
                 sender=self.__class__,
                 user=user,
