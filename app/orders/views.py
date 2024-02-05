@@ -149,7 +149,20 @@ class OfferViewSet(viewsets.ModelViewSet):
 
     queryset = OrderOffer.objects.all()
     serializer_class = OfferSerizalizer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsContractor)
+
+    def get_queryset(self):
+        user = self.request.user
+        return OrderOffer.objects.filter(user_account=user)
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [
+                IsAuthenticated(),
+                IsContractor(),
+                perm.OneOfferPerContactor(),
+            ]
+        return super().get_permissions()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -157,7 +170,9 @@ class OfferViewSet(viewsets.ModelViewSet):
         contactor_key = (
             last_contactor_key_offer(request.data.get("order_id")) + 1
         )
-        serializer.validated_data.update({"contactor_key": contactor_key})
+        serializer.validated_data.update(
+            {"contactor_key": contactor_key, "user_account": request.user}
+        )
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(

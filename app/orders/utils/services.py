@@ -105,6 +105,8 @@ def create_celery_beat_task(
     )
 
 
-def last_contactor_key_offer(order_id: int) -> OrderOffer:
+def last_contactor_key_offer(order_id: int) -> int:
     last_offer = OrderOffer.objects.filter(order_id=order_id).last()
+    if not last_offer:
+        return 0
     return last_offer.contactor_key
