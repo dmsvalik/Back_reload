@@ -549,9 +549,12 @@ class CloneOrderView(CreateAPIView):
         db = CloneOrderDB(user_id=user_id, old_order_id=old_order_id)
         db.clone_order()
         db.clone_order_question_response()
-        db.clone_order_file_data()
+        state_copy = db.clone_order_file_data()
 
-        celery_copy_order_file_task.delay(user_id, old_order_id, db.order_id)
+        if state_copy:
+            celery_copy_order_file_task.delay(
+                user_id, old_order_id, db.order_id
+            )
 
         return Response(
             {"order_id": db.order_id}, status=status.HTTP_201_CREATED

@@ -105,7 +105,7 @@ class CloneOrderDB(BaseOrderDB):
             QuestionResponse, responses, order_id=self.order_id
         )
 
-    def clone_order_file_data(self) -> None:
+    def clone_order_file_data(self) -> bool:
         """
         Копирование информации о файлах в БД
         @return:
@@ -121,9 +121,12 @@ class CloneOrderDB(BaseOrderDB):
             "server_size",
         )
         new_order = OrderModel.objects.get(pk=self.order_id)
+        if not files_data:
+            return False
         for file in files_data:
             file["question_id"] = Question.objects.get(pk=file["question_id"])
         save_many_obj_to_db(OrderFileData, files_data, order_id=new_order)
+        return True
 
 
 class UpdateOrderDB(BaseOrderDB):
