@@ -10,8 +10,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatMessage
-        fields = ("id", "sender", "text", "sent_at")
-        read_only_fields = ("id", "sender", "sent_at")
+        fields = ("id", "sender", "text", "sent_at", "is_read")
+        read_only_fields = ("id", "sender", "sent_at", "is_read")
 
 
 class ChatIDSerializer(serializers.ModelSerializer):
@@ -38,3 +38,10 @@ class ChatSerializer(ChatIDSerializer):
             many=True,
         )
         return serializer.data
+
+
+class InMemoryMessageSerializer(serializers.Serializer):
+    text = serializers.CharField(max_length=10000)
+    sender = serializers.CharField(max_length=1000)
+    sent_at = serializers.TimeField()
+    hashcode = serializers.CharField(max_length=1000)
