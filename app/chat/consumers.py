@@ -39,9 +39,6 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         хендшейк.
         """
 
-        # FIXME! удалить нахуй
-        self.redis.search_by_pattern("chat*")
-
         if self.scope["user"] and self.scope["user"].is_authenticated:
             self.user = self.scope["user"]
             if self.user is None:
@@ -136,8 +133,6 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             "sent_at": str(datetime.now()),
             "is_read": str(False),
         }
-
-        print(message_to_send)
 
         new_hash = generate_message_hash(message_to_send)
         while new_hash in self.hashes_for_db:

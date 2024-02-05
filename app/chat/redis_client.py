@@ -27,9 +27,6 @@ class RedisClient:
     def from_credentials(host, port, decode=True):
         return RedisClient(host, port, decode)
 
-    def debug_print_key(self, key):
-        print(self.r.get(key))
-
     def get_message(self, chat: str, hashcode: str):
         return self.r.hgetall(chat + ":" + hashcode)
 
@@ -37,8 +34,6 @@ class RedisClient:
         return self.r.hgetall(key)
 
     def store_message(self, chat: str, hashcode: str, message: dict):
-        print("В обертке редиска мессага:")
-        print(message)
         self.r.hset(
             chat + ":" + hashcode,
             mapping=message,
