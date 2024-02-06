@@ -9,3 +9,6 @@ class ChatConfig(AppConfig):
     def ready(self):
         """Добавляем кастомный ресивер сигналов в пространство имен"""
         import app.chat.signals  # noqa
+        from app.chat.utils import create_periodic_task
+
+        create_periodic_task()
