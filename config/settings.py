@@ -166,7 +166,8 @@ CHANNEL_LAYERS = {
 # Chats
 CHATTING = {
     'LIST_MESSAGE_LIMIT': 1,
-    'DAYS_TO_UNLOCK': 1,
+    'TIMEDELTA_TO_UNLOCK': timedelta(minutes=1),
+    'REDIS_DB_STORE_PERIOD': 1,
 }
 
 DATABASES = {
