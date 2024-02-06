@@ -1,10 +1,6 @@
 from django.contrib import admin
 
-from app.users.models import (
-    UserAccount,
-    UserQuota,
-    UserAgreement,
-)
+from app.users.models import UserAccount, UserQuota, UserAgreement, UserAvatar
 
 
 @admin.register(UserAccount)
@@ -26,3 +22,8 @@ class UserQuotaAdmin(admin.ModelAdmin):
 @admin.register(UserAgreement)
 class UserAgreementAdmin(admin.ModelAdmin):
     list_display = ["id", "user_account", "date"]
+
+
+@admin.register(UserAvatar)
+class UserAgreementAdmin(admin.ModelAdmin):
+    list_display = ["id", "user", "color"]

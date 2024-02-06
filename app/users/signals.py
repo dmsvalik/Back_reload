@@ -1,10 +1,11 @@
 import datetime
+import random
 
 from django.dispatch import Signal
 from django.db.models import QuerySet
 from django.db.models.signals import post_save
 
-from app.users.models import UserAccount, UserQuota, UserAgreement
+from app.users.models import UserAccount, UserQuota, UserAgreement, UserAvatar
 from app.orders.constants import ORDER_STATE_CHOICES as STATE_CHOICES
 from app.orders.models import OrderModel, OrderFileData
 from app.users.utils.quota_manager import UserQuotaManager
@@ -93,4 +94,15 @@ def create_userquota_and_agreement(sender, instance, created, **kwargs):
         )
 
 
+def create_user_avatar(sender, instance, created, **kwargs):
+    """
+    Создание объекта аватара при создании пользователя.
+    """
+    if created:
+        UserAvatar.objects.create(
+            user=instance, color="%06x" % random.randint(0, 0xFFFFFF)
+        )
+
+
 post_save.connect(create_userquota_and_agreement, sender=UserAccount)
+post_save.connect(create_user_avatar, sender=UserAccount)
