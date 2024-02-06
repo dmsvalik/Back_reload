@@ -61,7 +61,9 @@ urlpatterns = [
                 path(
                     "offers/",
                     views.OrderOfferView.as_view(),
+                    name="order-offers",
                 ),
+                path("accept_offer/", views.accept_offer, name="accept offer"),
             ]
         ),
     ),
