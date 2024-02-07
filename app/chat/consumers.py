@@ -140,12 +140,13 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
 
         self.hashes_for_db.append(new_hash)
 
+        message_to_send["hashcode"] = new_hash
+
         self.redis.store_message(
             self.chat_group_name, new_hash, message_to_send
         )
 
         message_to_send["type"] = "chat.message"
-        message_to_send["hashcode"] = new_hash
 
         await self.channel_layer.group_send(
             self.chat_group_name,
