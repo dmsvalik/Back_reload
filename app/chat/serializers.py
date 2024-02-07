@@ -10,8 +10,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatMessage
-        fields = ("id", "sender", "text", "sent_at", "is_read")
-        read_only_fields = ("id", "sender", "sent_at", "is_read")
+        fields = ("id", "sender", "text", "sent_at", "is_read", "hashcode")
+        read_only_fields = ("id", "sender", "sent_at", "is_read", "hashcode")
 
 
 class ChatIDSerializer(serializers.ModelSerializer):
@@ -49,14 +49,15 @@ class ChatSerializer(ChatIDSerializer):
             message = redis.get_message_by_key(key)
             if message.get("is_read") and message.get("is_read") == "False":
                 unread_count += 1
+        try:
+            not_read_in_db = ChatMessage.objects.filter(
+                is_read=False
+            ).values_list("hashcode", flat=True)
+            for code in not_read_in_db:
+                if code not in chat_keys:
+                    unread_count += 1
+        except:
+            # FIXME! проверить и потом о убрать try/catch
+            pass
 
-        return min(
-            instance.messages.filter(is_read=False).count(), unread_count
-        )
-
-
-class InMemoryMessageSerializer(serializers.Serializer):
-    text = serializers.CharField(max_length=10000)
-    sender = serializers.CharField(max_length=1000)
-    sent_at = serializers.TimeField()
-    hashcode = serializers.CharField(max_length=1000)
+        return unread_count
