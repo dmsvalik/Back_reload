@@ -100,7 +100,7 @@ def create_user_avatar(sender, instance, created, **kwargs):
     """
     if created:
         UserAvatar.objects.create(
-            user=instance, color="%06x" % random.randint(0, 0xFFFFFF)
+            user=instance, color="#%06x" % random.randint(0, 0xFFFFFF)
         )
 
 

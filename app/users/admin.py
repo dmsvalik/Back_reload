@@ -25,5 +25,5 @@ class UserAgreementAdmin(admin.ModelAdmin):
 
 
 @admin.register(UserAvatar)
-class UserAgreementAdmin(admin.ModelAdmin):
+class UserAvatarAdmin(admin.ModelAdmin):
     list_display = ["id", "user", "color"]

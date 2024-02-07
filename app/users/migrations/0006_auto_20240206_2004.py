@@ -12,7 +12,7 @@ def migrate_avatar_for_user(apps, _):
     for user in users:
         if not Avatar.objects.filter(user=user).exists():
             Avatar.objects.create(
-                user=user, color="%06x" % random.randint(0, 0xFFFFFF))
+                user=user, color="#%06x" % random.randint(0, 0xFFFFFF))
 
 
 class Migration(migrations.Migration):
