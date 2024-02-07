@@ -10,8 +10,8 @@ class MessageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ChatMessage
-        fields = ("id", "sender", "text", "sent_at", "is_read")
-        read_only_fields = ("id", "sender", "sent_at", "is_read")
+        fields = ("id", "sender", "text", "sent_at", "is_read", "hashcode")
+        read_only_fields = ("id", "sender", "sent_at", "is_read", "hashcode")
 
 
 class ChatIDSerializer(serializers.ModelSerializer):
@@ -53,10 +53,3 @@ class ChatSerializer(ChatIDSerializer):
         return min(
             instance.messages.filter(is_read=False).count(), unread_count
         )
-
-
-class InMemoryMessageSerializer(serializers.Serializer):
-    text = serializers.CharField(max_length=10000)
-    sender = serializers.CharField(max_length=1000)
-    sent_at = serializers.TimeField()
-    hashcode = serializers.CharField(max_length=1000)

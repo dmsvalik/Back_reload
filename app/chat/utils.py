@@ -21,7 +21,7 @@ def store_messages_to_db(chat, hashcodes: list[str]):
     for code in hashcodes:
         message = redis.get_message(chat, code)
         is_read = False
-        if message.get("is_read") and message.get("is_read") is True:
+        if message.get("is_read") and message.get("is_read") == "True":
             is_read = True
         chat_messages.append(
             ChatMessage(
