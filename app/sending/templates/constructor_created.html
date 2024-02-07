@@ -1,0 +1,29 @@
+{% load i18n %}
+
+{% block subject %}
+{% blocktrans %}Новый заказ{% endblocktrans %}
+{% endblock subject %}
+
+{% block text_body %}
+{% blocktrans %}Уведомдение о новом заказе!!!{% endblocktrans %}
+
+{% trans "Спасибо за использование нашего сайта!" %}
+
+{% trans "Для отключения уведомлений пожалуйста перейдите по ссылке:" %}
+{{ protocol }}://{{ site_name }}/{{ url|safe }}
+
+{% blocktrans %}Команда {{ site_name }}{% endblocktrans %}
+{% endblock text_body %}
+
+{% block html_body %}
+<h1>{% blocktrans %}Внимание!!!{% endblocktrans %}</h1>
+<p>{% blocktrans %}{{ username }}, на нашем сайте размещен новый Заказ "{{ order_name }}".{% endblocktrans %}</p>
+<br>
+<h2>{% trans "Спасибо за использование нашего сайта!" %}</h2>
+
+<p>{% trans "Для отключения уведомлений пожалуйста перейдите по ссылке:" %}</p>
+<p><a href="{{ protocol }}://{{ site_name }}/{{ url|safe }}">{{ protocol }}://{{ site_name }}/{{ url|safe }}</a></p>
+
+<p>{% blocktrans %}Команда {{ site_name }}{% endblocktrans %}</p>
+
+{% endblock html_body %}
