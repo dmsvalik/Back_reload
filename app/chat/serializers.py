@@ -49,7 +49,15 @@ class ChatSerializer(ChatIDSerializer):
             message = redis.get_message_by_key(key)
             if message.get("is_read") and message.get("is_read") == "False":
                 unread_count += 1
+        try:
+            not_read_in_db = ChatMessage.objects.filter(
+                is_read=False
+            ).values_list("hashcode", flat=True)
+            for code in not_read_in_db:
+                if code not in chat_keys:
+                    unread_count += 1
+        except:
+            # FIXME! проверить и потом о убрать try/catch
+            pass
 
-        return min(
-            instance.messages.filter(is_read=False).count(), unread_count
-        )
+        return unread_count
