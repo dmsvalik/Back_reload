@@ -150,11 +150,15 @@ class OfferServerFiles(BaseServerFileWork):
     def __init__(self, file_name=None, user_id=None, offer_id=None):
         super().__init__()
 
-        offer_id = offer_id if offer_id else "no_order"
+        offer_id = offer_id if offer_id else "no_offer"
         user_id = user_id if user_id else "no_user"
 
         self.relative_path = str(
-            os.path.join(FILE_SETTINGS.get("PATH_OFFER_FILES"), str(user_id))
+            os.path.join(
+                FILE_SETTINGS.get("PATH_OFFER_FILES"),
+                str(user_id),
+                str(offer_id),
+            )
         )
 
         self.dir_path = os.path.join(self.server_file_dir, self.relative_path)
@@ -163,10 +167,16 @@ class OfferServerFiles(BaseServerFileWork):
 class ChatsServerFiles(BaseServerFileWork):
     """Класс для работы с файлами чатов на сервере"""
 
-    def __init__(self):
+    def __init__(self, chat_id=None):
         super().__init__()
+        self.relative_path = str(
+            os.path.join(FILE_SETTINGS.get("PATH_OFFER_FILES"), str(chat_id))
+        )
+
         self.dir_path = os.path.join(
-            self.server_file_dir, FILE_SETTINGS.get("PATH_CHATS_FILES")
+            self.server_file_dir,
+            FILE_SETTINGS.get("PATH_CHATS_FILES"),
+            self.relative_path,
         )
 
 
@@ -213,7 +223,8 @@ class CloudStorage:
         self, user_id: int or str, order_id: int, not_check=False
     ) -> str or bool:
         """
-        Метод для создания пути для файла, если он еще не существует.
+        Метод для создания пути для файла, если путь не существует на диске,
+        то будет создан
         @param user_id: int - id пользователя.
         @param order_id: int - id заказа.
         @param not_check: bool - проверка существования пути на YandexDisk, и
@@ -221,19 +232,32 @@ class CloudStorage:
         выполняется.
         @return:
         """
-        path = str(os.path.join(self.dir_path, str(user_id), str(order_id)))
-        # path = f"{user_id}/{order_id}"
-        user_directory_path = str(os.path.join(self.dir_path, str(user_id)))
-        order_directory_path = path
+        path = os.path.join(self.dir_path, str(user_id), str(order_id))
         if not_check:
             return path
-        if not self._check_path(order_directory_path):
-            if not self._check_path(user_directory_path):
-                if not self._create_path(user_directory_path):
-                    return False
-            if not self._create_path(order_directory_path):
+
+        if self._check_or_create(path):
+            return path
+
+    def _check_or_create(self, path: str) -> bool:
+        """
+        Метод проверяет существование указанной директории,
+        и если её нет, то создает.
+        @param path: Путь
+        @return: bool
+        """
+        dirs = path.split("/")
+        create_dirs = []
+        for item in reversed(dirs):
+            indx = dirs.index(item)
+            path = str(os.path.join(*dirs[0 : indx + 1]))
+            if not self._check_path(path):
+                create_dirs.append(path)
+
+        for item in reversed(create_dirs):
+            if not self._create_path(item):
                 return False
-        return path
+        return True
 
     def _get_upload_link(self, path, order_id, name):
         """
