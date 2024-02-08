@@ -300,6 +300,7 @@ class CloudStorage:
     ) -> bool or str:
         """
         Метод копирует файлы расположенные на YandexDisk.
+        Пути должны существовать.
         @param path_from: str - Путь до файла/директории которые
         копируем.
         @param path_to: str - Путь до директории/файла в которые
@@ -317,7 +318,7 @@ class CloudStorage:
             return True
         elif res.status_code == 202:
             return res.json().get("href")
-        return False
+        return errorcode.CopyingFileError
 
     def create_order_path(
         self, user_id: int or str, order_id: int, not_check=False
@@ -365,7 +366,7 @@ class CloudStorage:
             return True
         elif res.status_code == 202:
             return res.json().get("href")
-        return False
+        return errorcode.CopyingFileError
 
 
 class OffersCloudStorage(CloudStorage):

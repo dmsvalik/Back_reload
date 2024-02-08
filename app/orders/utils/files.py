@@ -307,9 +307,7 @@ def moving_order_files_to_user(user_id: int, order_id: int) -> None:
             order_id=order_id,
         )
 
-        path_to = file.create_order_path(
-            user_id=user_id, order_id=order_id, not_check=True
-        )
+        path_to = file.create_order_path(user_id=user_id, order_id=order_id)
         operation_id = file.cloud_copy_files(
             path_to, path_from, overwrite=True
         )

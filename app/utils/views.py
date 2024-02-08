@@ -1,3 +1,4 @@
+import os
 from uuid import UUID
 
 from celery.result import AsyncResult
@@ -20,6 +21,7 @@ from app.users.models import UserAccount
 from app.orders.models import OrderModel, OrderOffer, OrderFileData
 from app.utils.swagger_documentation import utils as swagger
 from app.utils.tasks import celery_get_order_pdf
+from config.settings import FILE_SETTINGS
 from . import errorcode
 
 from .serializers import GalleryImagesSerializer
@@ -95,7 +97,9 @@ def document_view(request, file_id: UUID):
     if not file:
         raise errorcode.FileNotFound()
     res = Response()
-    res["X-Accel-Redirect"] = "/files/" + file.server_path
+    res["X-Accel-Redirect"] = str(
+        os.path.join(FILE_SETTINGS.get("PATH_SERVER_FILES"), file.server_path)
+    )
     return res
 
 
