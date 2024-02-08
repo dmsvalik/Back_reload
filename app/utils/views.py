@@ -97,7 +97,7 @@ def document_view(request, file_id: UUID):
     if not file:
         raise errorcode.FileNotFound()
     res = Response()
-    res["X-Accel-Redirect"] = str(
+    res["X-Accel-Redirect"] = "/" + str(
         os.path.join(FILE_SETTINGS.get("PATH_SERVER_FILES"), file.server_path)
     )
     return res
