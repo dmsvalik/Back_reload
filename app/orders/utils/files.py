@@ -221,16 +221,14 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
     files = (
         OrderFileData.objects.filter(order_id=old_order_id)
         .exclude(yandex_path="")
-        .exists()
+        .first()
     )
     if files:
         file = CloudStorage()
-        path_from = file.create_order_path(
-            user_id=user_id, order_id=old_order_id, not_check=True
-        )
+        path_from = get_path_dir_from_path_file(files.yandex_path)
 
         path_to = file.create_order_path(
-            user_id=user_id, order_id=new_order_id, not_check=True
+            user_id=user_id, order_id=new_order_id
         )
         operation_id = file.cloud_copy_files(
             path_to, path_from, overwrite=True
@@ -250,13 +248,13 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
     server_files = (
         OrderFileData.objects.filter(order_id=old_order_id)
         .exclude(server_path="")
-        .exists()
+        .first()
     )
     if server_files:
-        s_dir_from = OrderServerFiles(user_id=user_id, order_id=old_order_id)
+        s_dir_from = get_path_dir_from_path_file(server_files.server_path)
         s_dir_to = OrderServerFiles(user_id=user_id, order_id=new_order_id)
         server_path = s_dir_to.copy_dir_files(
-            s_dir_from.relative_path, s_dir_to.relative_path
+            s_dir_from, s_dir_to.relative_path
         )
 
         db = CloneOrderDB(order_id=new_order_id, user_id=user_id)
@@ -298,14 +296,11 @@ def moving_order_files_to_user(user_id: int, order_id: int) -> None:
     files = (
         OrderFileData.objects.filter(order_id=order_id)
         .exclude(yandex_path="")
-        .exists()
+        .first()
     )
     if files:
         file = CloudStorage()
-        path_from = file.create_order_path(
-            user_id="no_user",
-            order_id=order_id,
-        )
+        path_from = get_path_dir_from_path_file(files.yandex_path)
 
         path_to = file.create_order_path(user_id=user_id, order_id=order_id)
         operation_id = file.cloud_copy_files(
@@ -327,13 +322,13 @@ def moving_order_files_to_user(user_id: int, order_id: int) -> None:
     server_files = (
         OrderFileData.objects.filter(order_id=order_id)
         .exclude(server_path="")
-        .exists()
+        .first()
     )
     if server_files:
-        s_dir_from = OrderServerFiles(order_id=order_id)
+        s_dir_from = get_path_dir_from_path_file(server_files.server_path)
         s_dir_to = OrderServerFiles(user_id=user_id, order_id=order_id)
         server_path = s_dir_to.move_dir_files(
-            s_dir_from.relative_path, s_dir_to.relative_path
+            s_dir_from, s_dir_to.relative_path
         )
 
         db = UpdateOrderDB(order_id=order_id, user_id=user_id)
@@ -365,3 +360,14 @@ def update_order_file_data_move(
         yandex = CloudStorage()
         db.update_order_file_path(path_to, server=False)
         yandex.cloud_delete_file(path_from)
+
+
+def get_path_dir_from_path_file(full_path: str) -> str:
+    """
+    Метод получает путь до директории с файлом из полного пути файла
+    @param full_path: Путь до файла
+    @return:
+    """
+    path_lst = full_path.split("/")
+    del path_lst[-1]
+    return "/".join(path_lst)
