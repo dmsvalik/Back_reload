@@ -83,7 +83,7 @@ class OneOfferPerContactor(permissions.BasePermission):
 
     def has_permission(self, request, view):
         user = request.user
-        order_id = view.kwargs.get("pk")
+        order_id = view.kwargs.get("pk") or request.data.get("order_id")
 
         if OrderOffer.objects.filter(
             user_account=user, order_id=order_id
@@ -136,3 +136,20 @@ class IsOrderOfferStateNotDraft(permissions.BasePermission):
         if offer.order_id.state != OrderState.DRAFT.value:
             raise OrderInWrongStatus()
         return True
+
+
+class IsOrderOfferStateIsOffer(permissions.BasePermission):
+    """Проверка что статус заказа позволяет принимать офферы."""
+
+    message = {"detail": "К данному заказу нельзя создать предложения"}
+
+    def has_permission(self, request, view):
+        order_id = view.kwargs.get("pk") or request.data.get("order_id")
+        if (
+            request.user.is_authenticated
+            and OrderModel.objects.filter(
+                id=order_id, state=OrderState.OFFER.value
+            ).exists()
+        ):
+            return True
+        return False

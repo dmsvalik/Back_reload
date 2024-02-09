@@ -34,16 +34,18 @@ def register_method(method_set: tuple[tuple[Schema, str]]):
     return wrapper
 
 
-def select_offer(obj: OrderOffer) -> None:
+def select_offer(obj: OrderOffer) -> OrderOffer:
     """
     При обновлении статуса оффера на selected
     Меняет все статусы всех остальных офферов
     которые связаны с эти заказом на archive
     """
     # offer to selected
-    OrderOffer.objects.filter(pk=obj.pk).update(
-        status=OfferState.SELECTED.value
-    )
+    # OrderOffer.objects.filter(pk=obj.pk).update(
+    #     status=OfferState.SELECTED.value
+    # )
+    obj.status = OfferState.SELECTED.value
+    obj.save()
     offers_order = (
         OrderOffer.objects.filter(order_id=obj.order_id)
         .exclude(pk=obj.pk)
@@ -57,6 +59,7 @@ def select_offer(obj: OrderOffer) -> None:
     OrderModel.objects.filter(pk=obj.order_id.pk).update(
         state=OrderState.SELECTED.value
     )
+    return obj
 
 
 def save_many_obj_to_db(
@@ -105,6 +108,8 @@ def create_celery_beat_task(
     )
 
 
-def last_contactor_key_offer(order_id: int) -> OrderOffer:
+def last_contactor_key_offer(order_id: int) -> int:
     last_offer = OrderOffer.objects.filter(order_id=order_id).last()
+    if not last_offer:
+        return 0
     return last_offer.contactor_key

@@ -10,8 +10,8 @@ class IsContractor(permissions.BasePermission):
         Проверяет, является ли пользователь исполнителем.
         Использовать только после IsAuthenticated
         """
-        if request.method in permissions.SAFE_METHODS:
-            return True
+        # if request.method in permissions.SAFE_METHODS:
+        #     return True
         if not (
             request.user.is_staff
             or ContractorData.objects.filter(user_id=request.user.id).exists()

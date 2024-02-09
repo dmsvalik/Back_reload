@@ -123,14 +123,13 @@ class OfferSerizalizer(BaseOfferSerizalizer):
 
     class Meta(BaseOfferSerizalizer.Meta):
         fields = BaseOfferSerizalizer.Meta.fields + (
-            "user_account",
             "order_id",
             "contactor_key",
         )
 
     def create(self, validated_data):
         order_obj: OrderModel = validated_data.get("order_id")
-        if order_obj.state != OrderState.DRAFT.value:
+        if order_obj.state != OrderState.OFFER.value:
             raise OrderInWrongStatus()
         return super().create(validated_data)
 
@@ -165,8 +164,9 @@ class OfferOrderSerializer(BaseOfferSerizalizer):
         return f"Исполнитель {obj.contactor_key}"
 
     def get_files(self, obj):
-        serializer = FileSerializer(instance=obj.order_id.files, many=True)
-        return serializer.data
+        # serializer = FileSerializer(instance=obj.order_id.files, many=True)
+        # return serializer.data
+        return None
 
 
 class OfferContactorSerializer(BaseOfferSerizalizer):

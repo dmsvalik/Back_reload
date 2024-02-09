@@ -6,6 +6,7 @@ from drf_yasg.utils import swagger_auto_schema
 from app.orders.serializers import (
     AllOrdersClientSerializer,
     OfferOrderSerializer,
+    OfferSerizalizer,
 )
 from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
@@ -14,7 +15,6 @@ from app.questionnaire.serializers import (
 )
 from app.orders.serializers import OrderModelSerializer
 from config.settings import SWAGGER_TAGS, MAX_STORAGE_QUOTA
-from app.orders.constants import OfferState
 
 
 def generate_400_response(fields: List[str]):
@@ -303,6 +303,35 @@ class FileOrderDelete(BaseSwaggerSchema):
     }
 
 
+class AcceptOffer(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("offer")]
+    operation_id = "accept-offer"
+    operation_summary = "Выбор предложения исполнителя."
+    operation_description = (
+        "Выбор предложения исполнителя. Перевод оффера в статус выбраного. \n"
+        "Все остальные предложения будут отклонены.\n Статус заказа изменяется."
+        "\n\n**Ограничения:**\n\n1. Проверка пользователя(или):\n-- Владелец заказа."
+    )
+    method = "POST"
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=[
+            "offer_id",
+        ],
+        properties={
+            "offer_id": openapi.Schema(
+                title="Id оффера",
+                type=openapi.TYPE_INTEGER,
+            )
+        },
+    )
+    responses = {
+        200: OfferSerizalizer(),
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
+    }
+
+
 class QuestionnaireResponsePost(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("questionnaire")]
     operation_id = "post-order-answers"
@@ -475,19 +504,30 @@ class FileOrderDownload(BaseSwaggerSchema):
     }
 
 
+class AllOffersToOrder(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_summary = "Получение списка офферов к заказу"
+    request_body = None
+    responses = {
+        200: openapi.Response(
+            "Success response", OfferOrderSerializer(many=True)
+        ),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
 class OrderOfferList(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = "Получение списка офферов"
-    manual_parameters = (
-        openapi.Parameter(
-            "status",
-            in_=openapi.IN_QUERY,
-            description="Статус заказа",
-            required=False,
-            type=openapi.TYPE_STRING,
-            enum=[i.value for i in OfferState],
+    operation_summary = "Получение списка офферов исполнителя"
+    request_body = None
+    responses = {
+        200: openapi.Response(
+            "Success response", OfferOrderSerializer(many=True)
         ),
-    )
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
 
 
 class OrderOfferRetrieve(BaseSwaggerSchema):
@@ -498,6 +538,11 @@ class OrderOfferRetrieve(BaseSwaggerSchema):
 class OrderOfferCreate(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
     operation_summary = "Создание оффера"
+    responses = {
+        201: openapi.Response("Success response", OfferOrderSerializer()),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
 
 
 class OrderOfferPartialUpdate(BaseSwaggerSchema):

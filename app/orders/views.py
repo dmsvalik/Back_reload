@@ -11,7 +11,6 @@ from rest_framework.decorators import (
     api_view,
     permission_classes,
     parser_classes,
-    action,
 )
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
@@ -142,14 +141,37 @@ def create_order(request):
     return response
 
 
-class OfferViewSet(viewsets.ModelViewSet):
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(**swagger.OrderOfferList.__dict__),
+)
+@method_decorator(
+    name="create",
+    decorator=swagger_auto_schema(**swagger.OrderOfferCreate.__dict__),
+)
+class OfferViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
+):
     """
     Операции с офферами
     """
 
     queryset = OrderOffer.objects.all()
     serializer_class = OfferSerizalizer
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, IsContractor)
+
+    def get_queryset(self):
+        user = self.request.user
+        return OrderOffer.objects.filter(user_account=user)
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [
+                IsAuthenticated(),
+                IsContractor(),
+                perm.OneOfferPerContactor(),
+            ]
+        return super().get_permissions()
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -157,40 +179,37 @@ class OfferViewSet(viewsets.ModelViewSet):
         contactor_key = (
             last_contactor_key_offer(request.data.get("order_id")) + 1
         )
-        serializer.validated_data.update({"contactor_key": contactor_key})
+        serializer.validated_data.update(
+            {"contactor_key": contactor_key, "user_account": request.user}
+        )
         self.perform_create(serializer)
         headers = self.get_success_headers(serializer.data)
         return Response(
             serializer.data, status=status.HTTP_201_CREATED, headers=headers
         )
 
-    @action(
-        methods=["post"],
-        detail=True,
-        url_path="select",
-        permission_classes=[IsAuthenticated, perm.IsOrderOfferStateNotDraft],
-    )
-    def select_offer_view(self, request, *args, **kwargs):
-        """
-        Меняет статус оффера на выбран,
-        статус на заказа на выбран,
-        остальные офферы заказа на отклонен
-        """
-        instance = self.get_object()
-        select_offer(instance)
-        serializer = OfferSerizalizer(instance=instance, many=False)
-        return Response(data=serializer.data)
-
-    def update(self, request, *args, **kwargs):
-        pass
-
-    def partial_update(self, request, *args, **kwargs):
-        pass
-
-    def destroy(self, request, *args, **kwargs):
-        pass
+    # @action(
+    #     methods=["post"],
+    #     detail=True,
+    #     url_path="select",
+    #     permission_classes=[IsAuthenticated, perm.IsOrderOfferStateNotDraft],
+    # )
+    # def select_offer_view(self, request, *args, **kwargs):
+    #     """
+    #     Меняет статус оффера на выбран,
+    #     статус на заказа на выбран,
+    #     остальные офферы заказа на отклонен
+    #     """
+    #     instance = self.get_object()
+    #     select_offer(instance)
+    #     serializer = OfferSerizalizer(instance=instance, many=False)
+    #     return Response(data=serializer.data)
 
 
+@method_decorator(
+    name="get",
+    decorator=swagger_auto_schema(**swagger.AllOffersToOrder.__dict__),
+)
 class OrderOfferView(generics.ListAPIView):
     """Офферы по заказу"""
 
@@ -635,3 +654,25 @@ class CloneOrderView(generics.CreateAPIView):
         return Response(
             {"order_id": db.new_order_id}, status=status.HTTP_201_CREATED
         )
+
+
+@swagger_auto_schema(**swagger.AcceptOffer.__dict__)
+@api_view(["POST"])
+@permission_classes([perm.IsOrderOwner, perm.IsOrderOfferStateIsOffer])
+def accept_offer(request, pk):
+    """
+    Меняет статус оффера на выбран,
+    статус на заказа на выбран,
+    остальные офферы заказа на отклонен
+    """
+    offer_id = request.data.get("offer_id")
+    if not offer_id:
+        raise errorcode.OfferNotFound()
+    offer = OrderOffer.objects.filter(id=offer_id).first()
+    if not offer:
+        raise errorcode.OfferNotFound()
+    if offer.order_id.id != pk:
+        raise errorcode.IncorrectOffer()
+    selected_offer = select_offer(offer)
+    serializer = OfferSerizalizer(instance=selected_offer, many=False)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)

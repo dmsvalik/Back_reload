@@ -8,7 +8,7 @@ router.register("offers", views.OfferViewSet)
 
 urlpatterns = [
     path(
-        "orders",
+        "order/",
         include(
             [
                 path(
@@ -44,7 +44,7 @@ urlpatterns = [
         ),
     ),
     path(
-        "orders/<int:pk>/",
+        "order/<int:pk>/",
         include(
             [
                 path(
@@ -61,7 +61,9 @@ urlpatterns = [
                 path(
                     "offers/",
                     views.OrderOfferView.as_view(),
+                    name="order-offers",
                 ),
+                path("accept_offer/", views.accept_offer, name="accept offer"),
             ]
         ),
     ),
