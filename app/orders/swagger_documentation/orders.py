@@ -290,7 +290,7 @@ class FileOrderDelete(BaseSwaggerSchema):
         properties={
             "file_id": openapi.Schema(
                 title="Id файла",
-                type=openapi.TYPE_INTEGER,
+                type=openapi.TYPE_STRING,
             )
         },
     )

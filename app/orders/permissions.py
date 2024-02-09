@@ -110,11 +110,12 @@ class IsUserQuotaForClone(permissions.BasePermission):
     def has_permission(self, request, view):
         order_id = view.request.data.get("order_id")
         files = OrderFileData.objects.filter(order_id=order_id)
+        if not files:
+            return True
         user = OrderModel.objects.get(pk=order_id).user_account
 
         quota_manager = UserQuotaManager(user)
         quota = quota_manager.quota()
-
         proj_yandex_size = (
             files.aggregate(cloud_size=Sum("yandex_size")).get("cloud_size")
             + quota.total_cloud_size

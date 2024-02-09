@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 from django.conf import settings
@@ -37,8 +37,8 @@ class ChatViewSet(
                 return Conversation.objects.filter(
                     offer__in=offers_ids,
                 )
-            available_date = datetime.now() - timedelta(
-                days=settings.CHATTING["DAYS_TO_UNLOCK"],
+            available_date = (
+                datetime.now() - settings.CHATTING["TIMEDELTA_TO_UNLOCK"]
             )
             orders_ids = OrderModel.objects.filter(
                 user_account=user,

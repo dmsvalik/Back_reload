@@ -8,7 +8,7 @@ authors = ["Your Name <you@example.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8.1,<4.0.0"
+python = ">=3.10.0,<4.0.0"
 django = "4.1.7"
 djoser = "^2.2.0"
 pillow = "^9.5.0"
@@ -27,6 +27,7 @@ taskipy = "^1.12.0"
 reportlab = "^4.0.8"
 pypdf2 = "^3.0.1"
 django-celery-beat = "^2.5.0"
+django-colorfield = "^0.11.0"
 
 [tool.poetry.group.dev.dependencies]
 drf-yasg = "^1.21.6"

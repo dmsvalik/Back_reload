@@ -199,3 +199,11 @@ class QuestionnaireIdNotFound(HttpValidationException):
 class QuestionIdNotFound(HttpValidationException):
     status_code = 404
     detail = {"errors": "QuestionIdNotFound", "message": "Вопрос не найден."}
+
+
+class CopyingFileError(HttpValidationException):
+    status_code = 400
+    default = {
+        "errors": "CopyingFileError",
+        "message": "Ошибка при копировании файла",
+    }

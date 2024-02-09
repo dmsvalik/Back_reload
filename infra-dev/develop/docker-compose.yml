@@ -97,7 +97,7 @@ services:
       dockerfile: infra-dev/Dockerfile
     restart: always
     command:
-      sh -c "poetry run celery -A config beat -l info"
+      sh -c "poetry run celery -A config beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler"
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/

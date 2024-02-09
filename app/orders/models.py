@@ -142,3 +142,14 @@ class OrderOffer(models.Model):
 
     def __str__(self):
         return "офер на заказ №" + " " + str(self.order_id)
+
+
+class OfferFile(FileAbstractModel):
+    """Модель для файлов привязанных к офферу"""
+
+    offer_id = models.ForeignKey(
+        OrderOffer, on_delete=models.SET_NULL, null=True
+    )
+
+    def __str__(self):
+        return str(f"Файл оффера {self.offer_id}")

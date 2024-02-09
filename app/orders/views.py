@@ -69,7 +69,7 @@ from .utils.services import (
     select_offer,
 )
 from .utils.order_state import OrderStateActivate
-from .utils.clone_db_data import CloneOrderDB
+from .utils.db_data import CloneOrderDB
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -634,7 +634,6 @@ class CloneOrderView(generics.CreateAPIView):
         Клонирование заказа со всеми связанными данными.
         URL: http://localhost/order/clone/
         METHOD - "POST"
-        pk:int (обязательное) - id заказа к которому крепится файл,
         Данные передаваемые в запросе:
             - order_id: int - id заказа который необходимо клонировать,
         @return: Response object {"new_order_id": int}
@@ -645,14 +644,15 @@ class CloneOrderView(generics.CreateAPIView):
         db = CloneOrderDB(user_id=user_id, old_order_id=old_order_id)
         db.clone_order()
         db.clone_order_question_response()
-        db.clone_order_file_data()
+        state_copy = db.clone_order_file_data()
 
-        celery_copy_order_file_task.delay(
-            user_id, old_order_id, db.new_order_id
-        )
+        if state_copy:
+            celery_copy_order_file_task.delay(
+                user_id, old_order_id, db.order_id
+            )
 
         return Response(
-            {"order_id": db.new_order_id}, status=status.HTTP_201_CREATED
+            {"order_id": db.order_id}, status=status.HTTP_201_CREATED
         )
 
 

@@ -81,6 +81,16 @@ class ChatMessage(models.Model):
         verbose_name="Время отправки",
         editable=False,
     )
+    is_read = models.BooleanField(
+        verbose_name="прочтено ли сообщение",
+        default=False,
+    )
+    hashcode = models.CharField(
+        verbose_name="hascode",
+        max_length=1000,
+        null=True,
+        unique=True,
+    )
 
     class Meta:
         verbose_name = "сообщение в чате"
@@ -88,4 +98,4 @@ class ChatMessage(models.Model):
         ordering = ("-sent_at",)
 
     def __str__(self):
-        return self.text[:15]
+        return self.text[:15] + ": " + str(self.is_read)

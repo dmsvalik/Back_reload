@@ -137,7 +137,7 @@ services:
     image: whywe/prod_image:latest
     restart: always
     command:
-      sh -c "poetry run celery -A config beat -l info"
+      sh -c "poetry run celery -A config beat -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler"
     volumes:
       - $FILE_PATH/static/:/app/static/
       - $FILE_PATH/media/:/app/media/
