@@ -8,7 +8,7 @@ from app.questionnaire.models import (
     QuestionnaireType,
     Question,
 )
-from .servise import save_many_obj_to_db
+from .services import save_many_obj_to_db
 from ...users.utils.quota_manager import UserQuotaManager
 
 

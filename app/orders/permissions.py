@@ -1,14 +1,19 @@
 from django.db.models import Sum
 from rest_framework import permissions
 
-from app.orders.models import OrderFileData, OrderModel
+from app.utils.errorcode import (
+    FileNotFound,
+    UniqueOrderOffer,
+    OrderInWrongStatus,
+)
+from app.orders.models import OrderFileData, OrderModel, OrderOffer
 from app.users.utils.quota_manager import UserQuotaManager
-from app.utils.errorcode import FileNotFound
 from config.settings import (
     ORDER_COOKIE_KEY_NAME,
     MAX_SERVER_QUOTA,
     MAX_STORAGE_QUOTA,
 )
+from .constants import OrderState
 
 
 class IsOrderFileDataOwnerWithoutUser(permissions.BasePermission):
@@ -70,6 +75,23 @@ class IsFileExistById(permissions.BasePermission):
         return OrderModel.objects.filter(id=file_id).exists()
 
 
+class OneOfferPerContactor(permissions.BasePermission):
+    """
+    Ограничение на создание нескольких предложений
+    к одному заказу от 1 исполнителя
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        order_id = view.kwargs.get("pk") or request.data.get("order_id")
+
+        if OrderOffer.objects.filter(
+            user_account=user, order_id=order_id
+        ).exists():
+            raise UniqueOrderOffer()
+        return True
+
+
 class IsOrderExists(permissions.BasePermission):
     """Проверка на наличие заказа"""
 
@@ -107,3 +129,28 @@ class IsUserQuotaForClone(permissions.BasePermission):
             proj_server_size < MAX_SERVER_QUOTA
             and proj_yandex_size < MAX_STORAGE_QUOTA
         )
+
+
+class IsOrderOfferStateNotDraft(permissions.BasePermission):
+    def has_permission(self, request, view):
+        offer = OrderOffer.objects.filter(pk=view.kwargs.get("pk")).first()
+        if offer.order_id.state != OrderState.DRAFT.value:
+            raise OrderInWrongStatus()
+        return True
+
+
+class IsOrderOfferStateIsOffer(permissions.BasePermission):
+    """Проверка что статус заказа позволяет принимать офферы."""
+
+    message = {"detail": "К данному заказу нельзя создать предложения"}
+
+    def has_permission(self, request, view):
+        order_id = view.kwargs.get("pk") or request.data.get("order_id")
+        if (
+            request.user.is_authenticated
+            and OrderModel.objects.filter(
+                id=order_id, state=OrderState.OFFER.value
+            ).exists()
+        ):
+            return True
+        return False
