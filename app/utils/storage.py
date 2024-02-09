@@ -251,8 +251,11 @@ class CloudStorage:
         for item in reversed(dirs):
             indx = dirs.index(item)
             path = str(os.path.join(*dirs[0 : indx + 1]))
-            if not self._check_path(path):
+            state = self._check_path(path)
+            if not state:
                 create_dirs.append(path)
+            elif state:
+                break
 
         for item in reversed(create_dirs):
             if not self._create_path(item):
