@@ -13,6 +13,7 @@ class ContractorDataAdmin(admin.ModelAdmin):
     """Админка информации об исполнителе."""
 
     list_display = [
+        "pk",
         "user",
         "is_active",
         "company_name",

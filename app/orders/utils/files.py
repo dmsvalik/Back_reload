@@ -3,16 +3,18 @@ import os
 from rest_framework.response import Response
 from rest_framework import status
 
+
 from app.orders.utils.db_data import CloneOrderDB, UpdateOrderDB
 from app.orders.utils.servise import (
     create_celery_beat_task,
     update_periodic_tusk_copy,
 )
+
 from app.questionnaire.models import Question
 from app.questionnaire.serializers import FileSerializer
 from app.utils.file_work import FileWork
 from app.utils.image_work import GifWork, ImageWork
-from app.utils.storage import CloudStorage, UserServerFiles
+from app.utils.storage import CloudStorage, OrderServerFiles
 from app.utils.errorcode import (
     FileNotFound,
     IncorrectFileDeleting,
@@ -24,7 +26,7 @@ from app.users.utils.quota_manager import UserQuotaManager
 # from celery import shared_task
 
 from app.orders.models import OrderFileData, OrderModel
-from config.settings import BASE_DIR
+from config.settings import BASE_DIR, FILE_SETTINGS
 
 
 # celery -A config.celery worker
@@ -74,7 +76,9 @@ def delete_image(
         if file_to_delete.yandex_path:
             yandex.cloud_delete_file(file_to_delete.yandex_path)
         if preview_path:
-            full_preview_path = os.path.join(BASE_DIR, "files/", preview_path)
+            full_preview_path = os.path.join(
+                BASE_DIR, FILE_SETTINGS.get("PATH_SERVER_FILES"), preview_path
+            )
             if os.path.exists(full_preview_path):
                 os.remove(full_preview_path)
         file_to_delete.delete()
@@ -216,33 +220,47 @@ def copy_order_file(user_id: int, old_order_id: int, new_order_id: int):
     @param new_order_id: id нового заказа
     @return: str - id операции копирования
     """
-
-    file = CloudStorage()
-    path_from = file.create_order_path(
-        user_id=user_id, order_id=old_order_id, not_check=True
+    files = (
+        OrderFileData.objects.filter(order_id=old_order_id)
+        .exclude(yandex_path="")
+        .first()
     )
+    if files:
+        file = CloudStorage()
+        path_from = get_path_dir_from_path_file(files.yandex_path)
 
-    path_to = file.create_order_path(
-        user_id=user_id, order_id=new_order_id, not_check=True
+        path_to = file.create_order_path(
+            user_id=user_id, order_id=new_order_id
+        )
+        operation_id = file.cloud_copy_files(
+            path_to, path_from, overwrite=True
+        )
+
+        if type(operation_id) is str:
+            data = {
+                "operation_id": operation_id,
+                "path_to": path_to,
+                "user_id": user_id,
+                "order_id": new_order_id,
+            }
+            name = f"copy_files_{new_order_id}"
+            task = "app.orders.tasks.celery_update_order_file_data_task"
+            create_celery_beat_task(name, data, task)
+
+    server_files = (
+        OrderFileData.objects.filter(order_id=old_order_id)
+        .exclude(server_path="")
+        .first()
     )
-    operation_id = file.cloud_copy_files(path_to, path_from, overwrite=True)
+    if server_files:
+        s_dir_from = get_path_dir_from_path_file(server_files.server_path)
+        s_dir_to = OrderServerFiles(user_id=user_id, order_id=new_order_id)
+        server_path = s_dir_to.copy_dir_files(
+            s_dir_from, s_dir_to.relative_path
+        )
 
-    if type(operation_id) is str:
-        data = {
-            "operation_id": operation_id,
-            "path_to": path_to,
-            "user_id": user_id,
-            "order_id": new_order_id,
-        }
-        name = f"copy_files_{new_order_id}"
-        task = "app.orders.tasks.celery_update_order_file_data_tusk"
-        create_celery_beat_task(name, data, task)
-
-    s_file = UserServerFiles()
-    server_path = s_file.copy_dir_files(path_from, path_to)
-
-    db = CloneOrderDB(order_id=new_order_id, user_id=user_id)
-    db.update_order_file_path(server_path, cloud=False)
+        db = CloneOrderDB(order_id=new_order_id, user_id=user_id)
+        db.update_order_file_path(server_path, cloud=False)
 
 
 def update_order_file_data_copy(
@@ -277,34 +295,46 @@ def moving_order_files_to_user(user_id: int, order_id: int) -> None:
     @param order_id: id файлов принадлежащих заказу
     @return: None
     """
-
-    file = CloudStorage()
-    path_from = file.create_order_path(
-        user_id="no_user",
-        order_id=order_id,
+    files = (
+        OrderFileData.objects.filter(order_id=order_id)
+        .exclude(yandex_path="")
+        .first()
     )
+    if files:
+        file = CloudStorage()
+        path_from = get_path_dir_from_path_file(files.yandex_path)
 
-    path_to = file.create_order_path(
-        user_id=user_id, order_id=order_id, not_check=True
+        path_to = file.create_order_path(user_id=user_id, order_id=order_id)
+        operation_id = file.cloud_copy_files(
+            path_to, path_from, overwrite=True
+        )
+
+        if type(operation_id) is str:
+            data = {
+                "operation_id": operation_id,
+                "path_to": path_to,
+                "user_id": user_id,
+                "order_id": order_id,
+                "path_from": path_from,
+            }
+            name = f"move_files_{order_id}"
+            task = "app.orders.tasks.celery_update_order_file_data_move_task"
+            create_celery_beat_task(name, data, task)
+
+    server_files = (
+        OrderFileData.objects.filter(order_id=order_id)
+        .exclude(server_path="")
+        .first()
     )
-    operation_id = file.cloud_copy_files(path_to, path_from, overwrite=True)
-    if type(operation_id) is str:
-        data = {
-            "operation_id": operation_id,
-            "path_to": path_to,
-            "user_id": user_id,
-            "order_id": order_id,
-            "path_from": path_from,
-        }
-        name = f"move_files_{order_id}"
-        task = "app.orders.tasks.celery_update_order_file_data_move_task"
-        create_celery_beat_task(name, data, task)
+    if server_files:
+        s_dir_from = get_path_dir_from_path_file(server_files.server_path)
+        s_dir_to = OrderServerFiles(user_id=user_id, order_id=order_id)
+        server_path = s_dir_to.move_dir_files(
+            s_dir_from, s_dir_to.relative_path
+        )
 
-    s_file = UserServerFiles()
-    server_path = s_file.move_dir_files(path_from, path_to)
-
-    db = UpdateOrderDB(order_id=order_id, user_id=user_id)
-    db.update_order_file_path(server_path, cloud=False)
+        db = UpdateOrderDB(order_id=order_id, user_id=user_id)
+        db.update_order_file_path(server_path, cloud=False)
 
 
 def update_order_file_data_move(
@@ -332,3 +362,14 @@ def update_order_file_data_move(
         yandex = CloudStorage()
         db.update_order_file_path(path_to, server=False)
         yandex.cloud_delete_file(path_from)
+
+
+def get_path_dir_from_path_file(full_path: str) -> str:
+    """
+    Метод получает путь до директории с файлом из полного пути файла
+    @param full_path: Путь до файла
+    @return:
+    """
+    path_lst = full_path.split("/")
+    del path_lst[-1]
+    return "/".join(path_lst)

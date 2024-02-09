@@ -1,10 +1,12 @@
 from typing import List, Optional
 
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 from app.orders.serializers import (
     AllOrdersClientSerializer,
-    OrderOfferSerializer,
+    OfferOrderSerializer,
+    OfferSerizalizer,
 )
 from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
@@ -105,7 +107,7 @@ class OfferGetList(BaseSwaggerSchema):
     request_body = None
     responses = {
         200: openapi.Response(
-            "Success response", OrderOfferSerializer(many=True)
+            "Success response", OfferOrderSerializer(many=True)
         ),
         404: DEFAULT_RESPONSES[404],
     }
@@ -200,7 +202,7 @@ class OfferCreate(BaseSwaggerSchema):
         },
     )
     responses = {
-        201: openapi.Response("Success response", OrderOfferSerializer),
+        # 201: openapi.Response("Success response", OrderOfferSerializer),
         400: generate_400_response(
             ["offer_price", "offer_execution_time", "offer_description"]
         ),
@@ -288,7 +290,7 @@ class FileOrderDelete(BaseSwaggerSchema):
         properties={
             "file_id": openapi.Schema(
                 title="Id файла",
-                type=openapi.TYPE_INTEGER,
+                type=openapi.TYPE_STRING,
             )
         },
     )
@@ -296,6 +298,35 @@ class FileOrderDelete(BaseSwaggerSchema):
         204: openapi.Response(
             "Success response",
         ),
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
+    }
+
+
+class AcceptOffer(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order"), SWAGGER_TAGS.get("offer")]
+    operation_id = "accept-offer"
+    operation_summary = "Выбор предложения исполнителя."
+    operation_description = (
+        "Выбор предложения исполнителя. Перевод оффера в статус выбраного. \n"
+        "Все остальные предложения будут отклонены.\n Статус заказа изменяется."
+        "\n\n**Ограничения:**\n\n1. Проверка пользователя(или):\n-- Владелец заказа."
+    )
+    method = "POST"
+    request_body = openapi.Schema(
+        type=openapi.TYPE_OBJECT,
+        required=[
+            "offer_id",
+        ],
+        properties={
+            "offer_id": openapi.Schema(
+                title="Id оффера",
+                type=openapi.TYPE_INTEGER,
+            )
+        },
+    )
+    responses = {
+        200: OfferSerizalizer(),
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
     }
@@ -473,24 +504,73 @@ class FileOrderDownload(BaseSwaggerSchema):
     }
 
 
+class AllOffersToOrder(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("order")]
+    operation_summary = "Получение списка офферов к заказу"
+    request_body = None
+    responses = {
+        200: openapi.Response(
+            "Success response", OfferOrderSerializer(many=True)
+        ),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
+class OrderOfferList(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Получение списка офферов исполнителя"
+    request_body = None
+    responses = {
+        200: openapi.Response(
+            "Success response", OfferOrderSerializer(many=True)
+        ),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
 class OrderOfferRetrieve(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = (
-        "Получение информации о отдельном оффере " "**в разработке**"
-    )
-    deprecated = True
+    operation_summary = "Получение информации о отдельном оффере"
 
 
-class OrderOfferDelete(BaseSwaggerSchema):
+class OrderOfferCreate(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = "Удаление отдельного оффера **в разработке**"
-    deprecated = True
+    operation_summary = "Создание оффера"
+    responses = {
+        201: openapi.Response("Success response", OfferOrderSerializer()),
+        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
+    }
+
+
+class OrderOfferPartialUpdate(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Частичное изменение отдельного оффера"
 
 
 class OrderOfferUpdate(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = "Изменение отдельного оффера **в разработке"
-    deprecated = True
+    operation_summary = "Изменение отдельного оффера"
+
+
+class OrderOfferDelete(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Удаление отдельного оффера"
+
+
+swagger_offer_set = (
+    (swagger_auto_schema(**OrderOfferList.__dict__), "list"),
+    (swagger_auto_schema(**OrderOfferRetrieve.__dict__), "retrieve"),
+    (swagger_auto_schema(**OrderOfferCreate.__dict__), "create"),
+    (
+        swagger_auto_schema(**OrderOfferPartialUpdate.__dict__),
+        "partial_update",
+    ),
+    (swagger_auto_schema(**OrderOfferUpdate.__dict__), "update"),
+    (swagger_auto_schema(**OrderOfferDelete.__dict__), "destroy"),
+)
 
 
 class CloneOrderCreate(BaseSwaggerSchema):

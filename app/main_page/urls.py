@@ -6,6 +6,7 @@ from .views import (
     CooperationViewSet,
     SupportViewSet,
 )
+from app.orders.views import ContactorOfferView
 
 
 router = routers.SimpleRouter()
@@ -20,4 +21,5 @@ urlpatterns = [
         "contractor_agreement/",
         ContractorAgreementViewSet.as_view({"post": "create"}),
     ),
+    path("contactor/<int:pk>/offers/", ContactorOfferView.as_view()),
 ]

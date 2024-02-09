@@ -5,7 +5,7 @@ from django.db import models
 from app.main_page.models import ContractorData
 from app.users.models import UserAccount
 
-from .constants import ORDER_STATE_CHOICES
+from .constants import ORDER_STATE_CHOICES, OFFER_STATE_CHOICES
 
 
 class OrderModel(models.Model):
@@ -127,8 +127,14 @@ class OrderOffer(models.Model):
     offer_description = models.CharField(
         "Описание офера", max_length=300, blank=True
     )
-    offer_status = models.BooleanField("Принят офер или нет", default=False)
     contactor_key = models.IntegerField(verbose_name="Номер исполнителя")
+    is_archive = models.BooleanField(default=False)
+    status = models.CharField(
+        verbose_name="Статус",
+        choices=OFFER_STATE_CHOICES,
+        max_length=50,
+        default=OFFER_STATE_CHOICES[0][0],
+    )
 
     class Meta:
         verbose_name = "Офер"
@@ -136,3 +142,14 @@ class OrderOffer(models.Model):
 
     def __str__(self):
         return "офер на заказ №" + " " + str(self.order_id)
+
+
+class OfferFile(FileAbstractModel):
+    """Модель для файлов привязанных к офферу"""
+
+    offer_id = models.ForeignKey(
+        OrderOffer, on_delete=models.SET_NULL, null=True
+    )
+
+    def __str__(self):
+        return str(f"Файл оффера {self.offer_id}")

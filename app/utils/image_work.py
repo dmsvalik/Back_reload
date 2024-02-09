@@ -28,13 +28,26 @@ class ImageWork(object):
             user_id = "no_user"
 
         self.temp_file = temp_file
-        self.dir_path = os.path.join(
-            BASE_DIR, "files", str(user_id), str(order_id)
+        self.relative_path = str(
+            os.path.join(
+                FILE_SETTINGS.get("PATH_ORDER_FILES"),
+                str(user_id),
+                str(order_id),
+            )
+        )
+        self.dir_path = str(
+            os.path.join(
+                BASE_DIR,
+                FILE_SETTINGS.get("PATH_SERVER_FILES"),
+                self.relative_path,
+            )
         )
 
         self.filename = temp_file.split("/")[-1]
         self.preview = self._prepare_and_save_preview()
-        self.preview_path = self.preview.split("files/")[-1]
+        self.preview_path = self.preview.split(
+            FILE_SETTINGS.get("PATH_SERVER_FILES") + "/"
+        )[-1]
         self.upload_file_size = os.path.getsize(self._prepare_before_upload())
         self.preview_file_size = os.path.getsize(self.preview)
 

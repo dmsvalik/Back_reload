@@ -93,6 +93,14 @@ class IncorrectFileDeleting(HttpValidationException):
     }
 
 
+class IncorrectOffer(HttpValidationException):
+    status_code = 400
+    detail = {
+        "errors": "IncorrectOffer",
+        "message": "Предложение не соответствует заказу.",
+    }
+
+
 class IncorrectFileUploading(HttpValidationException):
     status_code = 400
     detail = {
@@ -103,7 +111,12 @@ class IncorrectFileUploading(HttpValidationException):
 
 class OrderIdNotFound(HttpValidationException):
     status_code = 404
-    detail = {"errors": "OrderIdNotFound", "message": "Заказ не найдет."}
+    detail = {"errors": "OrderIdNotFound", "message": "Заказ не найден."}
+
+
+class OfferNotFound(HttpValidationException):
+    status_code = 404
+    detail = {"errors": "OfferNotFound", "message": "Предложение не найдено."}
 
 
 class UniqueOrderOffer(HttpValidationException):
@@ -186,3 +199,11 @@ class QuestionnaireIdNotFound(HttpValidationException):
 class QuestionIdNotFound(HttpValidationException):
     status_code = 404
     detail = {"errors": "QuestionIdNotFound", "message": "Вопрос не найден."}
+
+
+class CopyingFileError(HttpValidationException):
+    status_code = 400
+    default = {
+        "errors": "CopyingFileError",
+        "message": "Ошибка при копировании файла",
+    }

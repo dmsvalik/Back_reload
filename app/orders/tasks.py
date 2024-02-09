@@ -220,7 +220,7 @@ def celery_copy_order_file_task(
 
 
 @shared_task()
-def celery_update_order_file_data_tusk(
+def celery_update_order_file_data_task(
     order_id: int, operation_id: str, path_to: str, user_id: int
 ):
     """

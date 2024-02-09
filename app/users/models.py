@@ -1,5 +1,6 @@
 import re
 
+from colorfield.fields import ColorField
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -175,6 +176,17 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "UserAccount"
 
 
+class UserAvatar(models.Model):
+    """Модель аватара юзера"""
+
+    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE)
+    color = ColorField()
+
+    class Meta:
+        verbose_name = "Аватар пользователя"
+        verbose_name_plural = "Аватары пользователей"
+
+
 class UserQuota(models.Model):
     """Модель для квоты дискового пространства пользователя."""
 
@@ -187,6 +199,10 @@ class UserQuota(models.Model):
         self.total_traffic = 0
         self.save()
 
+    class Meta:
+        verbose_name = "Квота пользователя"
+        verbose_name_plural = "Квоты пользователей"
+
 
 class UserAgreement(models.Model):
     """Модель принятия оферты пользователем при регистрации."""
@@ -196,3 +212,7 @@ class UserAgreement(models.Model):
         UserAccount, on_delete=models.CASCADE, null=True
     )
     date = models.DateField("Дата принятия офферты")
+
+    class Meta:
+        verbose_name = "Пользовательское соглашение"
+        verbose_name_plural = "Пользовательские соглашения"
