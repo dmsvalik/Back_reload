@@ -23,7 +23,9 @@ class BaseServerFileWork(object):
     """Базовый класс работы с файлами на сервере"""
 
     def __init__(self):
-        self.dir_path = BASE_DIR
+        self.server_file_dir = str(
+            os.path.join(BASE_DIR, FILE_SETTINGS.get("PATH_SERVER_FILES"))
+        )
 
     def copy_dir_files(self, src_path: str, dst_path: str):
         """
@@ -34,11 +36,11 @@ class BaseServerFileWork(object):
         @param dst_path: Путь до директории в которую копируются файлы
         @return: dst_path
         """
+        path_from = os.path.join(self.server_file_dir, src_path)
+        if os.path.exists(path_from):
+            path_to = os.path.join(self.server_file_dir, dst_path)
 
-        path_from = os.path.join(self.dir_path, src_path)
-        path_to = os.path.join(self.dir_path, dst_path)
-
-        shutil.copytree(str(path_from), str(path_to), dirs_exist_ok=True)
+            shutil.copytree(str(path_from), str(path_to), dirs_exist_ok=True)
         return dst_path
 
     def move_dir_files(self, src_path: str, dst_path: str):
@@ -50,9 +52,10 @@ class BaseServerFileWork(object):
         @param dst_path: Путь до директории в которую перемещаются файлы
         @return: dst_path
         """
-        path_from = os.path.join(self.dir_path, src_path)
-        path_to = os.path.join(self.dir_path, dst_path)
-        shutil.move(str(path_from), str(path_to))
+        path_from = os.path.join(self.server_file_dir, src_path)
+        if os.path.exists(path_from):
+            path_to = os.path.join(self.server_file_dir, dst_path)
+            shutil.move(str(path_from), str(path_to))
         return dst_path
 
 
@@ -75,9 +78,14 @@ class ServerFileSystem(BaseServerFileWork):
 
         # self.user = UserAccount.objects.get(id=user_id)
         self.file_format = file_name.split(".")[-1]
-        self.dir_path = os.path.join(
-            BASE_DIR, "files", str(user_id), str(order_id)
+        self.relative_path = str(
+            os.path.join(
+                FILE_SETTINGS.get("PATH_ORDER_FILES"),
+                str(user_id),
+                str(order_id),
+            )
         )
+        self.dir_path = os.path.join(self.server_file_dir, self.relative_path)
         self.filename = self.generate_new_filename()
 
     def _prepare_catalog_file_names(self, dir_path):
@@ -114,12 +122,62 @@ class ServerFileSystem(BaseServerFileWork):
         return f"{generated_file_name}.{self.file_format}"
 
 
-class UserServerFiles(BaseServerFileWork):
-    """Класс для работы со всеми пользовательскими файлами на сервере"""
+class OrderServerFiles(BaseServerFileWork):
+    """Класс для работы с файлами заказов на сервере"""
 
-    def __init__(self):
+    def __init__(self, file_name=None, user_id=None, order_id=None):
         super().__init__()
-        self.dir_path = os.path.join(BASE_DIR, "files")
+
+        if order_id is None:
+            order_id = "no_order"
+
+        if user_id is None:
+            user_id = "no_user"
+
+        self.relative_path = str(
+            os.path.join(
+                FILE_SETTINGS.get("PATH_ORDER_FILES"),
+                str(user_id),
+                str(order_id),
+            )
+        )
+        self.dir_path = os.path.join(self.server_file_dir, self.relative_path)
+
+
+class OfferServerFiles(BaseServerFileWork):
+    """Класс для работы с файлами офферов на сервере"""
+
+    def __init__(self, file_name=None, user_id=None, offer_id=None):
+        super().__init__()
+
+        offer_id = offer_id if offer_id else "no_offer"
+        user_id = user_id if user_id else "no_user"
+
+        self.relative_path = str(
+            os.path.join(
+                FILE_SETTINGS.get("PATH_OFFER_FILES"),
+                str(user_id),
+                str(offer_id),
+            )
+        )
+
+        self.dir_path = os.path.join(self.server_file_dir, self.relative_path)
+
+
+class ChatsServerFiles(BaseServerFileWork):
+    """Класс для работы с файлами чатов на сервере"""
+
+    def __init__(self, chat_id=None):
+        super().__init__()
+        self.relative_path = str(
+            os.path.join(FILE_SETTINGS.get("PATH_OFFER_FILES"), str(chat_id))
+        )
+
+        self.dir_path = os.path.join(
+            self.server_file_dir,
+            FILE_SETTINGS.get("PATH_CHATS_FILES"),
+            self.relative_path,
+        )
 
 
 class CloudStorage:
@@ -134,6 +192,7 @@ class CloudStorage:
             "Authorization": f"OAuth {self.token[0]}",
         }
         self.overwrite = "true"
+        self.dir_path = FILE_SETTINGS.get("PATH_ORDER_FILES")
 
     def _check_path(self, path):
         """
@@ -164,7 +223,8 @@ class CloudStorage:
         self, user_id: int or str, order_id: int, not_check=False
     ) -> str or bool:
         """
-        Метод для создания пути для файла, если он еще не существует.
+        Метод для создания пути для файла, если путь не существует на диске,
+        то будет создан
         @param user_id: int - id пользователя.
         @param order_id: int - id заказа.
         @param not_check: bool - проверка существования пути на YandexDisk, и
@@ -172,18 +232,35 @@ class CloudStorage:
         выполняется.
         @return:
         """
-        path = f"{user_id}/{order_id}"
-        user_directory_path = f"{user_id}"
-        order_directory_path = f"{user_id}/{order_id}"
+        path = os.path.join(self.dir_path, str(user_id), str(order_id))
         if not_check:
             return path
-        if not self._check_path(order_directory_path):
-            if not self._check_path(user_directory_path):
-                if not self._create_path(user_directory_path):
-                    return False
-            if not self._create_path(order_directory_path):
+
+        if self._check_or_create(path):
+            return path
+
+    def _check_or_create(self, path: str) -> bool:
+        """
+        Метод проверяет существование указанной директории,
+        и если её нет, то создает.
+        @param path: Путь
+        @return: bool
+        """
+        dirs = path.split("/")
+        create_dirs = []
+        for item in reversed(dirs):
+            indx = dirs.index(item)
+            path = str(os.path.join(*dirs[0 : indx + 1]))
+            state = self._check_path(path)
+            if not state:
+                create_dirs.append(path)
+            elif state:
+                break
+
+        for item in reversed(create_dirs):
+            if not self._create_path(item):
                 return False
-        return path
+        return True
 
     def _get_upload_link(self, path, order_id, name):
         """
@@ -250,6 +327,7 @@ class CloudStorage:
     ) -> bool or str:
         """
         Метод копирует файлы расположенные на YandexDisk.
+        Пути должны существовать.
         @param path_from: str - Путь до файла/директории которые
         копируем.
         @param path_to: str - Путь до директории/файла в которые
@@ -267,7 +345,7 @@ class CloudStorage:
             return True
         elif res.status_code == 202:
             return res.json().get("href")
-        return False
+        return errorcode.CopyingFileError
 
     def create_order_path(
         self, user_id: int or str, order_id: int, not_check=False
@@ -311,9 +389,24 @@ class CloudStorage:
         res = requests.post(
             url=f"{self.URL}/move", params=data, headers=self.headers
         )
-        print(res.json())
         if res.status_code == 201:
             return True
         elif res.status_code == 202:
             return res.json().get("href")
-        return False
+        return errorcode.CopyingFileError
+
+
+class OffersCloudStorage(CloudStorage):
+    """Класс для работы с файлами оффера на YandexCloud"""
+
+    def __init__(self):
+        super().__init__()
+        self.dir_path = FILE_SETTINGS.get("PATH_OFFER_FILES")
+
+
+class ChatsCloudStorage(CloudStorage):
+    """Класс для работы с файлами чатов на YandexCloud"""
+
+    def __init__(self):
+        super().__init__()
+        self.dir_path = FILE_SETTINGS.get("PATH_CHATS_FILES")
