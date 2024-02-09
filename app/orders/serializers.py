@@ -94,7 +94,7 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
             .select_related("user_account")
             .select_related("user_account__contractordata")
         )
-        serializer = OfferSerizalizer(
+        serializer = OfferOrderSerializer(
             instance=queryset,
             many=True,
         )
