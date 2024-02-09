@@ -79,15 +79,15 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         если заказ был создан
         более hours(24) часов назад
         """
-        is_selected = True if obj.state == ORDER_STATE_CHOICES[2][0] else False
         range_filter = timezone.now() - timedelta(
             hours=settings.OFFER_ACCESS_HOURS
         )
         query_filter = {
             "order_id": obj.pk,
-            "status": is_selected,
             "order_id__order_time__lt": range_filter,
         }
+        if obj.state == ORDER_STATE_CHOICES[2][0]:
+            query_filter["status"] = OfferState.SELECTED.value
 
         queryset = (
             OrderOffer.objects.filter(**query_filter)
