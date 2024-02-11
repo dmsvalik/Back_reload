@@ -48,6 +48,13 @@ urlpatterns = [
         include(
             [
                 path(
+                    "",
+                    views.OrderViewSet.as_view(
+                        {"get": "retrieve", "patch": "partial_update"}
+                    ),
+                    name="get-order-answers",
+                ),
+                path(
                     "answers/",
                     views.create_answers_to_order,
                     name="post-order-answers",
