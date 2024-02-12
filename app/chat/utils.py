@@ -9,11 +9,17 @@ from .redis_client import RedisClient
 
 
 def generate_message_hash(message: dict):
+    """Генерация хеша для сообщения"""
     str_for_hash = message["text"] + message["sent_at"]
     return hashlib.sha256(str_for_hash.encode()).hexdigest()
 
 
 def store_messages_to_db(chat, hashcodes: list[str]):
+    """
+    Функция сброса данных из редиса в бд
+    Получит все сообщения из редиски по хешкодам,
+    соберет список, сбросит в бд и удалит из редиса
+    """
     redis = RedisClient.from_settings()
     chat_messages = []
     keys_for_deletion = []
@@ -47,6 +53,11 @@ def store_messages_to_db(chat, hashcodes: list[str]):
 
 
 def create_periodic_task():
+    """
+    Создание периодической задачи в celery beat
+    Должно стартовать вместе с джангой при импорте приложения
+    чатов
+    """
     schedule, create = IntervalSchedule.objects.get_or_create(
         every=1, period=IntervalSchedule.MINUTES
     )
@@ -64,6 +75,12 @@ def create_periodic_task():
 def load_message_history_to_redis(
     client: RedisClient, chat_id: int, offset: int = None, limit: int = None
 ):
+    """
+    Функция загрузки истории сообщений в редис из базы.
+    Сейчас должна вызывать при создании Консюмера.
+    При возникновении лагов вероятно следует доработать консюмер,
+    чтобы вызывать обновлении истории порционно
+    """
     chat = Conversation.objects.filter(pk=chat_id)
     if chat.aexists() is False:
         return
