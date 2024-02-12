@@ -8,7 +8,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from .models import Conversation
 from .redis_client import RedisClient
 from .serializers import MessageSerializer
-from .utils import generate_message_hash, store_messages_to_db
+from .utils import (
+    generate_message_hash,
+    load_message_history_to_redis,
+    store_messages_to_db,
+)
 
 
 User = get_user_model()
@@ -57,6 +61,11 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             if self.conversation.is_blocked:
                 await self.close()
                 return
+            # подгружаем, по возможности, асинхронно, все сообщения из бд в редиску
+            print("Зашли сюда?")
+            await sync_to_async(load_message_history_to_redis)(
+                self.redis, self.chat_id
+            )
         else:
             await self.close()
             return
@@ -85,14 +94,18 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         Сбрасывает накопленные сообщения в базу одним запросом.
         """
 
-        await sync_to_async(store_messages_to_db)(
-            self.chat_group_name, self.hashes_for_db
-        )
+        try:
+            await sync_to_async(store_messages_to_db)(
+                self.chat_group_name, self.hashes_for_db
+            )
 
-        await self.channel_layer.group_discard(
-            self.chat_group_name,
-            self.channel_name,
-        )
+            await self.channel_layer.group_discard(
+                self.chat_group_name,
+                self.channel_name,
+            )
+
+        except Exception as e:
+            print(e)
 
     async def chat_message(self, event):
         """
@@ -120,6 +133,15 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             "messages": await sync_to_async(get_serialized_data)(messages)
         }
         await self.send(text_data=json.dumps(content))
+
+    async def fetch_messages_redis(self):
+        messages = []
+        redis_keys = self.redis.search_by_pattern("chat_" + self.chat_id + "*")
+        for key in redis_keys:
+            stored = self.redis.get_message_by_key(key)
+            stored["hashcode"] = key.split(":")[1]
+            messages.append(stored)
+        await self.send(text_data=json.dumps(messages))
 
     async def new_message(self, message):
         """
@@ -184,6 +206,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data=None, bytes_data=None):
         text_data_json = json.loads(text_data)
         command = text_data_json.get("command")
+        print(command)
         if not command:
             await self.send(
                 text_data=json.dumps({"error": "command was not provided"})
@@ -202,8 +225,10 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                     )
                     return
                 await self.read_messages(hashcodes)
+            # case "fetch_messages":
+            #     await self.fetch_messages()
             case "fetch_messages":
-                await self.fetch_messages()
+                await self.fetch_messages_redis()
             case "new_message":
                 if not text_data_json.get("message"):
                     await self.send(

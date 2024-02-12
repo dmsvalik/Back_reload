@@ -59,3 +59,27 @@ def create_periodic_task():
             interval=schedule,
             start_time=datetime.now(timezone.utc) + timedelta(minutes=1),
         )
+
+
+def load_message_history_to_redis(
+    client: RedisClient, chat_id: int, offset: int = None, limit: int = None
+):
+    chat = Conversation.objects.filter(pk=chat_id)
+    if chat.aexists() is False:
+        return
+
+    messages = ChatMessage.objects.filter(conversation=chat.first())[
+        offset:limit
+    ]
+
+    for message in messages:
+        client.store_message(
+            "chat_" + str(chat_id),
+            message.hashcode,
+            {
+                "text": message.text,
+                "sender": str(message.sender),
+                "sent_at": str(message.sent_at),
+                "is_read": str(message.is_read),
+            },
+        )
