@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "app.products",
     "app.orders",
     "app.utils",
+    "app.file",
     "app.chat",
     "app.users",
     "rest_framework",
