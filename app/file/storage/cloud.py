@@ -73,7 +73,6 @@ class CloudBase(object):
                 create_dirs.append(part_path)
             elif state:
                 break
-        print(create_dirs)
         for item in reversed(create_dirs):
             if not self._create_path(item):
                 return False

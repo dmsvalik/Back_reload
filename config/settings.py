@@ -425,6 +425,7 @@ FILE_SETTINGS = {
     "PATH_ORDER_FILES": "orders",
     "PATH_OFFER_FILES": "offers",
     "PATH_CHATS_FILES": "chats",
+    "PATH_TMP_FILES": "tmp",
 }
 
 IMAGE_FILE_FORMATS = [
