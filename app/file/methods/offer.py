@@ -32,6 +32,10 @@ class FileWorkBase(object):
         """Метод выполняет сохранение на сервере и возвращает словарь
         с параметрами для сохранения в БД"""
 
+        file_format = self._server.get_file_format(file.name)
+        if file_format in IMAGE_FILE_FORMATS:
+            self._server = ServerImageFiles
+
         server = self._server()
         name = server.get_unique_filename(file.name)
         path = server.generate_path(self._relative_path, name)
@@ -42,11 +46,9 @@ class FileWorkBase(object):
             "server_size": size,
             "yandex_size": 0,
         }
-        file_format = server.get_file_format(name)
 
         if file_format in IMAGE_FILE_FORMATS:
-            image = ServerImageFiles()
-            preview_path, size = image.save_preview(path)
+            preview_path, size = server.save_preview(path)
             data["preview_path"] = preview_path
             data["server_size"] += size
 
