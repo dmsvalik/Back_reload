@@ -10,9 +10,9 @@ class FileModel(models.Model):
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     original_name = models.CharField("Имя файла", max_length=250)
-    file_path = models.CharField("Путь в облаке", max_length=150, blank=True)
+    file_path = models.CharField("Путь до файла", max_length=150, blank=True)
     preview_path = models.CharField(
-        "Путь на сервере", max_length=150, blank=True
+        "Путь до превью файла", max_length=150, blank=True
     )
     date_upload = models.DateTimeField("Дата создания записи", auto_now=True)
     yandex_size = models.PositiveIntegerField(

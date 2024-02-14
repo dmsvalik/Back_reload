@@ -16,8 +16,11 @@ class BaseSwaggerSchema:
 
 class UploadFile(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("files")]
-    operation_summary = "Загрузка файлов"
-    operation_description = "jgbcfybt"
+    operation_summary = "Загрузка файлов на сервер"
+    operation_description = (
+        "Метод позволяет загрузить файл на сервер\n"
+        "Возвращает id загруженного файла"
+    )
     request_body = FileModelSerializer
     manual_parameters = [
         openapi.Parameter(
@@ -41,7 +44,6 @@ class UploadFile(BaseSwaggerSchema):
                 },
             ),
         ),
-        401: DEFAULT_RESPONSES[401],
-        403: DEFAULT_RESPONSES[403],
+        404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
     }
