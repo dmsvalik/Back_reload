@@ -620,6 +620,5 @@ class CloneOrderCreate(BaseSwaggerSchema):
 
 class ContactorOffer(BaseSwaggerSchema):
     tags = [SWAGGER_TAGS.get("offer")]
-    operation_summary = "Получение списка всех офферов"
+    operation_summary = "Получение списка офферов исполнителя"
     description = ""
-    # request_body = OfferContactorSerializer

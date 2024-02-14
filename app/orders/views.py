@@ -252,10 +252,10 @@ class OrderOfferView(generics.ListAPIView):
         return offers
 
 
-# @method_decorator(
-#     name="get",
-#     decorator=
-# )
+@method_decorator(
+    name="get",
+    decorator=swagger_auto_schema(**swagger.ContactorOffer.__dict__),
+)
 class ContactorOfferView(generics.ListAPIView):
     """
     Офферы исполнителя
@@ -267,7 +267,6 @@ class ContactorOfferView(generics.ListAPIView):
         IsContractor,
     ]
 
-    @swagger_auto_schema(**swagger.ContactorOffer.__dict__)
     def get_queryset(self):
         # прячем ошибку swagger
         if getattr(self, "swagger_fake_view", False):
