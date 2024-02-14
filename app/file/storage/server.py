@@ -4,7 +4,7 @@ import string
 
 from PIL.Image import Image
 
-from app.file.exception import ThisNotFileError
+from app.file import exception as ex
 from config.settings import BASE_DIR, FILE_SETTINGS
 
 
@@ -29,6 +29,8 @@ class ServerFileBase:
         """Метод генерирует строковый путь на основе переданных
         позиционных аргументов. Внимание: Важно передавать аргументы списком
         с аргументами расположенными в правильном порядке"""
+        if len(args) <= 1:
+            raise ex.FewElementsError
         path = os.path.join(*args).__str__()
         return path
 
@@ -71,12 +73,12 @@ class ServerFileBase:
         if "." in file_name:
             return file_name
         else:
-            raise ThisNotFileError
+            raise ex.ThisNotFileError
 
     @staticmethod
     def replace_filename_from_path(path: str, filename: str) -> str:
         if "." not in path or "." not in filename:
-            raise ThisNotFileError
+            raise ex.ThisNotFileError
 
         dir_path = os.path.dirname(path)
         new_path = os.path.join(dir_path, filename).__str__()

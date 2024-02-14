@@ -3,6 +3,7 @@ from typing import Any
 
 from app.file.models import FileModel
 from app.file.storage.server import ServerFiles, ServerImageFiles
+from app.file import exception as ex
 from config.settings import FILE_SETTINGS, IMAGE_FILE_FORMATS
 
 
@@ -19,6 +20,8 @@ class FileWorkBase(object):
 
     @staticmethod
     def get_path(*args):
+        if len(args) <= 1:
+            raise ex.FewElementsError
         return os.path.join(*args).__str__()
 
     def save_file_db(self, **kwargs):
@@ -31,7 +34,7 @@ class FileWorkBase(object):
 
         server = self._server()
         name = server.get_unique_filename(file.name)
-        path = self.get_path(self.relative_path, name)
+        path = server.generate_path(self.relative_path, name)
         path, size = server.save(path, file)
         data = {
             "original_name": file.name,
