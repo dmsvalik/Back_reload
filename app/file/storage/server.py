@@ -2,7 +2,7 @@ import os
 import random
 import string
 
-from PIL.Image import Image
+from PIL import Image
 
 from app.file import exception as ex
 from config.settings import BASE_DIR, FILE_SETTINGS
@@ -122,7 +122,7 @@ class ServerImageFiles(ServerFileBase):
         abs_path = self.generate_path(self._server_dir, path)
         filename = self.get_filename_from_path(path)
         new_filename = self.get_unique_filename(filename)
-        preview_path = self.generate_path(self.path, new_filename)
+        preview_path = self.replace_filename_from_path(abs_path, new_filename)
 
         img = Image.open(abs_path)
         img.thumbnail(self.MAXIMUM_DIMENSIONS_OF_SIDES)

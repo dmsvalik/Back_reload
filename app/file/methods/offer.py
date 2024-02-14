@@ -12,7 +12,7 @@ class FileWorkBase(object):
 
     def __init__(self):
         self._dir = None
-        self.relative_path = self._dir
+        self._relative_path = self._dir
 
         self._model = FileModel
         self._sub_model = FileModel
@@ -34,12 +34,13 @@ class FileWorkBase(object):
 
         server = self._server()
         name = server.get_unique_filename(file.name)
-        path = server.generate_path(self.relative_path, name)
+        path = server.generate_path(self._relative_path, name)
         path, size = server.save(path, file)
         data = {
             "original_name": file.name,
             "file_path": path,
             "server_size": size,
+            "yandex_size": 0,
         }
         file_format = server.get_file_format(name)
 
@@ -47,7 +48,7 @@ class FileWorkBase(object):
             image = ServerImageFiles()
             preview_path, size = image.save_preview(path)
             data["preview_path"] = preview_path
-            data["size"] += size
+            data["server_size"] += size
 
         return data
 
@@ -62,7 +63,7 @@ class TmpFileWork(FileWorkBase):
     def __init__(self):
         super().__init__()
         self._dir = FILE_SETTINGS.get("PATH_TMP_FILES")
-        self._relative_path = self.get_path(self._dir)
+        self._relative_path = self._dir
 
 
 class OfferFileWork(FileWorkBase):
