@@ -2,6 +2,9 @@ import os
 import random
 import string
 
+from PIL.Image import Image
+
+from app.file.exception import ThisNotFileError
 from config.settings import BASE_DIR, FILE_SETTINGS
 
 
@@ -18,11 +21,11 @@ class ServerFileBase:
             self.path = self._server_dir
         else:
             self.path = self._check_or_create(
-                self._generate_path(self._server_dir, path)
+                self.generate_path(self._server_dir, path)
             )
 
     @staticmethod
-    def _generate_path(*args):
+    def generate_path(*args):
         """Метод генерирует строковый путь на основе переданных
         позиционных аргументов. Внимание: Важно передавать аргументы списком
         с аргументами расположенными в правильном порядке"""
@@ -58,28 +61,77 @@ class ServerFileBase:
 
     @staticmethod
     def get_file_format(filename: str) -> str:
-        """Метод получает формат файла из его имени"""
-        return filename.split(".")[-1]
+        """Метод получает формат файла из любого пути"""
+        return os.path.splitext(filename)[1][1:]
+
+    @staticmethod
+    def get_filename_from_path(path: str) -> str:
+        """Метод получает имя файла из пути до него"""
+        file_name = os.path.split(path)[1]
+        if "." in file_name:
+            return file_name
+        else:
+            raise ThisNotFileError
+
+    @staticmethod
+    def replace_filename_from_path(path: str, filename: str) -> str:
+        if "." not in path or "." not in filename:
+            raise ThisNotFileError
+
+        dir_path = os.path.dirname(path)
+        new_path = os.path.join(dir_path, filename).__str__()
+        return new_path
 
     def get_unique_filename(self, old_name: str) -> str:
         """Метод генерирует уникальное имя файла на основе директории
         предполагаемого сохранения файла"""
-        existed_names = os.listdir(self._server_dir)
+        existed_names = self._get_filename_list()
         new_name = self._get_random_filename()
         while new_name in existed_names:
             new_name = self._get_random_filename()
 
         return f"{new_name}.{self.get_file_format(old_name)}"
 
-    def save(self, path: str, file) -> str:
-        """Метод сохраняет файл в указанную директорию"""
+    def get_size(self, path):
+        abs_path = os.path.join(self._server_dir, path).__str__()
+        return os.path.getsize(abs_path)
+
+    def save(self, path: str, file) -> tuple[str, int]:
+        """Метод сохраняет превью файл в указанную директорию"""
         path_to_save = os.path.join(self._server_dir, path).__str__()
         with open(path_to_save, "wb+") as f:
             for chunk in file.chunks():
                 f.write(chunk)
-        return path_to_save
+        size = self.get_size(path)
+        return path, size
 
 
-class TmpServerFiles(ServerFileBase):
+class ServerImageFiles(ServerFileBase):
+    """Класс для работы с изображениями"""
+
+    MAXIMUM_DIMENSIONS_OF_SIDES = FILE_SETTINGS.get(
+        "MAXIMUM_DIMENSIONS_OF_SIDES"
+    )
+
+    def __init__(self, path: str = None):
+        super().__init__(path)
+
+    def save_preview(self, path: str):
+        abs_path = self.generate_path(self._server_dir, path)
+        filename = self.get_filename_from_path(path)
+        new_filename = self.get_unique_filename(filename)
+        preview_path = self.generate_path(self.path, new_filename)
+
+        img = Image.open(abs_path)
+        img.thumbnail(self.MAXIMUM_DIMENSIONS_OF_SIDES)
+        img.save(preview_path)
+
+        size = self.get_size(preview_path)
+        preview_path = self.replace_filename_from_path(path, new_filename)
+
+        return preview_path, size
+
+
+class ServerFiles(ServerFileBase):
     def __init__(self, path: str = "tmp"):
         super().__init__(path)
