@@ -252,6 +252,10 @@ class OrderOfferView(generics.ListAPIView):
         return offers
 
 
+# @method_decorator(
+#     name="get",
+#     decorator=
+# )
 class ContactorOfferView(generics.ListAPIView):
     """
     Офферы исполнителя
@@ -263,7 +267,11 @@ class ContactorOfferView(generics.ListAPIView):
         IsContractor,
     ]
 
+    @swagger_auto_schema(**swagger.ContactorOffer.__dict__)
     def get_queryset(self):
+        # прячем ошибку swagger
+        if getattr(self, "swagger_fake_view", False):
+            return OrderOffer.objects.none()
         contactor_id = self.kwargs.get("pk")
         contactor = (
             ContractorData.objects.filter(pk=contactor_id)
