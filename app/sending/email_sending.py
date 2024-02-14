@@ -4,10 +4,7 @@ from djoser import utils
 from templated_mail.mail import BaseEmailMessage
 
 from app.orders.models import OrderModel
-from app.questionnaire.models import (
-    QuestionnaireChapter,
-    QuestionnaireType,
-)
+
 from config.settings import SENDING
 
 
@@ -37,8 +34,9 @@ class OrderEmail(BaseLinkEmail):
     template_name = "order_created.html"
 
     def get_context_data(self):
-        """Получение данных для наполнения context для шаблона письма.
-        Заказ оформлен и отправлен исполнителям.
+        """
+        Получение данных для наполнения context для шаблона письма.
+        Уведомление заказчика об оформлении заказа.
         """
         context = super().get_context_data()
 
@@ -51,23 +49,19 @@ class OrderEmail(BaseLinkEmail):
             return context
 
 
-class QuestionnaireEmail(BaseLinkEmail):
-    template_name = "questionnaire_created.html"
+class ConstructorEmail(BaseLinkEmail):
+    template_name = "constructor_notification.html"
 
     def get_context_data(self):
-        """Получение данных для наполнения context для шаблона письма анкеты.
-        Уведомление что анкета заполнена.
+        """Получение данных для наполнения context для шаблона письма.
+        Уведомление  исполнителей о  новых заказах.
         """
         context = super().get_context_data()
 
-        questionnaire_id = context.get("questionnaire_id")
-        chapter_id = context.get("chapter_id")
+        order_id = context.get("order_id")
         try:
-            questionnaire = QuestionnaireType.objects.get(id=questionnaire_id)
-            chapter = QuestionnaireChapter.objects.get(id=chapter_id)
-            # Добавление данных в контекст
-            context["questionnaire_type"] = questionnaire.type
-            context["chapter_name"] = chapter.name
+            order = OrderModel.objects.get(id=order_id)
+            context["order_name"] = order.name
             return context
         except Exception:
             return context
@@ -95,21 +89,91 @@ class NewOfferEmail(BaseLinkEmail):
             return context
 
 
-class ConstructorEmail(BaseLinkEmail):
-    template_name = "constructor_created.html"
+class ChoiseConstructorEmail(BaseLinkEmail):
+    template_name = "choise_constructor.html"
 
     def get_context_data(self):
-        """Получение данных для наполнения context для шаблона письма.
-        Уведомление  исполнителей о  новых заказах.
+        """Получение данных для наполнения context для шаблона письма анкеты.
+        Уведомление что выбран Исполнитель.
         """
         context = super().get_context_data()
 
         order_id = context.get("order_id")
-        # Здесь будет исполнитель
         try:
             order = OrderModel.objects.get(id=order_id)
             context["order_name"] = order.name
-            # Здесь будет исполнитель
+            return context
+        except Exception:
+            return context
+
+
+class NoOfferConstructorEmail(BaseLinkEmail):
+    template_name = "no_offer_constructor.html"
+
+    def get_context_data(self):
+        """Получение данных для наполнения context для шаблона письма анкеты.
+        Уведомление что Исполнитель не сделал предложение.
+        """
+        context = super().get_context_data()
+
+        order_id = context.get("order_id")
+        try:
+            order = OrderModel.objects.get(id=order_id)
+            context["order_name"] = order.name
+            return context
+        except Exception:
+            return context
+
+
+class OpenChatOrderEmail(BaseLinkEmail):
+    template_name = "open_chat.html"
+
+    def get_context_data(self):
+        """Получение данных для наполнения context для шаблона письма анкеты.
+        Уведомление что Заказчик открыл чат с Исполнителем.
+        """
+        context = super().get_context_data()
+
+        order_id = context.get("order_id")
+        try:
+            order = OrderModel.objects.get(id=order_id)
+            context["order_name"] = order.name
+            return context
+        except Exception:
+            return context
+
+
+class CloseOrderWithConstructorEmail(BaseLinkEmail):
+    template_name = "close_order_with_constructor.html"
+
+    def get_context_data(self):
+        """Получение данных для наполнения context для шаблона письма анкеты.
+        Уведомление Исполнителя что Заказчик его выбрал.
+        """
+        context = super().get_context_data()
+
+        order_id = context.get("order_id")
+        try:
+            order = OrderModel.objects.get(id=order_id)
+            context["order_name"] = order.name
+            return context
+        except Exception:
+            return context
+
+
+class CloseOrderWithoutConstructorEmail(BaseLinkEmail):
+    template_name = "close_order_without_constructor.html"
+
+    def get_context_data(self):
+        """Получение данных для наполнения context для шаблона письма анкеты.
+        Уведомление Исполнителя что Заказчик его не выбрал.
+        """
+        context = super().get_context_data()
+
+        order_id = context.get("order_id")
+        try:
+            order = OrderModel.objects.get(id=order_id)
+            context["order_name"] = order.name
             return context
         except Exception:
             return context
