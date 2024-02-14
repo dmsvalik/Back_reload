@@ -34,8 +34,9 @@ class UploadFile(BaseSwaggerSchema):
             openapi.Schema(
                 type=openapi.TYPE_OBJECT,
                 properties={
-                    "new_order_id": openapi.Schema(
-                        type=openapi.TYPE_INTEGER, title="ID нового заказа"
+                    "file_id": openapi.Schema(
+                        type=openapi.TYPE_INTEGER,
+                        title="ID загруженного файла",
                     ),
                 },
             ),

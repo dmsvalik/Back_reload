@@ -99,7 +99,7 @@ class ServerFileBase:
         return os.path.getsize(abs_path)
 
     def save(self, path: str, file) -> tuple[str, int]:
-        """Метод сохраняет превью файл в указанную директорию"""
+        """Метод сохраняет файл в указанную директорию"""
         path_to_save = os.path.join(self._server_dir, path).__str__()
         with open(path_to_save, "wb+") as f:
             for chunk in file.chunks():
@@ -114,6 +114,10 @@ class ServerImageFiles(ServerFileBase):
     MAXIMUM_DIMENSIONS_OF_SIDES = FILE_SETTINGS.get(
         "MAXIMUM_DIMENSIONS_OF_SIDES"
     )
+    MAX_IMAGE_SIZE_IN_B = FILE_SETTINGS["MAX_IMAGE_SIZE_IN_B"]
+    COEFFICIENT_OF_SIZE_CHANGING = FILE_SETTINGS[
+        "IMAGE_COEFFICIENT_OF_SIZE_CHANGING"
+    ]
 
     def __init__(self, path: str = None):
         super().__init__(path)
@@ -132,6 +136,29 @@ class ServerImageFiles(ServerFileBase):
         preview_path = self.replace_filename_from_path(path, new_filename)
 
         return preview_path, size
+
+    def _image_compression(self, path: str):
+        """Сжатие изображения согласно коэффициента заданного в настройках"""
+        image_size = os.path.getsize(path)
+        if image_size > self.MAX_IMAGE_SIZE_IN_B:
+            img = Image.open(path)
+            while image_size > self.MAX_IMAGE_SIZE_IN_B:
+                img = img.resize(
+                    (
+                        int(img.size[0] * self.COEFFICIENT_OF_SIZE_CHANGING),
+                        int(img.size[1] * self.COEFFICIENT_OF_SIZE_CHANGING),
+                    )
+                )
+                img.save(path)
+                image_size = os.path.getsize(path)
+            return image_size
+
+    def save(self, path: str, file) -> tuple[str, int]:
+        """Метод сохраняет файл в указанную директорию"""
+        path_to_save, size = super().save(path, file)
+        abs_path = self.generate_path(self.path, path_to_save)
+        size = self._image_compression(abs_path)
+        return path_to_save, size
 
 
 class ServerFiles(ServerFileBase):
