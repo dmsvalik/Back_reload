@@ -60,22 +60,12 @@ class CloudBase(object):
         @param path: Путь
         @return: bool
         """
-        dirs = path.split("/")
-        create_dirs = []
-
-        for item in reversed(dirs):
-            indx = dirs.index(item)
-
-            part_path = str(os.path.join(*dirs[0 : indx + 1]))
-            state = self._check_path(part_path)
-
-            if not state:
-                create_dirs.append(part_path)
-            elif state:
-                break
-        for item in reversed(create_dirs):
-            if not self._create_path(item):
-                return False
+        state = self._check_path(path)
+        if not state:
+            dirs = path.split("/")
+            if len(dirs) > 1:
+                self._check_or_create(str(os.path.join(*dirs[0:-1])))
+            path = self._create_path(path)
         return path
 
     def get_path(self, *args):
