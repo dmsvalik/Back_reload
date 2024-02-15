@@ -48,7 +48,8 @@ class TestServerFilesBase:
     @pytest.mark.parametrize(
         "lst,result", [
             (["test", "test", "test.jpg"], "test/test/test.jpg"),
-            (["test1", "test1", "test.dox"], "test1/test1/test.dox")
+            (["test1", "test1", "test.dox"], "test1/test1/test.dox"),
+            ([1, 5, 0.4], "1/5/0.4")
         ]
     )
     def test_generate_path(self, lst, result):

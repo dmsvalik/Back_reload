@@ -31,7 +31,7 @@ class ServerFileBase:
         с аргументами расположенными в правильном порядке"""
         if len(args) <= 1:
             raise ex.FewElementsError
-        path = os.path.join(*args).__str__()
+        path = os.path.join(*map(lambda x: str(x), args)).__str__()
         return path
 
     @staticmethod

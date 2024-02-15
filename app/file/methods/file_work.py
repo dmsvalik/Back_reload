@@ -12,7 +12,7 @@ class FileWorkBase(object):
 
     def __init__(self):
         self._dir = None
-        self._relative_path = self._dir
+        self.relative_path = self._dir
 
         self._model = FileModel
         self._sub_model = FileModel
@@ -22,7 +22,7 @@ class FileWorkBase(object):
     def get_path(*args):
         if len(args) <= 1:
             raise ex.FewElementsError
-        return os.path.join(*args).__str__()
+        return os.path.join(*map(lambda x: str(x), args)).__str__()
 
     def save_file_db(self, **kwargs):
         file = self._model.objects.create(**kwargs)
@@ -38,7 +38,7 @@ class FileWorkBase(object):
 
         server = self._server()
         name = server.get_unique_filename(file.name)
-        path = server.generate_path(self._relative_path, name)
+        path = server.generate_path(self.relative_path, name)
         path, size = server.save(path, file)
         data = {
             "original_name": file.name,
@@ -47,7 +47,7 @@ class FileWorkBase(object):
             "yandex_size": 0,
         }
 
-        if file_format in IMAGE_FILE_FORMATS:
+        if self._server == ServerImageFiles:
             preview_path, size = server.save_preview(path)
             data["preview_path"] = preview_path
             data["server_size"] += size
@@ -65,7 +65,7 @@ class TmpFileWork(FileWorkBase):
     def __init__(self):
         super().__init__()
         self._dir = FILE_SETTINGS.get("PATH_TMP_FILES")
-        self._relative_path = self._dir
+        self.relative_path = self._dir
 
 
 class OfferFileWork(FileWorkBase):
@@ -73,7 +73,7 @@ class OfferFileWork(FileWorkBase):
 
     def __init__(self, user_id: int, offer_id: int):
         super().__init__()
-        self.dir = os.path.join(
+        self._dir = os.path.join(
             FILE_SETTINGS.get("PATH_OFFER_FILES")
         ).__str__()
 
