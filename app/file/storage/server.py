@@ -119,7 +119,7 @@ class ServerImageFiles(ServerFileBase):
         "IMAGE_COEFFICIENT_OF_SIZE_CHANGING"
     ]
 
-    def __init__(self, path: str = None):
+    def __init__(self, path: str = "tmp"):
         super().__init__(path)
 
     def save_preview(self, path: str):
@@ -151,7 +151,7 @@ class ServerImageFiles(ServerFileBase):
                 )
                 img.save(path)
                 image_size = os.path.getsize(path)
-            return image_size
+        return image_size
 
     def save(self, path: str, file) -> tuple[str, int]:
         """Метод сохраняет файл в указанную директорию"""
