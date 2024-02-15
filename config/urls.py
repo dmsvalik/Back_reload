@@ -15,6 +15,7 @@ urlpatterns = [
     path("", include("app.users.urls")),
     path("", include("app.questionnaire.urls")),
     path("api-auth/", include("rest_framework.urls")),
+    path("file/", include("app.file.urls")),
     # path("auth/", include("djoser.urls")),
     # path("auth/", include("djoser.urls.jwt")),
 ]

@@ -8,7 +8,11 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from .models import Conversation
 from .redis_client import RedisClient
 from .serializers import MessageSerializer
-from .utils import generate_message_hash, store_messages_to_db
+from .utils import (
+    generate_message_hash,
+    load_message_history_to_redis,
+    store_messages_to_db,
+)
 
 
 User = get_user_model()
@@ -28,17 +32,14 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         # все сообщения, которые мы хотим скинуть в базу по завершению
         self.hashes_for_db = []
         self.user = None
-        # редис-клиент
         self.redis = RedisClient.from_settings()
 
     async def connect(self):
         """
-        Открытие соединения.
-        Забираем из скоупа нужные данные, делаем проверки.
-        По итогу прохождения проверок соглашаемся либо закрываем
-        хендшейк.
+        Выполняется на открытии соединения.
+        Сюда убраны проверки на аутентификацию, наличия чата
+        и его блокировки, а так же инициирует наполнение редиса данными.
         """
-
         if self.scope["user"] and self.scope["user"].is_authenticated:
             self.user = self.scope["user"]
             if self.user is None:
@@ -57,6 +58,13 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             if self.conversation.is_blocked:
                 await self.close()
                 return
+            # подгружаем все сообщения из бд в редиску
+            await sync_to_async(load_message_history_to_redis)(
+                self.redis,
+                self.chat_id,
+                None,
+                None,
+            )
         else:
             await self.close()
             return
@@ -81,22 +89,28 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
 
     async def disconnect(self, code):
         """
-        Вызывается при разрыве вебсокетного соединения.
-        Сбрасывает накопленные сообщения в базу одним запросом.
+        Выполняется при разрыве соединения
+        Так же отправляет хеши сообщений на сброс в базу данных
+        из редиса
         """
+        try:
+            await sync_to_async(store_messages_to_db)(
+                self.chat_group_name, self.hashes_for_db
+            )
 
-        await sync_to_async(store_messages_to_db)(
-            self.chat_group_name, self.hashes_for_db
-        )
+            await self.channel_layer.group_discard(
+                self.chat_group_name,
+                self.channel_name,
+            )
 
-        await self.channel_layer.group_discard(
-            self.chat_group_name,
-            self.channel_name,
-        )
+        except Exception as e:
+            # FIXME! залоггировать
+            print(e)
 
     async def chat_message(self, event):
         """
-        Отправка одного конкретного сообщения.
+        Метод, с помощью которого выполняется отправка
+        всем подписчикам layer-а
         """
         await self.send(
             text_data=json.dumps(
@@ -112,18 +126,30 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def fetch_messages(self):
-        """
-        Fetch last messages from this chat (load history)
-        """
+        """Старый метод получения истории сообщений из базы"""
         messages = self.conversation.messages.all()
         content = {
             "messages": await sync_to_async(get_serialized_data)(messages)
         }
         await self.send(text_data=json.dumps(content))
 
+    async def fetch_messages_redis(self):
+        """
+        Метод получения истории сообщений из редиса
+        """
+        messages = []
+        redis_keys = self.redis.search_by_pattern("chat_" + self.chat_id + "*")
+        for key in redis_keys:
+            stored = self.redis.get_message_by_key(key)
+            stored["hashcode"] = key.split(":")[1]
+            messages.append(stored)
+        await self.send(text_data=json.dumps(messages))
+
     async def new_message(self, message):
         """
-        Send new message to this chat
+        Метод отправки нового сообщения
+        Генерит для него хеш, сохраняет в редис и отправляет
+        подписчикам layer-а
         """
         sender = self.user
 
@@ -155,6 +181,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
 
     @staticmethod
     def validate_hashcodes(hashcodes):
+        """Валидация хешей чтобы не курочить редис и бд"""
         if not isinstance(hashcodes, list):
             return None
         result = []
@@ -164,46 +191,89 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             result.append(element)
         return result
 
-    async def read_messages(self, hashcodes):
-        hashcodes = self.validate_hashcodes(hashcodes)
-        messages_to_mark_read = dict()
-        for code in hashcodes:
-            message = self.redis.get_message(self.chat_group_name, code)
-            if (
-                message.get("sender")
-                and message.get("sender") != self.user.email
-            ):
-                message["is_read"] = str(True)
-                messages_to_mark_read[code] = message
-        self.redis.store_multiple_messages(
-            self.chat_group_name, messages_to_mark_read
-        )
+    async def read_messages(self, hashcodes) -> (bool, str):
+        """Метод разметки сообщений прочитанными"""
+        try:
+            hashcodes = self.validate_hashcodes(hashcodes)
+            messages_to_mark_read = dict()
+            for code in hashcodes:
+                message = self.redis.get_message(self.chat_group_name, code)
+                if (
+                    message.get("sender")
+                    and message.get("sender") != self.user.email
+                ):
+                    message["is_read"] = str(True)
+                    messages_to_mark_read[code] = message
+            self.redis.store_multiple_messages(
+                self.chat_group_name, messages_to_mark_read
+            )
+            return True, "OK"
+        except Exception as e:
+            # FIXME! залоггировать
+            return False, e
 
-    # переписал, потому что передавать копированием аргументы в команды
-    # там, где это не надо - тупо и не эффективно
     async def receive(self, text_data=None, bytes_data=None):
+        """
+        Метод вызывается при получении сообщения извне
+        """
         text_data_json = json.loads(text_data)
         command = text_data_json.get("command")
         if not command:
             await self.send(
-                text_data=json.dumps({"error": "command was not provided"})
+                text_data=json.dumps(
+                    {
+                        "status": "fail",
+                        "error": "command was not provided",
+                    }
+                )
             )
 
         match command:
+            # команда чтения сообщений
             case "read_messages":
                 hashcodes = text_data_json.get("hashcodes")
                 if not hashcodes:
                     await self.send(
                         text_data=json.dumps(
                             {
-                                "error": "read messages hashcodes was not provided"
+                                "status": "fail",
+                                "error": "read messages hashcodes was not provided",
                             }
                         )
                     )
                     return
-                await self.read_messages(hashcodes)
+                result, status = await self.read_messages(hashcodes)
+                if result:
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "status": status,
+                            }
+                        )
+                    )
+                await self.send(
+                    text_data=json.dumps(
+                        {
+                            "status": "fail",
+                            "error": status,
+                        }
+                    )
+                )
+            # команда получения истории сообщений
             case "fetch_messages":
-                await self.fetch_messages()
+                try:
+                    await self.fetch_messages_redis()
+                except Exception as e:
+                    # FIXME! залоггировать
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "status": "fail",
+                                "error": e,
+                            }
+                        )
+                    )
+            # команда отправки нового сообщения
             case "new_message":
                 if not text_data_json.get("message"):
                     await self.send(
@@ -212,8 +282,22 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                         )
                     )
                     return
-                await self.new_message(text_data_json.get("message"))
+                try:
+                    await self.new_message(text_data_json.get("message"))
+                except Exception as e:
+                    # FIXME! залоггировать
+                    await self.send(
+                        text_data=json.dumps(
+                            {
+                                "status": "fail",
+                                "error": e,
+                            }
+                        )
+                    )
+            # неизвестная команда
             case _:
                 await self.send(
-                    text_data=json.dumps({"error": "unknown command provided"})
+                    text_data=json.dumps(
+                        {"status": "fail", "error": "unknown command provided"}
+                    )
                 )

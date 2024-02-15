@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     "app.products",
     "app.orders",
     "app.utils",
+    "app.file",
     "app.chat",
     "app.users",
     "rest_framework",
@@ -424,6 +425,7 @@ FILE_SETTINGS = {
     "PATH_ORDER_FILES": "orders",
     "PATH_OFFER_FILES": "offers",
     "PATH_CHATS_FILES": "chats",
+    "PATH_TMP_FILES": "tmp",
 }
 
 IMAGE_FILE_FORMATS = [

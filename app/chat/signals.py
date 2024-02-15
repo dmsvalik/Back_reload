@@ -18,7 +18,11 @@ User = get_user_model()
     dispatch_uid="create_new_chat_and_first_message",
 )
 def manage_chats_for_offer(sender, instance, **kwargs):
+    """Сигнал вызывается при изменении оффера"""
     if kwargs.get("created"):
+        # если оффер создается, порождается чат,
+        # где первым сообщений станет коммерческое предложение
+        # из оффера
         try:
             contractor = instance.user_account
             new_conversation = Conversation.objects.create(
@@ -36,11 +40,12 @@ def manage_chats_for_offer(sender, instance, **kwargs):
             # FIXME! Залоггировать
             print("Shit happens", e)
     else:
+        # если оффер редактируется, если его статус имеет значение
+        # True, принудительно блокируются все чаты, относящиеся к этому заказу
+        # кроме порожденного редактируемым оффером
         try:
             order = instance.order_id
             if instance.offer_status:
-                # client = order.user_account
-                # offers_users_ids = (
                 offers_ids = (
                     OrderOffer.objects.filter(
                         order_id=order,
@@ -49,8 +54,6 @@ def manage_chats_for_offer(sender, instance, **kwargs):
                     .values_list("pk", flat=True)
                 )
                 chats = Conversation.objects.filter(
-                    # client=client,
-                    # contractor__in=offers_users_ids,
                     offer__in=offers_ids,
                 )
                 for chat in chats:
@@ -60,13 +63,9 @@ def manage_chats_for_offer(sender, instance, **kwargs):
                     ["is_blocked"],
                 )
                 if Conversation.objects.filter(
-                    # client=client,
-                    # contractor=instance.user_account,
                     offer=instance,
                 ).exists():
                     current_order_chat = Conversation.objects.filter(
-                        # client=client,
-                        # contractor=instance.user_account,
                         offer=instance,
                     ).first()
                     current_order_chat.is_match = True

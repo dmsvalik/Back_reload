@@ -616,3 +616,9 @@ class CloneOrderCreate(BaseSwaggerSchema):
         403: DEFAULT_RESPONSES[403],
         500: DEFAULT_RESPONSES[500],
     }
+
+
+class ContactorOffer(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("offer")]
+    operation_summary = "Получение списка офферов исполнителя"
+    description = ""
