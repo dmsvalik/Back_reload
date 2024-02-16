@@ -1,11 +1,20 @@
 from datetime import datetime, timedelta, timezone
 import hashlib
 
+from asgiref.sync import sync_to_async
+
+from django.contrib.auth import get_user_model
+from django.db import transaction
+from django.conf import settings
+
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
 from app.users.models import UserAccount
 from .models import ChatMessage, Conversation
 from .redis_client import RedisClient
+
+
+User = get_user_model()
 
 
 def generate_message_hash(message: dict):
@@ -45,11 +54,14 @@ def store_messages_to_db(chat, hashcodes: list[str]):
         # подготовка к удалению
         keys_for_deletion.append(chat + ":" + code)
 
-    ChatMessage.objects.bulk_create(
-        chat_messages,
-    )
+    with transaction.atomic():
+        ChatMessage.objects.bulk_create(
+            chat_messages,
+        )
+        success = True
 
-    redis.delete(keys_for_deletion)
+    if success:
+        redis.delete(keys_for_deletion)
 
 
 def create_periodic_task():
@@ -59,7 +71,8 @@ def create_periodic_task():
     чатов
     """
     schedule, create = IntervalSchedule.objects.get_or_create(
-        every=1, period=IntervalSchedule.MINUTES
+        every=settings.CHATTING.get("REDIS_DB_STORE_PERIOD", 1),
+        period=IntervalSchedule.MINUTES,
     )
     if not PeriodicTask.objects.filter(
         name="sync_chats_in_redis_and_db"
@@ -82,7 +95,7 @@ def load_message_history_to_redis(
     чтобы вызывать обновлении истории порционно
     """
     chat = Conversation.objects.filter(pk=chat_id)
-    if chat.aexists() is False:
+    if chat.exists() is False:
         return
 
     messages = ChatMessage.objects.filter(conversation=chat.first())[
@@ -99,4 +112,36 @@ def load_message_history_to_redis(
                 "sent_at": str(message.sent_at),
                 "is_read": str(message.is_read),
             },
+        )
+
+
+async def async_load_message_history_to_redis(
+    client: RedisClient, chat_id: int, offset: int = None, limit: int = None
+):
+    """
+    То же что и выше, но асинхронное.
+    """
+    chat = Conversation.objects.filter(pk=chat_id)
+    if chat.aexists() is False:
+        return
+
+    chat = await chat.afirst()
+
+    messages = ChatMessage.objects.select_related("sender").filter(
+        conversation=chat
+    )
+    messages = messages[offset:limit]
+
+    async for message in messages:
+        key = message.hashcode
+        data = {
+            "text": message.text,
+            "sender": str(message.sender),
+            "sent_at": str(message.sent_at),
+            "is_read": str(message.is_read),
+        }
+        await sync_to_async(client.store_message)(
+            "chat_" + str(chat_id),
+            key,
+            data,
         )

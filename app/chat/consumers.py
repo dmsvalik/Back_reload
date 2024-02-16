@@ -1,3 +1,4 @@
+import asyncio
 from datetime import datetime
 import json
 
@@ -10,7 +11,7 @@ from .redis_client import RedisClient
 from .serializers import MessageSerializer
 from .utils import (
     generate_message_hash,
-    load_message_history_to_redis,
+    async_load_message_history_to_redis,
     store_messages_to_db,
 )
 
@@ -29,17 +30,11 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         self.chat_id = None
         self.chat_group_name = None
         self.conversation = None
-        # все сообщения, которые мы хотим скинуть в базу по завершению
         self.hashes_for_db = []
         self.user = None
         self.redis = RedisClient.from_settings()
 
-    async def connect(self):
-        """
-        Выполняется на открытии соединения.
-        Сюда убраны проверки на аутентификацию, наличия чата
-        и его блокировки, а так же инициирует наполнение редиса данными.
-        """
+    async def _validate_user(self):
         if self.scope["user"] and self.scope["user"].is_authenticated:
             self.user = self.scope["user"]
             if self.user is None:
@@ -49,6 +44,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             await self.close()
             return
 
+    async def _validate_chat_exists(self):
         self.chat_id = self.scope["url_route"]["kwargs"].get("chat_id")
 
         if await Conversation.objects.filter(pk=self.chat_id).aexists():
@@ -58,16 +54,30 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             if self.conversation.is_blocked:
                 await self.close()
                 return
-            # подгружаем все сообщения из бд в редиску
-            await sync_to_async(load_message_history_to_redis)(
-                self.redis,
-                self.chat_id,
-                None,
-                None,
-            )
         else:
             await self.close()
             return
+
+    async def connect(self):
+        """
+        Выполняется на открытии соединения.
+        Сюда убраны проверки на аутентификацию, наличия чата
+        и его блокировки, а так же инициирует наполнение редиса данными.
+        """
+
+        async_tasks = [
+            asyncio.to_thread(
+                async_load_message_history_to_redis,
+                self.redis,
+                self.scope["url_route"]["kwargs"].get("chat_id"),
+                None,
+                None,
+            ),
+            asyncio.create_task(self._validate_user()),
+            asyncio.create_task(self._validate_chat_exists()),
+        ]
+
+        await asyncio.gather(*async_tasks)
 
         if (
             self.user.role == "contractor"
@@ -125,14 +135,6 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             ),
         )
 
-    async def fetch_messages(self):
-        """Старый метод получения истории сообщений из базы"""
-        messages = self.conversation.messages.all()
-        content = {
-            "messages": await sync_to_async(get_serialized_data)(messages)
-        }
-        await self.send(text_data=json.dumps(content))
-
     async def fetch_messages_redis(self):
         """
         Метод получения истории сообщений из редиса
@@ -142,8 +144,12 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         for key in redis_keys:
             stored = self.redis.get_message_by_key(key)
             stored["hashcode"] = key.split(":")[1]
+            if stored["is_read"] == "True":
+                stored["is_read"] = True
+            else:
+                stored["is_read"] = False
             messages.append(stored)
-        await self.send(text_data=json.dumps(messages))
+        await self.send(text_data=json.dumps(messages, ensure_ascii=False))
 
     async def new_message(self, message):
         """
@@ -157,7 +163,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
             "text": message,
             "sender": sender.email,
             "sent_at": str(datetime.now()),
-            "is_read": str(False),
+            "is_read": "False",
         }
 
         new_hash = generate_message_hash(message_to_send)
@@ -173,6 +179,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
         )
 
         message_to_send["type"] = "chat.message"
+        message_to_send["is_read"] = False
 
         await self.channel_layer.group_send(
             self.chat_group_name,
@@ -202,7 +209,7 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                     message.get("sender")
                     and message.get("sender") != self.user.email
                 ):
-                    message["is_read"] = str(True)
+                    message["is_read"] = "True"
                     messages_to_mark_read[code] = message
             self.redis.store_multiple_messages(
                 self.chat_group_name, messages_to_mark_read
@@ -224,7 +231,8 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                     {
                         "status": "fail",
                         "error": "command was not provided",
-                    }
+                    },
+                    ensure_ascii=False,
                 )
             )
 
@@ -238,7 +246,8 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                             {
                                 "status": "fail",
                                 "error": "read messages hashcodes was not provided",
-                            }
+                            },
+                            ensure_ascii=False,
                         )
                     )
                     return
@@ -248,15 +257,18 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                         text_data=json.dumps(
                             {
                                 "status": status,
-                            }
+                            },
+                            ensure_ascii=False,
                         )
                     )
+                    return
                 await self.send(
                     text_data=json.dumps(
                         {
                             "status": "fail",
                             "error": status,
-                        }
+                        },
+                        ensure_ascii=False,
                     )
                 )
             # команда получения истории сообщений
@@ -270,7 +282,8 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                             {
                                 "status": "fail",
                                 "error": e,
-                            }
+                            },
+                            ensure_ascii=False,
                         )
                     )
             # команда отправки нового сообщения
@@ -279,7 +292,8 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                     await self.send(
                         text_data=json.dumps(
                             {"error": "no message was provided"}
-                        )
+                        ),
+                        ensure_ascii=False,
                     )
                     return
                 try:
@@ -291,13 +305,18 @@ class AsyncChatConsumer(AsyncWebsocketConsumer):
                             {
                                 "status": "fail",
                                 "error": e,
-                            }
+                            },
+                            ensure_ascii=False,
                         )
                     )
             # неизвестная команда
             case _:
                 await self.send(
                     text_data=json.dumps(
-                        {"status": "fail", "error": "unknown command provided"}
+                        {
+                            "status": "fail",
+                            "error": "unknown command provided",
+                        },
+                        ensure_ascii=False,
                     )
                 )
