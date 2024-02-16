@@ -1,0 +1,66 @@
+name: deploy
+
+on:
+  push:
+    branches: [ "main" ]
+
+
+jobs:
+
+  build_and_push_to_docker_hub:
+    name: Push Docker image to Docker Hub
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Push Backend to Docker Hub
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infra-dev/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/prod_image:latest
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build_and_push_to_docker_hub
+    steps:
+      - name: executing remote ssh commands to deploy
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USER }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/prod_image:latest
+            echo SECRET_KEY=${{ secrets.SECRET_KEY }} > .env
+            echo EMAIL_HOST=${{ secrets.EMAIL_HOST }} >> .env
+            echo EMAIL_HOST_USER=${{ secrets.EMAIL_HOST_USER }} >> .env
+            echo EMAIL_HOST_PASSWORD=${{ secrets.EMAIL_HOST_PASSWORD }} >> .env
+            echo EMAIL_USE_TLS=${{ secrets.EMAIL_USE_TLS }} >> .env
+            echo TOKEN=${{ secrets.TOKEN }} >> .env
+            echo CELERY_BROKER_URL=${{ secrets.CELERY_BROKER_URL }} >> .env
+            echo CELERY_RESULT_BACKEND=${{ secrets.CELERY_RESULT_BACKEND }} >> .env
+            echo POSTGRES_DB=${{ secrets.POSTGRES_DB }} >> .env
+            echo POSTGRES_USER=${{ secrets.POSTGRES_USER }} >> .env
+            echo POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }} >> .env
+            echo POSTGRES_HOST=${{ secrets.POSTGRES_HOST }} >> .env
+            echo POSTGRES_PORT=${{ secrets.POSTGRES_PORT }} >> .env
+            echo PGADMIN_DEFAULT_EMAIL=${{ secrets.PGADMIN_DEFAULT_EMAIL }} >> .env
+            echo PGADMIN_DEFAULT_PASSWORD=${{ secrets.PGADMIN_DEFAULT_PASSWORD }} >> .env
+            echo DJANGO_SUPERUSER_PASSWORD=${{ secrets.DJANGO_SUPERUSER_PASSWORD }} >> .env
+            echo DJANGO_SUPERUSER_EMAIL=${{ secrets.DJANGO_SUPERUSER_EMAIL }} >> .env
+            echo DJANGO_SUPERUSER_NAME=${{ secrets.DJANGO_SUPERUSER_NAME }} >> .env
+            echo DJANGO_SUPERUSER_PERSON_TELEPHONE=${{ secrets.DJANGO_SUPERUSER_PERSON_TELEPHONE }} >> .env
+            echo DJANGO_SUPERUSER_SURNAME=${{ secrets.DJANGO_SUPERUSER_SURNAME }} >> .env
+            echo EMAIL_PORT=${{ secrets.EMAIL_PORT }} >> .env
+            docker compose up -d --build
+            sudo docker image prune --force
