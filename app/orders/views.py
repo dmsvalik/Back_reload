@@ -1,10 +1,11 @@
 import os
-from datetime import datetime, timedelta, timezone
 from typing import Any
 from uuid import UUID
 
-from django.http import HttpResponsePermanentRedirect
 from drf_yasg.utils import swagger_auto_schema
+
+from rest_framework import status, viewsets, views, generics
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import mixins, status, viewsets, views
 from rest_framework.decorators import (
     api_view,
@@ -13,14 +14,13 @@ from rest_framework.decorators import (
 )
 from rest_framework.exceptions import ValidationError
 from rest_framework.parsers import MultiPartParser
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
-from rest_framework.generics import CreateAPIView
 
-from django.db.models import Q
+from django.db.models import Q, Prefetch
+from django.http import HttpResponsePermanentRedirect
+from django.conf import settings
 from django.utils.decorators import method_decorator
 
-from app.main_page.permissions import IsContractor
 from app.orders.permissions import (
     IsOrderFileDataOwnerWithoutUser,
     IsOrderExists,
@@ -37,37 +37,39 @@ from app.questionnaire.serializers import (
 from app.sending.views import send_user_notifications
 from app.users.signals import send_notify
 from app.users.utils.quota_manager import UserQuotaManager
+from app.main_page.models import ContractorData
+from app.main_page.permissions import IsContractor
 from app.utils import errorcode
 from app.utils.decorators import check_file_type, check_user_quota
-from app.utils.errorcode import QuestionnaireTypeIdNotFound
 from app.utils.file_work import FileWork
 from app.utils.storage import ServerFileSystem
-from config.settings import IMAGE_FILE_FORMATS, ORDER_COOKIE_KEY_NAME
 from .constants import ErrorMessages, ORDER_STATE_CHOICES
+from . import permissions as perm
 from .models import OrderFileData, OrderModel, OrderOffer, WorksheetFile
-from .permissions import IsOrderOwner
 from .serializers import (
     AllOrdersClientSerializer,
-    OrderOfferSerializer,
     OrderModelSerializer,
+    OfferOrderSerializer,
+    OfferContactorSerializer,
+    OfferSerizalizer,
 )
 from .swagger_documentation import orders as swagger
 
 from .tasks import celery_copy_order_file_task
 
-#     celery_delete_file_task,
-#     celery_delete_image_task,
-#     celery_upload_file_task_to_answer,
-#     celery_upload_image_task_to_answer,
-# )
 from .utils.files import (
     delete_file,
     delete_image,
     upload_file_to_answer,
     upload_image_to_answer,
 )
+from .utils.services import (
+    range_filter,
+    last_contactor_key_offer,
+    select_offer,
+)
 from .utils.order_state import OrderStateActivate
-from .utils.clone_db_data import CloneOrderDB
+from .utils.db_data import CloneOrderDB
 
 
 @swagger_auto_schema(**swagger.OrderCreate.__dict__)
@@ -96,7 +98,7 @@ def create_order(request):
         QuestionnaireType.objects.filter(id=order_questionnaire_type).exists()
         is False
     ):
-        raise QuestionnaireTypeIdNotFound
+        raise errorcode.QuestionnaireTypeIdNotFound
     if request.user.is_authenticated:
         user = request.user
     else:
@@ -120,7 +122,10 @@ def create_order(request):
     )
     if not user:
         response.set_cookie(
-            ORDER_COOKIE_KEY_NAME, order.key, samesite="None", secure=True
+            settings.ORDER_COOKIE_KEY_NAME,
+            order.key,
+            samesite="None",
+            secure=True,
         )
     else:
         context = {"order_id": order.id, "user_id": user.id}
@@ -137,64 +142,160 @@ def create_order(request):
 
 
 @method_decorator(
-    name="retrieve",
-    decorator=swagger_auto_schema(**swagger.OrderOfferRetrieve.__dict__),
+    name="list",
+    decorator=swagger_auto_schema(**swagger.OrderOfferList.__dict__),
 )
 @method_decorator(
-    name="destroy",
-    decorator=swagger_auto_schema(**swagger.OrderOfferDelete.__dict__),
+    name="create",
+    decorator=swagger_auto_schema(**swagger.OrderOfferCreate.__dict__),
 )
-@method_decorator(
-    name="update",
-    decorator=swagger_auto_schema(**swagger.OrderOfferUpdate.__dict__),
-)
-class OrderOfferViewSet(viewsets.ModelViewSet):
-    """Поведение Оффера"""
+class OfferViewSet(
+    mixins.CreateModelMixin, mixins.ListModelMixin, viewsets.GenericViewSet
+):
+    """
+    Операции с офферами
+    """
 
-    serializer_class = OrderOfferSerializer
-
-    def get_permissions(self):
-        permission_classes = [
-            IsAuthenticated,
-        ]
-        if self.action == "list":
-            # уточнить пермишены
-            permission_classes = [
-                IsAuthenticated,
-            ]
-        if self.action == "create":
-            # уточнить пермишены
-            permission_classes = [
-                IsAuthenticated,
-                IsContractor,
-            ]
-        return [permission() for permission in permission_classes]
+    queryset = OrderOffer.objects.all()
+    serializer_class = OfferSerizalizer
+    permission_classes = (IsAuthenticated, IsContractor)
 
     def get_queryset(self):
-        order_id = self.kwargs.get("pk", None)
-        if OrderModel.objects.filter(id=order_id).exists():
-            date = OrderModel.objects.get(id=order_id).order_time
-            if (datetime.now(timezone.utc) - date) > timedelta(hours=24):
-                return OrderOffer.objects.filter(order_id=order_id).all()
-        return []
-
-    @swagger_auto_schema(**swagger.OfferGetList.__dict__)
-    def list(self, request, *args, **kwargs):
-        order_id = self.kwargs["pk"]
-        if not OrderModel.objects.filter(id=order_id).exists():
-            raise errorcode.OrderIdNotFound()
-        queryset = self.filter_queryset(self.get_queryset())
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    @swagger_auto_schema(**swagger.OfferCreate.__dict__)
-    def create(self, request, *args, **kwargs):
-        return super().create(request)
-
-    def perform_create(self, serializer):
         user = self.request.user
-        serializer.is_valid()
-        serializer.save(user_account=user)
+        return OrderOffer.objects.filter(user_account=user)
+
+    def get_permissions(self):
+        if self.action == "create":
+            return [
+                IsAuthenticated(),
+                IsContractor(),
+                perm.OneOfferPerContactor(),
+            ]
+        return super().get_permissions()
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        contactor_key = (
+            last_contactor_key_offer(request.data.get("order_id")) + 1
+        )
+        serializer.validated_data.update(
+            {"contactor_key": contactor_key, "user_account": request.user}
+        )
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
+
+    # @action(
+    #     methods=["post"],
+    #     detail=True,
+    #     url_path="select",
+    #     permission_classes=[IsAuthenticated, perm.IsOrderOfferStateNotDraft],
+    # )
+    # def select_offer_view(self, request, *args, **kwargs):
+    #     """
+    #     Меняет статус оффера на выбран,
+    #     статус на заказа на выбран,
+    #     остальные офферы заказа на отклонен
+    #     """
+    #     instance = self.get_object()
+    #     select_offer(instance)
+    #     serializer = OfferSerizalizer(instance=instance, many=False)
+    #     return Response(data=serializer.data)
+
+
+@method_decorator(
+    name="get",
+    decorator=swagger_auto_schema(**swagger.AllOffersToOrder.__dict__),
+)
+class OrderOfferView(generics.ListAPIView):
+    """Офферы по заказу"""
+
+    serializer_class = OfferOrderSerializer
+    permission_classes = [
+        IsAuthenticated,
+        perm.IsOrderOwner,
+    ]
+
+    def get_queryset(self):
+        order_id = self.kwargs.get("pk")
+        offers = (
+            OrderOffer.objects.filter(
+                order_id=order_id,
+                order_id__order_time__lt=range_filter(
+                    settings.OFFER_ACCESS_HOURS
+                ),
+            )
+            .select_related("order_id", "chat", "user_account__contractordata")
+            .prefetch_related(
+                Prefetch(lookup="order_id__orderfiledata_set", to_attr="files")
+            )
+            .only(
+                "id",
+                "user_account_id",
+                "order_id_id",
+                "offer_price",
+                "offer_execution_time",
+                "offer_description",
+                "contactor_key",
+                "status",
+                "user_account__id",
+                "user_account__contractordata__user_id",
+                "user_account__contractordata__company_name",
+                "order_id__id",
+                "chat__id",
+            )
+            .all()
+        )
+        return offers
+
+
+@method_decorator(
+    name="get",
+    decorator=swagger_auto_schema(**swagger.ContactorOffer.__dict__),
+)
+class ContactorOfferView(generics.ListAPIView):
+    """
+    Офферы исполнителя
+    """
+
+    serializer_class = OfferContactorSerializer
+    permission_classes = [
+        IsAuthenticated,
+        IsContractor,
+    ]
+
+    def get_queryset(self):
+        # прячем ошибку swagger
+        if getattr(self, "swagger_fake_view", False):
+            return OrderOffer.objects.none()
+        contactor_id = self.kwargs.get("pk")
+        contactor = (
+            ContractorData.objects.filter(pk=contactor_id)
+            .only("user_id")
+            .first()
+        )
+        offers = (
+            OrderOffer.objects.filter(user_account_id=contactor.user_id)
+            .select_related("order_id", "chat")
+            .only(
+                "id",
+                "user_account_id",
+                "order_id_id",
+                "offer_price",
+                "offer_execution_time",
+                "offer_description",
+                "contactor_key",
+                "status",
+                "order_id__id",
+                "order_id__name",
+                "chat__id",
+            )
+            .all()
+        )
+        return offers
 
 
 class AllOrdersClientViewSet(viewsets.ModelViewSet):
@@ -238,7 +339,7 @@ class ArchiveOrdersClientViewSet(viewsets.ModelViewSet):
 
 @swagger_auto_schema(**swagger.QuestionnaireResponsePost.__dict__)
 @api_view(["POST"])
-@permission_classes([IsOrderOwner])
+@permission_classes([perm.IsOrderOwner])
 def create_answers_to_order(request, pk):
     """
     Создание ответов на вопросы к заказу.
@@ -319,12 +420,10 @@ class OrderViewSet(
     queryset = OrderModel.objects.all()
     serializer_class = OrderFullSerializer
     permission_classes = [
-        IsOrderOwner,
+        perm.IsOrderOwner,
     ]
 
 
-@swagger_auto_schema(**swagger.QuestionnaireResponseLastGet.__dict__)
-@api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def get_answers_to_last_order(request):
     """
@@ -360,7 +459,10 @@ def delete_file_order(request):
             quota_manager = UserQuotaManager(request.user)
         else:
             quota_manager = None
-        if file_to_delete.original_name.split(".")[-1] in IMAGE_FILE_FORMATS:
+        if (
+            file_to_delete.original_name.split(".")[-1]
+            in settings.IMAGE_FILE_FORMATS
+        ):
             # task = celery_delete_image_task.delay(file_id)
             response = delete_image(file_id, quota_manager)
         else:
@@ -381,7 +483,7 @@ def delete_file_order(request):
 
 @swagger_auto_schema(**swagger.AttachFileAnswerPost.__dict__)
 @api_view(["POST"])
-@permission_classes([IsOrderOwner])
+@permission_classes([perm.IsOrderOwner])
 @parser_classes([MultiPartParser])
 @check_file_type(["image/jpg", "image/gif", "image/jpeg", "application/pdf"])
 @check_user_quota
@@ -430,7 +532,7 @@ def attach_file(request, pk: int):
         quota_manager = UserQuotaManager(request.user)
     else:
         quota_manager = None
-    if temp_file.split(".")[-1] in IMAGE_FILE_FORMATS:
+    if temp_file.split(".")[-1] in settings.IMAGE_FILE_FORMATS:
         # task = celery_upload_image_task_to_answer.delay(
         #     temp_file, order_id, user_id, question_id, original_name
         # )
@@ -498,7 +600,7 @@ class OrderStateActivateView(views.APIView):
     Активирует заказ меняя его статус на offer
     """
 
-    permission_classes = (IsAuthenticated, IsOrderOwner)
+    permission_classes = (IsAuthenticated, perm.IsOrderOwner)
 
     def get_object(self) -> OrderModel:
         instance = OrderModel.objects.filter(pk=self.kwargs.get("pk")).first()
@@ -525,12 +627,12 @@ class OrderStateActivateView(views.APIView):
     name="post",
     decorator=swagger_auto_schema(**swagger.CloneOrderCreate.__dict__),
 )
-class CloneOrderView(CreateAPIView):
+class CloneOrderView(generics.CreateAPIView):
     serializer_class = None
     permission_classes = (
         IsAuthenticated,
         IsOrderExists,
-        IsOrderOwner,
+        perm.IsOrderOwner,
         IsUserQuotaForClone,
     )
 
@@ -539,7 +641,6 @@ class CloneOrderView(CreateAPIView):
         Клонирование заказа со всеми связанными данными.
         URL: http://localhost/order/clone/
         METHOD - "POST"
-        pk:int (обязательное) - id заказа к которому крепится файл,
         Данные передаваемые в запросе:
             - order_id: int - id заказа который необходимо клонировать,
         @return: Response object {"new_order_id": int}
@@ -550,12 +651,35 @@ class CloneOrderView(CreateAPIView):
         db = CloneOrderDB(user_id=user_id, old_order_id=old_order_id)
         db.clone_order()
         db.clone_order_question_response()
-        db.clone_order_file_data()
+        state_copy = db.clone_order_file_data()
 
-        celery_copy_order_file_task.delay(
-            user_id, old_order_id, db.new_order_id
-        )
+        if state_copy:
+            celery_copy_order_file_task.delay(
+                user_id, old_order_id, db.order_id
+            )
 
         return Response(
-            {"order_id": db.new_order_id}, status=status.HTTP_201_CREATED
+            {"order_id": db.order_id}, status=status.HTTP_201_CREATED
         )
+
+
+@swagger_auto_schema(**swagger.AcceptOffer.__dict__)
+@api_view(["POST"])
+@permission_classes([perm.IsOrderOwner, perm.IsOrderOfferStateIsOffer])
+def accept_offer(request, pk):
+    """
+    Меняет статус оффера на выбран,
+    статус на заказа на выбран,
+    остальные офферы заказа на отклонен
+    """
+    offer_id = request.data.get("offer_id")
+    if not offer_id:
+        raise errorcode.OfferNotFound()
+    offer = OrderOffer.objects.filter(id=offer_id).first()
+    if not offer:
+        raise errorcode.OfferNotFound()
+    if offer.order_id.id != pk:
+        raise errorcode.IncorrectOffer()
+    selected_offer = select_offer(offer)
+    serializer = OfferSerizalizer(instance=selected_offer, many=False)
+    return Response(data=serializer.data, status=status.HTTP_200_OK)

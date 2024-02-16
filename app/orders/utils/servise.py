@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, List, Dict
 from django_celery_beat.models import PeriodicTask, IntervalSchedule
 
+from app.utils.storage import CloudStorage
+
 
 def save_many_obj_to_db(
     model: Any, data_lst: List[Dict], **kwargs: Any
@@ -22,29 +24,49 @@ def save_many_obj_to_db(
 
 
 def create_celery_beat_task(
-    order_id: int, operation_id: str, path_to: str, user_id: int
-):
+    name: str, data: dict, task: str, interval: int = 1
+) -> None:
     """
-    Метод создает отложенную задачу для проверки статуса копирования файлов
-    @param order_id: id заказа.
-    @param operation_id: - ссылка на проверку статуса заказа яндекс API
-    @param path_to: путь до файлов заказа
-    @param user_id: id пользователя
+    Метод создает новую периодическую задачу
+    @param name: Имя задачи
+    @param data: Данные необходимые для выполнения метода в задаче
+    @param task: Метод выполняемый в задаче
+    @param interval: Интервал выполнения в минутах
     @return: None
     """
-    data = {
-        "operation_id": operation_id,
-        "path_to": path_to,
-        "user_id": user_id,
-        "order_id": order_id,
-    }
     schedule, create = IntervalSchedule.objects.get_or_create(
-        every=1, period=IntervalSchedule.MINUTES
+        every=interval, period=IntervalSchedule.MINUTES
     )
     PeriodicTask.objects.create(
-        name=f"update_files_{order_id}",
-        task="app.orders.tasks.celery_update_order_file_data_tusk",
+        name=name,
+        task=task,
         interval=schedule,
         kwargs=json.dumps(data),
-        start_time=datetime.now(timezone.utc) + timedelta(minutes=1),
+        start_time=datetime.now(timezone.utc) + timedelta(minutes=interval),
     )
+
+
+def update_periodic_tusk_copy(operation_id: str, name: str):
+    """
+    Метод обновляет периодическую задачу на основе статуса
+    возвращенного от API Yandex
+    @param operation_id: id операции
+    @param name: имя периодической задачи
+    @return: статус выполнения операции
+    """
+    yandex = CloudStorage()
+    state = yandex.check_status_operation(operation_id)
+
+    task = PeriodicTask.objects.get(name=name)
+    task.total_run_count += 1
+    task.save()
+
+    if state == "in-progress" and task.total_run_count < 3:
+        return False
+
+    if state == "success":
+        task.delete()
+        return True
+    else:
+        task.delete()
+        return False

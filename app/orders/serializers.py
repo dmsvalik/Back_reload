@@ -7,11 +7,9 @@ from django.conf import settings
 from django.utils import timezone
 
 from .models import OrderModel, OrderOffer, OrderFileData
-from app.main_page.models import ContractorData
-from app.users.serializers import UserAccountSerializer
 from app.questionnaire.serializers import FileSerializer
-from app.utils import errorcode
-from app.orders.constants import ORDER_STATE_CHOICES
+from app.orders.constants import ORDER_STATE_CHOICES, OfferState, OrderState
+from app.utils.errorcode import OrderInWrongStatus
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -81,104 +79,125 @@ class AllOrdersClientSerializer(serializers.ModelSerializer):
         если заказ был создан
         более hours(24) часов назад
         """
-        is_selected = True if obj.state == ORDER_STATE_CHOICES[2][0] else False
         range_filter = timezone.now() - timedelta(
             hours=settings.OFFER_ACCESS_HOURS
         )
         query_filter = {
             "order_id": obj.pk,
-            "offer_status": is_selected,
             "order_id__order_time__lt": range_filter,
         }
+        if obj.state == ORDER_STATE_CHOICES[2][0]:
+            query_filter["status"] = OfferState.SELECTED.value
 
         queryset = (
             OrderOffer.objects.filter(**query_filter)
             .select_related("user_account")
             .select_related("user_account__contractordata")
         )
-        serializer = OfferHalfSerializer(
+        serializer = OfferOrderSerializer(
             instance=queryset,
             many=True,
         )
         return serializer.data
 
 
-class OfferIDSerizalizer(serializers.ModelSerializer):
+class BaseOfferSerizalizer(serializers.ModelSerializer):
     """
     Базовый класс для сериализатора модели Offer
     """
 
     class Meta:
         model = OrderOffer
-        fields = ("id",)
-
-
-class OfferHalfSerializer(OfferIDSerizalizer):
-    """
-    Сериализатор для вывода полей
-    :id - ID оффера
-    :contactor_key - номер исполнителч
-    :chat_id: ID чата этого оффера
-    """
-
-    chat_id = serializers.IntegerField(source="chat.pk")
-    contactor_name = serializers.SerializerMethodField()
-
-    class Meta(OfferIDSerizalizer.Meta):
-        fields = OfferIDSerizalizer.Meta.fields + ("contactor_name", "chat_id")
-
-    def get_contactor_name(self, obj):
-        if obj.offer_status:
-            return obj.user_account.contractordata.company_name
-        return f"Исполнитель {obj.contactor_key}"
-
-
-class OfferSerializer(OfferIDSerizalizer):
-    class Meta(OfferIDSerizalizer.Meta):
-        fields = OfferIDSerizalizer.Meta.fields + (
+        fields = (
             "id",
             "offer_price",
             "offer_execution_time",
             "offer_description",
+            "status",
         )
 
 
-class OrderOfferSerializer(OfferSerializer):
-    user_account = UserAccountSerializer(
-        read_only=True, default=serializers.CurrentUserDefault()
-    )
-    order_id = serializers.SerializerMethodField(read_only=True)
+class OfferSerizalizer(BaseOfferSerizalizer):
+    contactor_key = serializers.IntegerField(read_only=True)
+    status = serializers.CharField(read_only=True)
 
-    class Meta(OfferSerializer.Meta):
-        fields = OfferSerializer.Meta.fields + (
-            "user_account",
+    class Meta(BaseOfferSerizalizer.Meta):
+        fields = BaseOfferSerizalizer.Meta.fields + (
             "order_id",
-        )
-        read_only_fields = (
-            "id",
-            "user_account",
-            "order_id",
+            "contactor_key",
         )
 
-    def get_order_id(self, value):
-        return self.context["view"].kwargs["pk"]
+    def create(self, validated_data):
+        order_obj: OrderModel = validated_data.get("order_id")
+        if order_obj.state != OrderState.OFFER.value:
+            raise OrderInWrongStatus()
+        return super().create(validated_data)
 
-    def validate(self, data):
-        order_id = self.context["view"].kwargs["pk"]
-        if not OrderModel.objects.filter(id=order_id).exists():
-            raise errorcode.OrderIdNotFound()
-        user = self.context["view"].request.user
-        if user.role != "contractor":
-            raise errorcode.NotContractorOffer()
-        # Вот тут надо продумать как автоматически создавать ContractorData
-        # если у пользователя role = 'contractor'
-        if OrderModel.objects.get(id=order_id).state != "offer":
-            raise errorcode.OrderInWrongStatus()
-        if not ContractorData.objects.get(user=user).is_active:
-            raise errorcode.ContractorIsInactive()
-        if OrderOffer.objects.filter(
-            user_account=user, order_id=order_id
-        ).exists():
-            raise errorcode.UniqueOrderOffer()
 
-        return data
+class OfferOrderSerializer(BaseOfferSerizalizer):
+    """
+    :contactor_key - номер исполнителч
+    :chat_id - ID чата этого оффера
+    :files - файлы заказа
+    """
+
+    chat_id = serializers.IntegerField(source="chat.pk")
+    contactor_name = serializers.SerializerMethodField()
+    files = serializers.SerializerMethodField()
+
+    class Meta(BaseOfferSerizalizer.Meta):
+        fields = BaseOfferSerizalizer.Meta.fields + (
+            "contactor_name",
+            "chat_id",
+            "files",
+        )
+
+    def get_contactor_name(self, obj):
+        """
+        Возвращает название компании исполнителя
+        если статус оффера == selected
+        Или возвращает номер исполнителя
+        как счетчик количества предложений к заказу
+        """
+        if obj.status == OfferState.SELECTED.value:
+            return obj.user_account.contractordata.company_name
+        return f"Исполнитель {obj.contactor_key}"
+
+    def get_files(self, obj):
+        # serializer = FileSerializer(instance=obj.order_id.files, many=True)
+        # return serializer.data
+        return None
+
+
+class OfferContactorSerializer(BaseOfferSerizalizer):
+    """
+    :order_name - название заказа
+    :chat_id - ID чата
+    :images - картинки оффера
+    :file - файл с тз
+    :task - задача заказа
+    """
+
+    chat_id = serializers.IntegerField(source="chat.pk")
+    order_name = serializers.CharField(source="order_id.name")
+    images = serializers.CharField(default=None)
+    file = serializers.SerializerMethodField()
+    task = serializers.CharField(default=None)
+
+    class Meta(BaseOfferSerizalizer.Meta):
+        fields = BaseOfferSerizalizer.Meta.fields + (
+            "order_name",
+            "chat_id",
+            "images",
+            "file",
+            "task",
+        )
+
+    def get_file(self, obj):
+        file = (
+            OrderFileData.objects.filter(order_id=obj.order_id_id)
+            .order_by("date_upload")
+            .last()
+        )
+        serializer = FileSerializer(instance=file, many=False)
+        return serializer.data

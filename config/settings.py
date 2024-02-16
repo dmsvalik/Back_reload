@@ -45,12 +45,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "colorfield",
     "rest_framework.authtoken",
     "django_celery_beat",
     "app.main_page",
     "app.products",
     "app.orders",
     "app.utils",
+    "app.file",
     "app.chat",
     "app.users",
     "rest_framework",
@@ -416,7 +418,14 @@ FILE_SETTINGS = {
     "MAXIMUM_DIMENSIONS_OF_SIDES": (300, 300),
     "IMAGE_COEFFICIENT_OF_SIZE_CHANGING": 0.9,
     "ANIMATION_COEFFICIENT_OF_SIZE_CHANGING": 0.7,
-    "NUMBER_OF_CHARACTERS_IN_FILENAME": 7
+    "NUMBER_OF_CHARACTERS_IN_FILENAME": 7,
+
+
+    "PATH_SERVER_FILES": "files",
+    "PATH_ORDER_FILES": "orders",
+    "PATH_OFFER_FILES": "offers",
+    "PATH_CHATS_FILES": "chats",
+    "PATH_TMP_FILES": "tmp",
 }
 
 IMAGE_FILE_FORMATS = [
