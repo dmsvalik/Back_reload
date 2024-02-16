@@ -34,11 +34,16 @@ def store_chat_messages_from_redis_to_db():
                 hashcode=code,
             )
         )
+    try:
+        with transaction.atomic():
+            ChatMessage.objects.bulk_create(
+                message_for_db,
+            )
+            success = True
+    except Exception as e:
+        success = False
+        # FIXME! Залоггировать
+        print(e)
 
-    with transaction.atomic():
-        ChatMessage.objects.bulk_create(
-            message_for_db,
-        )
-        success = True
     if success:
         redis.delete(messages_in_redis)

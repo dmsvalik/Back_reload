@@ -53,12 +53,16 @@ def store_messages_to_db(chat, hashcodes: list[str]):
 
         # подготовка к удалению
         keys_for_deletion.append(chat + ":" + code)
-
-    with transaction.atomic():
-        ChatMessage.objects.bulk_create(
-            chat_messages,
-        )
-        success = True
+    try:
+        with transaction.atomic():
+            ChatMessage.objects.bulk_create(
+                chat_messages,
+            )
+            success = True
+    except Exception as e:
+        success = False
+        # FIXME! Залоггировать
+        print(e)
 
     if success:
         redis.delete(keys_for_deletion)
