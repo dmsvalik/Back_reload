@@ -18,7 +18,7 @@ class UserAccountManager(BaseUserManager):
     def create(
         self, email, name, person_telephone=None, surname=None, password=None
     ):
-        email = self.normalize_email(email.lower())
+        email = email.lower()
 
         user = self.model(
             email=email,
