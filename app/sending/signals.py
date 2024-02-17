@@ -24,7 +24,7 @@ post_save.connect(create_user_notification, sender=UserAccount)
 def create_notification_record(
     sender, user: UserAccount, theme: str, type: str, **kwargs
 ):
-    """Создание записи от уведомлении пользователя."""
+    """Создание записи об уведомлении пользователя."""
     SentNotification.objects.create(user=user, theme=theme, type=type)
 
 

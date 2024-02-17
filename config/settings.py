@@ -384,10 +384,47 @@ NOTIFICATION_CLASSES = {
     "email": {
         "ORDER_CREATE_CONFIRMATION": {
             "type": "app.sending.email_sending.OrderEmail",
-            "theme": "Подтверждение отправки заказа исполнителям.",
+            "theme": "Подтверждение отправки заказа Заказчиком.",
+        },
+        "ORDER_CREATE_CONFIRMATION_TO_CONSTRUCTOR": {
+            "type": "app.sending.email_sending.ConstructorEmail",
+            "theme": "Подтверждение отправки нового заказа исполнителям.",
+        },
+        "NEW_OFFER_CONFIRMATION_TO_CUSTOMER": {
+            "type": "app.sending.email_sending.NewOfferEmail",
+            "theme": "Подтверждение отправки нового заказа исполнителям.",
+        },
+        "CONSTRUCTOR_WAS_SELECTED_CONFIRMATION_TO_CUSTOMER": {
+            "type": "app.sending.email_sending.ChoiseConstructorEmail",
+            "theme": "Подтверждение отправки нового заказа исполнителям.",
+        },
+        "NO_OFFER_CONFIRMATION_TO_CONSTRUCTOR": {
+            "type": "app.sending.email_sending.NoOfferConstructorEmail",
+            "theme": "Уведомление что Исполнителя не сделал предложение.",
+        },
+        "OPEN_CHAT_ORDER_CONFIRMATION_TO_CONSTRUCTOR": {
+            "type": "app.sending.email_sending.OpenChatOrderEmail",
+            "theme": "Уведомление об открытии чата Заказчиком.",
+        },
+        "CLOSE_ORDER_WITH_CONFIRMATION_TO_CONSTRUCTOR": {
+            "type": "app.sending.email_sending.CloseOrderWithConstructorEmail",
+            "theme": "Уведомление Исполнителя о его выборе Заказчиком.",
+        },
+        "CLOSE_ORDER_WITHOUT_CONFIRMATION_TO_CONSTRUCTOR": {
+            "type": "app.sending.email_sending.CloseOrderWithoutConstructorEmail",
+            "theme": "Уведомление Исполнителя что Исполнитель выбран другой.",
         }
     },
-    "tel": {"ORDER_CREATE_CONFIRMATION": None},
+    "tel": {
+        "ORDER_CREATE_CONFIRMATION": None,
+        "ORDER_CREATE_CONFIRMATION_TO_CONSTRUCTOR": None,
+        "NEW_OFFER_CONFIRMATION_TO_CUSTOMER": None,
+        "CONSTRUCTOR_WAS_SELECTED_CONFIRMATION_TO_CUSTOMER": None,
+        "NO_OFFER_CONFIRMATION_TO_CONSTRUCTOR": None,
+        "OPEN_CHAT_ORDER_CONFIRMATION_TO_CONSTRUCTOR": None,
+        "CLOSE_ORDER_WITH_CONFIRMATION_TO_CONSTRUCTOR": None,
+        "CLOSE_ORDER_WITHOUT_CONFIRMATION_TO_CONSTRUCTOR": None,
+    }
 }
 
 DJOSER_EMAIL_CLASSES = {
