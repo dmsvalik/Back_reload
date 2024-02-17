@@ -2,6 +2,7 @@ import string
 
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from phonenumber_field.serializerfields import PhoneNumberField
 
 from config.settings import NOTIFICATION_CLASSES
 from .constants import ErrorMessages
@@ -12,6 +13,8 @@ User = get_user_model()
 
 class UserCreateSerializer(serializers.ModelSerializer):
     """Сериализатор создания пользователя."""
+
+    person_telephone = PhoneNumberField()
 
     class Meta:
         model = User
