@@ -1,4 +1,5 @@
 from django.db import models
+from phonenumber_field.modelfields import PhoneNumberField
 
 from app.users.models import UserAccount
 
@@ -15,11 +16,15 @@ class ContractorData(models.Model):
     created_date = models.DateTimeField(
         "Дата создания аккаунта исполнителя", auto_now=True
     )
-    phone_number = models.CharField(
-        "Телефон компании", max_length=12, blank=True
+    phone_number = PhoneNumberField(
+        verbose_name="Телефон компании", blank=True
     )
     requisites = models.CharField(
         "Реквизиты компании", max_length=100, blank=True
+    )
+    tin = models.CharField(verbose_name="ИНН", max_length=10)
+    legal_address = models.CharField(
+        verbose_name="Юридический адресс", max_length=128
     )
 
     class Meta:

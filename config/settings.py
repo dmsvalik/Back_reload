@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "channels",
     "app.questionnaire",
     "app.sending",
+    "phonenumber_field",
 ]
 
 DOMAIN = ("api.whywe.ru")
@@ -377,6 +378,7 @@ SENDING = {
 
 ORDER_COOKIE_KEY_NAME = "key"
 
+PHONENUMBER_DEFAULT_REGION = "RU"
 
 NOTIFICATION_CLASSES = {
     "email": {
