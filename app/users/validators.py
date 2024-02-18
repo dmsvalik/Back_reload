@@ -7,6 +7,8 @@ from abc import ABC, abstractmethod
 import re
 from string import digits
 
+from app.utils.errorcode import IncorrectPasswordCreateUser
+
 
 class BaseFieldValidator(ABC):
     """Валидатор для полей модели"""
@@ -21,7 +23,18 @@ class BaseFieldValidator(ABC):
 class PasswordFieldValidator(BaseFieldValidator):
     def __call__(self, password: str):
         validate_password(password)
+        self._validate_by_regex(password)
         self._has_digit(password)
+
+    def _validate_by_regex(self, password: str):
+        if not re.match(
+            r"^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,"
+            r":\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$",
+            password,
+        ):
+            raise ValidationError(
+                IncorrectPasswordCreateUser.detail["message"]
+            )
 
     def _has_digit(self, value: str):
         if not set(value).intersection(set(digits)):
