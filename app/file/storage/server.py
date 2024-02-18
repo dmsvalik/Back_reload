@@ -1,14 +1,15 @@
 import os
 import random
+import shutil
 import string
 
 from PIL import Image
 
-from app.file import exception as ex
+from .mixin import WorkFilePathMixin
 from config.settings import BASE_DIR, FILE_SETTINGS
 
 
-class ServerFileBase:
+class ServerFileBase(WorkFilePathMixin):
     _server_dir = os.path.join(
         BASE_DIR, FILE_SETTINGS.get("PATH_SERVER_FILES")
     ).__str__()
@@ -25,22 +26,21 @@ class ServerFileBase:
             )
 
     @staticmethod
-    def generate_path(*args):
-        """Метод генерирует строковый путь на основе переданных
-        позиционных аргументов. Внимание: Важно передавать аргументы списком
-        с аргументами расположенными в правильном порядке"""
-        if len(args) <= 1:
-            raise ex.FewElementsError
-        path = os.path.join(*map(lambda x: str(x), args)).__str__()
-        return path
-
-    @staticmethod
     def _check_or_create(path: str) -> str:
         """Метод проверяет наличие заданной директории, если директория
         не найдена - создает"""
         if not os.path.exists(path):
             os.makedirs(path)
         return path
+
+    def generate_abspath(self, path: str) -> str:
+        return self.generate_path(self._server_dir, path)
+
+    def check_path(self, path: str) -> bool:
+        abs_path = self.generate_abspath(path)
+        if os.path.exists(abs_path):
+            return True
+        return False
 
     def _get_filename_list(self):
         """Метод получает список имен файлов указанной директории"""
@@ -61,29 +61,6 @@ class ServerFileBase:
         )
         return file_name
 
-    @staticmethod
-    def get_file_format(filename: str) -> str:
-        """Метод получает формат файла из любого пути"""
-        return os.path.splitext(filename)[1][1:]
-
-    @staticmethod
-    def get_filename_from_path(path: str) -> str:
-        """Метод получает имя файла из пути до него"""
-        file_name = os.path.split(path)[1]
-        if "." in file_name:
-            return file_name
-        else:
-            raise ex.ThisNotFileError
-
-    @staticmethod
-    def replace_filename_from_path(path: str, filename: str) -> str:
-        if "." not in path or "." not in filename:
-            raise ex.ThisNotFileError
-
-        dir_path = os.path.dirname(path)
-        new_path = os.path.join(dir_path, filename).__str__()
-        return new_path
-
     def get_unique_filename(self, old_name: str) -> str:
         """Метод генерирует уникальное имя файла на основе директории
         предполагаемого сохранения файла"""
@@ -95,17 +72,32 @@ class ServerFileBase:
         return f"{new_name}.{self.get_file_format(old_name)}"
 
     def get_size(self, path):
-        abs_path = os.path.join(self._server_dir, path).__str__()
+        abs_path = self.generate_abspath(path)
         return os.path.getsize(abs_path)
 
     def save(self, path: str, file) -> tuple[str, int]:
         """Метод сохраняет файл в указанную директорию"""
-        path_to_save = os.path.join(self._server_dir, path).__str__()
+        path_to_save = self.generate_abspath(path)
         with open(path_to_save, "wb+") as f:
             for chunk in file.chunks():
                 f.write(chunk)
         size = self.get_size(path)
         return path, size
+
+    def delete(self, path: str) -> None:
+        """Метод удаляет файл по заданному пути"""
+        abs_path = self.generate_abspath(path)
+        os.remove(abs_path)
+
+    def moving_file(self, old_path: str, new_path: str) -> str:
+        abs_dir_path = self.generate_abspath(new_path)
+        self._check_or_create(abs_dir_path)
+
+        filename = self.get_filename_from_path(old_path)
+        abs_path = os.path.join(abs_dir_path, filename)
+        shutil.move(old_path, abs_path)
+
+        return self.generate_path(new_path, filename)
 
 
 class ServerImageFiles(ServerFileBase):
@@ -119,11 +111,11 @@ class ServerImageFiles(ServerFileBase):
         "IMAGE_COEFFICIENT_OF_SIZE_CHANGING"
     ]
 
-    def __init__(self, path: str = "tmp"):
+    def __init__(self, path: str = None):
         super().__init__(path)
 
     def save_preview(self, path: str):
-        abs_path = self.generate_path(self._server_dir, path)
+        abs_path = self.generate_abspath(path)
         filename = self.get_filename_from_path(path)
         new_filename = self.get_unique_filename(filename)
         preview_path = self.replace_filename_from_path(abs_path, new_filename)
@@ -156,11 +148,12 @@ class ServerImageFiles(ServerFileBase):
     def save(self, path: str, file) -> tuple[str, int]:
         """Метод сохраняет файл в указанную директорию"""
         path_to_save, size = super().save(path, file)
-        abs_path = self.generate_path(self.path, path_to_save)
+        filename = self.get_filename_from_path(path)
+        abs_path = self.generate_path(self.path, filename)
         size = self._image_compression(abs_path)
         return path_to_save, size
 
 
 class ServerFiles(ServerFileBase):
-    def __init__(self, path: str = "tmp"):
+    def __init__(self, path: str = None):
         super().__init__(path)
