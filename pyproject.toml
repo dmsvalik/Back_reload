@@ -28,6 +28,7 @@ reportlab = "^4.0.8"
 pypdf2 = "^3.0.1"
 django-celery-beat = "^2.5.0"
 django-colorfield = "^0.11.0"
+django-phonenumber-field = {extras = ["phonenumberslite"], version = "^7.3.0"}
 
 [tool.poetry.group.dev.dependencies]
 drf-yasg = "^1.21.6"

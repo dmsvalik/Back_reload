@@ -1,24 +1,14 @@
-import re
-
 from colorfield.fields import ColorField
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
-from django.core.validators import MinLengthValidator
 from django.db import models
-from rest_framework.exceptions import ValidationError
-
-from app.utils.errorcode import (
-    IncorrectEmailCreateUser,
-    IncorrectNameCreateUser,
-    IncorrectSurnameCreateUser,
-    IncorrectTelephoneCreateUser,
-    IncorrectPasswordCreateUser,
-)
+from phonenumber_field.modelfields import PhoneNumberField
 
 from .constants import ModelChoices
+from .validators import PasswordFieldValidator, NameFieldValidator
 
 
 # Create your models here.
@@ -28,48 +18,14 @@ class UserAccountManager(BaseUserManager):
     def create(
         self, email, name, person_telephone=None, surname=None, password=None
     ):
-        if not email:
-            raise ValidationError({"email": ["This field is required."]})
         email = email.lower()
-        if not re.match(r"^[a-zA-Z-0-9\-.@]{5,50}$", email):
-            raise IncorrectEmailCreateUser
-        if not person_telephone:
-            raise ValidationError(
-                {"person_telephone": ["This field is required."]}
-            )
-        if not surname:
-            raise ValidationError({"surname": ["This field is required."]})
 
-        if not re.match(r"^[a-zA-Zа-яА-Я\s\-]{2,20}$", name):
-            raise IncorrectNameCreateUser
-
-        if not re.match(r"^[a-zA-Zа-яА-Я\s\-]{2,20}$", surname):
-            raise IncorrectSurnameCreateUser
-
-        if (
-            person_telephone[0:2] != "+7"
-            or len(person_telephone) != 12
-            or (person_telephone[1:].isdigit() is False)
-        ):
-            raise IncorrectTelephoneCreateUser
-
-        email = self.normalize_email(email)
         user = self.model(
             email=email,
             name=name,
             person_telephone=person_telephone,
             surname=surname,
         )
-
-        if (
-            not re.match(
-                r"^[a-zA-Z-0-9\-~!?@#$%^&*_+(){}<>|.,"
-                r":\u005B\u002F\u005C\u005D\u0022\u0027]{8,64}$",
-                password,
-            )
-            or len(re.findall(r"\d+", password)) == 0
-        ):
-            raise IncorrectPasswordCreateUser
         user.set_password(password)
         user.save()
 
@@ -103,30 +59,18 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(
         max_length=50,
         unique=True,
-        validators=[
-            MinLengthValidator(
-                5, "the field must contain at least 5 characters"
-            )
-        ],
     )
     name = models.CharField(
         max_length=50,
-        validators=[
-            MinLengthValidator(
-                2, "the field must contain at least 2 characters"
-            )
-        ],
+        validators=[NameFieldValidator(2)],
     )
     surname = models.CharField(
         max_length=50,
-        blank=True,
         unique=False,
-        null=True,
-        validators=[
-            MinLengthValidator(
-                2, "the field must contain at least 2 characters"
-            )
-        ],
+        validators=[NameFieldValidator(2)],
+    )
+    password = models.CharField(
+        "Пароль", max_length=128, validators=[PasswordFieldValidator()]
     )
     is_active = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
@@ -136,15 +80,9 @@ class UserAccount(AbstractBaseUser, PermissionsMixin):
     person_created = models.DateTimeField(
         "Дата создания аккаунта", auto_now_add=True
     )
-    person_telephone = models.CharField(
+    person_telephone = PhoneNumberField(
         "Номер телефона",
-        max_length=12,
         unique=True,
-        blank=True,
-        null=True,
-        validators=[
-            MinLengthValidator(7, "the field must contain at least 7 numbers")
-        ],
     )
     person_address = models.CharField(
         "Адрес", max_length=200, blank=True, null=True

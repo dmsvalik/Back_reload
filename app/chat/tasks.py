@@ -1,5 +1,7 @@
 from celery import shared_task
 
+from django.db import transaction
+
 from .redis_client import RedisClient
 from .models import ChatMessage, Conversation
 from app.users.models import UserAccount
@@ -18,7 +20,7 @@ def store_chat_messages_from_redis_to_db():
         code = id_and_code[1]
         message = redis.get_message_by_key(key)
         is_read = False
-        if message.get("is_read") and message.get("is_read") is True:
+        if message.get("is_read") and message.get("is_read") == "True":
             is_read = True
         message_for_db.append(
             ChatMessage(
@@ -32,9 +34,16 @@ def store_chat_messages_from_redis_to_db():
                 hashcode=code,
             )
         )
+    try:
+        with transaction.atomic():
+            ChatMessage.objects.bulk_create(
+                message_for_db,
+            )
+            success = True
+    except Exception as e:
+        success = False
+        # FIXME! Залоггировать
+        print(e)
 
-    ChatMessage.objects.bulk_create(
-        message_for_db,
-    )
-
-    redis.delete(messages_in_redis)
+    if success:
+        redis.delete(messages_in_redis)
