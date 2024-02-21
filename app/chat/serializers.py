@@ -59,14 +59,19 @@ class ChatSerializer(ChatIDSerializer):
 
         try:
             not_read_in_db = (
-                ChatMessage.objects.filter(is_read=False)
+                ChatMessage.objects.select_related("conversation", "user")
+                .filter(
+                    is_read=False,
+                    conversation=instance,
+                )
                 .exclude(sender=user)
                 .values_list("hashcode", flat=True)
             )
             for code in not_read_in_db:
                 if code not in message_hashcodes:
                     unread_count += 1
-        except:
+        except Exception as e:
             # FIXME! проверить и потом о убрать try/catch
+            print(e)
             pass
         return unread_count
