@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from app.file.models import OfferFileModel, FileModel
+from app.file.models import OfferFileModel, FileModel, IpFileModel
 
 
 @admin.register(FileModel)
@@ -29,3 +29,15 @@ class OfferFileModelAdmin(admin.ModelAdmin):
 
     def date_upload(self, obj):
         return obj.file.date_upload
+
+
+@admin.register(IpFileModel)
+class IpFileModelAdmin(admin.ModelAdmin):
+    """Админка для файлов заказа пользователя."""
+
+    list_display = [
+        "id",
+        "ip",
+        "file",
+    ]
+    readonly_fields = ("id",)

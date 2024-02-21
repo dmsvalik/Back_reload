@@ -4,6 +4,7 @@ from django.db.models import F
 from app.file.models import FileModel
 from app.file.storage.cloud import Cloud
 from app.file.storage.server import ServerFiles
+from app.users.utils.quota_manager import UserQuotaManager
 
 User = get_user_model()
 
@@ -15,7 +16,8 @@ class TaskFile:
         self.server = ServerFiles()
         self.cloud = Cloud()
         self._file_model = FileModel
-        # self.user = User.objects.get(pk=user_id) Предполагается для квоты
+        self.user = User.objects.filter(pk=user_id).first()
+        self.user_quota = UserQuotaManager(self.user)
 
     def moving_files_to_cloud(self, path_to_save: str, file_ids: list[int]):
         """
@@ -40,6 +42,7 @@ class TaskFile:
                 file.yandex_size = size
                 file.server_size = F("server_size") - size
                 file.save()
+                self.user_quota.add(file, server=False, cloud=True)
                 self.server.delete(file_path)
             else:
                 continue
@@ -79,3 +82,4 @@ class TaskFile:
                 )
                 file.preview_path = new_preview_path
                 file.save()
+                self.user_quota.add(file, server=True, cloud=False)

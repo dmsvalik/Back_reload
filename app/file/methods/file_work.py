@@ -36,9 +36,11 @@ class FileWorkBase(ABC):
     def _create_bunch(self, file_ids: list[int]):
         pass
 
-    def _moving_files_to_dirobj(self, file_ids: list):
-        """Метод перемещает файлы в директорию файлов объекта"""
-        task_moving_files.delay(self.relative_path, file_ids)
+    def _moving_files_to_dirobj(self, file_ids: list, user_id: int):
+        """Метод перемещает файлы в директорию файлов объекта
+        и пересчитывает квоту пользователя"""
+        task = task_moving_files.delay(self.relative_path, file_ids, user_id)
+        print(task.id)
 
     def create(self, file: Any) -> dict:
         """Метод выполняет сохранение на сервере и возвращает словарь

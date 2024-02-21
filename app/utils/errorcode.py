@@ -207,3 +207,11 @@ class CopyingFileError(HttpValidationException):
         "errors": "CopyingFileError",
         "message": "Ошибка при копировании файла",
     }
+
+
+class IpFileUploadLimit(HttpValidationException):
+    status_code = 400
+    detail = {
+        "errors": "IpFileUploadLimit",
+        "message": "Превышен лимит загрузки с 1 ip адреса.",
+    }
