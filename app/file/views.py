@@ -2,18 +2,22 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser
+from rest_framework.permissions import AllowAny
 from rest_framework.views import APIView
 
 from app.file.methods.file_work import TmpFileWork
 from app.file import exception as ex
+from .models import IpFileModel
+from .permissions import IpFileSizeLimit
 from .serializers import FileModelSerializer
 from .swagger_documentation import file as swagger
+from .utils.helpers import get_client_ip
 
 
 class CreateFileView(APIView):
     serializer_class = FileModelSerializer
     parser_classes = (MultiPartParser,)
-    permission_classes = ()
+    permission_classes = (AllowAny, IpFileSizeLimit)
 
     @swagger_auto_schema(**swagger.UploadFile.__dict__)
     def post(self, request, *args, **kwargs):
@@ -22,6 +26,8 @@ class CreateFileView(APIView):
         try:
             save_data = tmp_file.create(file) or None
             file = tmp_file.save_file_db(**save_data)
+            ip = get_client_ip(request)
+            IpFileModel.objects.create(file=file, ip=ip)
             return Response(
                 data={"file_id": file.id}, status=status.HTTP_201_CREATED
             )

@@ -207,3 +207,20 @@ class CopyingFileError(HttpValidationException):
         "errors": "CopyingFileError",
         "message": "Ошибка при копировании файла",
     }
+
+
+class IpFileUploadLimit(HttpValidationException):
+    status_code = 400
+    detail = {
+        "errors": "IpFileUploadLimit",
+        "message": "Превышен лимит загрузки с 1 ip адреса.",
+    }
+
+
+class UserQuotaUploadLimit(HttpValidationException):
+    status_code = 403
+    detail = {
+        "errors": "UserQuotaUploadLimit",
+        "message": f"Доступный трафик закончился. Подождите следующего "
+        f"месяца или свяжитесь с администратором.",
+    }

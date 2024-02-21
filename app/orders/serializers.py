@@ -10,6 +10,9 @@ from .models import OrderModel, OrderOffer, OrderFileData
 from app.questionnaire.serializers import FileSerializer
 from app.orders.constants import ORDER_STATE_CHOICES, OfferState, OrderState
 from app.utils.errorcode import OrderInWrongStatus
+from ..file.methods.file_work import OfferFileWork
+from ..file.models import FileModel
+from ..file.serializers import FilesSerializer
 
 
 class OrderModelSerializer(serializers.ModelSerializer):
@@ -120,18 +123,45 @@ class BaseOfferSerizalizer(serializers.ModelSerializer):
 class OfferSerizalizer(BaseOfferSerizalizer):
     contactor_key = serializers.IntegerField(read_only=True)
     status = serializers.CharField(read_only=True)
+    files = serializers.PrimaryKeyRelatedField(
+        many=True,
+        queryset=FileModel.objects.all(),
+        source="offerfilemodel_set.file.id",
+        required=False,
+    )
 
     class Meta(BaseOfferSerizalizer.Meta):
         fields = BaseOfferSerizalizer.Meta.fields + (
             "order_id",
             "contactor_key",
+            "files",
         )
 
     def create(self, validated_data):
         order_obj: OrderModel = validated_data.get("order_id")
         if order_obj.state != OrderState.OFFER.value:
             raise OrderInWrongStatus()
-        return super().create(validated_data)
+        files = validated_data.pop("offerfilemodel_set").get("file").get("id")
+        file_ids = [file.id for file in files]
+        offer = OrderOffer.objects.create(**validated_data)
+        offer_work = OfferFileWork(offer_id=offer.id)
+        offer_work.binding_files(file_ids)
+        return offer
+
+    def to_representation(self, instance):
+        return OfferReadSerializer(instance).data
+
+
+class OfferReadSerializer(BaseOfferSerizalizer):
+    files = serializers.SerializerMethodField()
+
+    class Meta(BaseOfferSerizalizer.Meta):
+        fields = BaseOfferSerizalizer.Meta.fields + ("files",)
+
+    def get_files(self, obj):
+        files = FileModel.objects.filter(offerfilemodel__offer=obj)
+        serializer = FilesSerializer(files, many=True)
+        return serializer.data
 
 
 class OfferOrderSerializer(BaseOfferSerizalizer):

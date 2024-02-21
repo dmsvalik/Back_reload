@@ -40,3 +40,15 @@ class OfferFileModel(models.Model):
 
     def __str__(self):
         return f"Файл {str(self.file)} к оффферу с id {self.offer.id}"
+
+
+class IpFileModel(models.Model):
+    file = models.ForeignKey(FileModel, on_delete=models.CASCADE, null=False)
+    ip = models.CharField("IP пользователя", max_length=50)
+
+    class Meta:
+        verbose_name = "Файл с IP пользователя"
+        verbose_name_plural = "Файлы с IP пользователями"
+
+    def __str__(self):
+        return f"Файл {str(self.file)} с IP {self.ip}"
