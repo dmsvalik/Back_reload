@@ -13,6 +13,7 @@ def task_moving_files(
     к которому привязан файл.
     @param relative_path:
     @param file_ids:
+    @param user_id:
     @return:
     """
     files = TaskFile(user_id)

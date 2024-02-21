@@ -141,9 +141,8 @@ class OfferSerizalizer(BaseOfferSerizalizer):
         order_obj: OrderModel = validated_data.get("order_id")
         if order_obj.state != OrderState.OFFER.value:
             raise OrderInWrongStatus()
-        file_ids = (
-            validated_data.pop("offerfilemodel_set").get("file").get("id")
-        )
+        files = validated_data.pop("offerfilemodel_set").get("file").get("id")
+        file_ids = [file.id for file in files]
         offer = OrderOffer.objects.create(**validated_data)
         offer_work = OfferFileWork(offer_id=offer.id)
         offer_work.binding_files(file_ids)

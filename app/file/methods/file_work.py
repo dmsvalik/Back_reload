@@ -39,8 +39,7 @@ class FileWorkBase(ABC):
     def _moving_files_to_dirobj(self, file_ids: list, user_id: int):
         """Метод перемещает файлы в директорию файлов объекта
         и пересчитывает квоту пользователя"""
-        task = task_moving_files.delay(self.relative_path, file_ids, user_id)
-        print(task.id)
+        task_moving_files.delay(self.relative_path, file_ids, user_id)
 
     def create(self, file: Any) -> dict:
         """Метод выполняет сохранение на сервере и возвращает словарь
@@ -135,4 +134,4 @@ class OfferFileWork(FileWorkBase):
                 self._sub_model(offer_id=self.instance_id, file_id=file_id)
             )
         self._sub_model.objects.bulk_create(create_lst)
-        self._moving_files_to_dirobj(file_ids)
+        self._moving_files_to_dirobj(file_ids, self.user_id)

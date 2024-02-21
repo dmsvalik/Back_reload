@@ -33,3 +33,4 @@ class UserQuotaLimit(permissions.BasePermission):
                 or quota.total_server_size > MAX_SERVER_QUOTA
             ):
                 raise IpFileUploadLimit()
+        return True
