@@ -13,7 +13,7 @@ class FileModelSerializer(serializers.ModelSerializer):
 
 class DeleteFileSerializer(serializers.Serializer):
     file_id = serializers.PrimaryKeyRelatedField(
-        queryset=FileModel.objects.all(), source="file.id"
+        queryset=FileModel.objects.all(), source="id"
     )
 
     class Meta:

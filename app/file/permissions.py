@@ -3,7 +3,11 @@ from rest_framework import permissions
 from app.file.models import FileModel, IpFileModel, OfferFileModel
 from app.file.utils.helpers import get_client_ip
 from app.users.models import UserQuota
-from app.utils.errorcode import IpFileUploadLimit, UserQuotaUploadLimit
+from app.utils.errorcode import (
+    IpFileUploadLimit,
+    UserQuotaUploadLimit,
+    FileNotFound,
+)
 from config.settings import IP_LIMIT_B, MAX_STORAGE_QUOTA, MAX_SERVER_QUOTA
 
 
@@ -52,3 +56,10 @@ class IsFileOwner(permissions.BasePermission):
             ).exists():
                 return True
         return False
+
+
+class IsFileExists(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if FileModel.objects.filter(id=request.data.get("file_id")).exists():
+            return True
+        raise FileNotFound()

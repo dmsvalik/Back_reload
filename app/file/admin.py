@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from app.file.models import OfferFileModel, FileModel, IpFileModel
+from app.file.models import (
+    OfferFileModel,
+    FileModel,
+    IpFileModel,
+    FileToDelete,
+)
 
 
 @admin.register(FileModel)
@@ -39,5 +44,17 @@ class IpFileModelAdmin(admin.ModelAdmin):
         "id",
         "ip",
         "file",
+    ]
+    readonly_fields = ("id",)
+
+
+@admin.register(FileToDelete)
+class FileToDeleteAdmin(admin.ModelAdmin):
+    """Админка для удаляемых файлов."""
+
+    list_display = [
+        "id",
+        "file_path",
+        "preview_path",
     ]
     readonly_fields = ("id",)

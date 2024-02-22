@@ -7,12 +7,13 @@ from rest_framework.views import APIView
 
 from app.file.methods.file_work import TmpFileWork
 from app.file import exception as ex
-from .models import IpFileModel, FileModel
-from .permissions import IpFileSizeLimit, IsFileOwner
+from .models import IpFileModel
+from .permissions import IpFileSizeLimit, IsFileOwner, IsFileExists
 from .serializers import FileModelSerializer, DeleteFileSerializer
 from .swagger_documentation import file as swagger
 from .tasks import task_delete_file
 from .utils.helpers import get_client_ip
+from ..users.utils.quota_manager import UserQuotaManager
 
 
 class CreateFileView(APIView):
@@ -41,18 +42,20 @@ class CreateFileView(APIView):
 
 class DeleteFileView(APIView):
     serializer_class = DeleteFileSerializer
-    permission_classes = (AllowAny, IsFileOwner | IsAdminUser)
+    permission_classes = (AllowAny, IsFileExists, IsFileOwner | IsAdminUser)
 
     @swagger_auto_schema(**swagger.DeleteFile.__dict__)
     def delete(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        file_id = serializer.validated_data.get("file_id")
-        file = FileModel.objects.get(id=file_id)
+        file = serializer.validated_data.get("id")
+        if request.user.is_authenticated and not file.file_path.startswith(
+            "/tmp"
+        ):
+            UserQuotaManager(user=request.user).subtract(file)
         file.delete()
         task_delete_file.delay(
             file_path=file.file_path,
             preview_path=file.preview_path,
-            user_id=request.user.id or None,
         )
         return Response(status=status.HTTP_204_NO_CONTENT)

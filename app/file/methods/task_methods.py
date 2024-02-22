@@ -89,11 +89,6 @@ class TaskFile:
     def delete_file_from_server(self, server_path: str):
         if not server_path:
             return
-        file = self._file_model.objects.filter(
-            preview_path=server_path
-        ).first()
-        if self.user and not server_path.startswith("tmp/"):
-            self.user_quota.subtract(file, server=True, cloud=False)
         self.server.delete(server_path)
         file_to_delete = FileToDelete.objects.filter(
             preview_path=server_path
@@ -105,7 +100,6 @@ class TaskFile:
     def delete_file_from_cloud(self, cloud_path: str):
         if not cloud_path:
             return
-        file = self._file_model.objects.filter(file_path=cloud_path).first()
         file_to_delete = FileToDelete.objects.filter(
             file_path=cloud_path
         ).first()
@@ -115,8 +109,6 @@ class TaskFile:
                 file_to_delete.file_path = ""
                 file_to_delete.save()
         else:
-            if self.user:
-                self.user_quota.subtract(file, server=False, cloud=True)
             try:
                 self.cloud.delete(cloud_path)
                 file_to_delete.file_path = ""
