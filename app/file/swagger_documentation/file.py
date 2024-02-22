@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from drf_yasg import openapi
 
-from app.file.serializers import FileModelSerializer
+from app.file.serializers import FileModelSerializer, DeleteFileSerializer
 from app.orders.swagger_documentation.orders import DEFAULT_RESPONSES
 from config.settings import SWAGGER_TAGS
 
@@ -44,6 +44,24 @@ class UploadFile(BaseSwaggerSchema):
                 },
             ),
         ),
+        404: DEFAULT_RESPONSES[404],
+        500: DEFAULT_RESPONSES[500],
+    }
+
+
+class DeleteFile(BaseSwaggerSchema):
+    tags = [SWAGGER_TAGS.get("files")]
+    operation_summary = "Удаление файла"
+    operation_description = (
+        "Метод позволяет удалить файл\n"
+        "Разрешения - владелец файла или администратор"
+    )
+    request_body = DeleteFileSerializer
+    responses = {
+        204: openapi.Response(
+            "Success response",
+        ),
+        403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404],
         500: DEFAULT_RESPONSES[500],
     }

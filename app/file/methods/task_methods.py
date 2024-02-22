@@ -1,7 +1,9 @@
+import os.path
+
 from django.contrib.auth import get_user_model
 from django.db.models import F
 
-from app.file.models import FileModel
+from app.file.models import FileModel, FileToDelete
 from app.file.storage.cloud import Cloud
 from app.file.storage.server import ServerFiles
 from app.users.utils.quota_manager import UserQuotaManager
@@ -83,3 +85,42 @@ class TaskFile:
                 file.preview_path = new_preview_path
                 file.save()
                 self.user_quota.add(file, server=True, cloud=False)
+
+    def delete_file_from_server(self, server_path: str):
+        if not server_path:
+            return
+        file = self._file_model.objects.filter(
+            preview_path=server_path
+        ).first()
+        if self.user and not server_path.startswith("tmp/"):
+            self.user_quota.subtract(file, server=True, cloud=False)
+        self.server.delete(server_path)
+        file_to_delete = FileToDelete.objects.filter(
+            preview_path=server_path
+        ).first()
+        if not os.path.exists(self.server.generate_abspath(server_path)):
+            file_to_delete.preview_path = ""
+            file_to_delete.save()
+
+    def delete_file_from_cloud(self, cloud_path: str):
+        if not cloud_path:
+            return
+        file = self._file_model.objects.filter(file_path=cloud_path).first()
+        file_to_delete = FileToDelete.objects.filter(
+            file_path=cloud_path
+        ).first()
+        if cloud_path.startswith("tmp/"):
+            self.server.delete(cloud_path)
+            if not os.path.exists(self.server.generate_abspath(cloud_path)):
+                file_to_delete.file_path = ""
+                file_to_delete.save()
+        else:
+            if self.user:
+                self.user_quota.subtract(file, server=False, cloud=True)
+            try:
+                self.cloud.delete(cloud_path)
+                file_to_delete.file_path = ""
+                file_to_delete.save()
+            except Exception as err:
+                print(err)
+                pass

@@ -66,14 +66,27 @@ class UserQuotaManager:
 
         return self.user_quota
 
-    def subtract(self, file: OrderFileData | FileData) -> UserQuota:
+    def subtract(
+        self,
+        file: OrderFileData | FileData,
+        server: bool = True,
+        cloud: bool = True,
+    ) -> UserQuota:
         """
         Вычитает размеры переданного файла из квоты юзера
         """
+        update_fields: dict = {}
+        if server:
+            update_fields["total_server_size"] = (
+                F("total_server_size") - file.server_size
+            )
+        if cloud:
+            update_fields["total_cloud_size"] = (
+                F("total_cloud_size") - file.yandex_size
+            )
         (
             UserQuota.objects.filter(pk=self.user_quota.pk).update(
-                total_cloud_size=F("total_cloud_size") - file.yandex_size,
-                total_server_size=F("total_server_size") - file.server_size,
+                **update_fields
             )
         )
         return self.user_quota

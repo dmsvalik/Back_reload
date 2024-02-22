@@ -11,6 +11,15 @@ class FileModelSerializer(serializers.ModelSerializer):
         read_only_fields = ("id",)
 
 
+class DeleteFileSerializer(serializers.Serializer):
+    file_id = serializers.PrimaryKeyRelatedField(
+        queryset=FileModel.objects.all(), source="file.id"
+    )
+
+    class Meta:
+        fields = ("file_id",)
+
+
 class OfferFileWriteSerializer(serializers.ModelSerializer):
     id = serializers.PrimaryKeyRelatedField(
         queryset=FileModel.objects.all(), source="file.id"
