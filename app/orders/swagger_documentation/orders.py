@@ -7,6 +7,7 @@ from app.orders.serializers import (
     AllOrdersClientSerializer,
     OfferOrderSerializer,
     OfferSerizalizer,
+    OfferReadSerializer,
 )
 from app.questionnaire.serializers import (
     QuestionnaireResponseSerializer,
@@ -523,7 +524,7 @@ class OrderOfferList(BaseSwaggerSchema):
     request_body = None
     responses = {
         200: openapi.Response(
-            "Success response", OfferOrderSerializer(many=True)
+            "Success response", OfferReadSerializer(many=True)
         ),
         403: DEFAULT_RESPONSES[403],
         404: DEFAULT_RESPONSES[404],
