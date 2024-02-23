@@ -5,6 +5,7 @@ import requests
 from .mixin import WorkFilePathMixin
 from config.settings import TOKEN
 from app.file import exception as ex
+from ...utils import errorcode
 
 
 class CloudBase(WorkFilePathMixin):
@@ -115,6 +116,17 @@ class CloudBase(WorkFilePathMixin):
                     "message", "Возникла ошибка при загрузке файла"
                 )
             )
+
+    def delete(self, path: str):
+        """Удаление файла с Yandex Cloud"""
+        res = requests.delete(
+            f"{self.URL}?path={path}&permanently=True",
+            headers=self.headers,
+        )
+        # если файл на сервере удален или не найден возвращаем True
+        if res.status_code not in [202, 204, 404]:
+            raise errorcode.IncorrectFileDeleting
+        return True
 
 
 class Cloud(CloudBase):

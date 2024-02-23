@@ -31,6 +31,8 @@ class FileModel(models.Model):
 
 
 class OfferFileModel(models.Model):
+    """Модель связи оффера и файла."""
+
     file = models.ForeignKey(FileModel, on_delete=models.CASCADE, null=False)
     offer = models.ForeignKey(OrderOffer, on_delete=models.CASCADE, null=False)
 
@@ -43,6 +45,8 @@ class OfferFileModel(models.Model):
 
 
 class IpFileModel(models.Model):
+    """Модель связи IP пользователя и файла."""
+
     file = models.ForeignKey(FileModel, on_delete=models.CASCADE, null=False)
     ip = models.CharField("IP пользователя", max_length=50)
 
@@ -52,3 +56,19 @@ class IpFileModel(models.Model):
 
     def __str__(self):
         return f"Файл {str(self.file)} с IP {self.ip}"
+
+
+class FileToDelete(models.Model):
+    """Промежуточная модель при удалении файлов."""
+
+    file_path = models.CharField("Путь до файла", max_length=150, blank=True)
+    preview_path = models.CharField(
+        "Путь до превью файла", max_length=150, blank=True
+    )
+
+    class Meta:
+        verbose_name = "Файл для удаления"
+        verbose_name_plural = "Файлы для удаления"
+
+    def __str__(self):
+        return f"Файл {str(self.id)} для удаления"

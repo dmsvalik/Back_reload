@@ -20,3 +20,19 @@ def task_moving_files(
     files.moving_files_to_cloud(relative_path, file_ids)
     files.moving_file_to_server(relative_path, file_ids)
     IpFileModel.objects.filter(file__id__in=file_ids).delete()
+
+
+@shared_task
+def task_delete_file(
+    file_path: str, preview_path: str, user_id: int = None
+) -> None:
+    """
+    Таска удаляет файлы с сервера и облака.
+    @param file_path:
+    @param preview_path:
+    @param user_id:
+    @return:
+    """
+    file = TaskFile(user_id)
+    file.delete_file_from_server(preview_path)
+    file.delete_file_from_cloud(file_path)

@@ -154,9 +154,10 @@ class OfferSerizalizer(BaseOfferSerizalizer):
 
 class OfferReadSerializer(BaseOfferSerizalizer):
     files = serializers.SerializerMethodField()
+    chat_id = serializers.IntegerField(source="chat.pk")
 
     class Meta(BaseOfferSerizalizer.Meta):
-        fields = BaseOfferSerizalizer.Meta.fields + ("files",)
+        fields = BaseOfferSerizalizer.Meta.fields + ("files", "chat_id")
 
     def get_files(self, obj):
         files = FileModel.objects.filter(offerfilemodel__offer=obj)
